@@ -1,0 +1,33 @@
+.mat_btn img {
+    width: 16px;
+    height: 16px;
+}
+
+.mat_btn {
+    outline-width: 2.5px;
+}
+
+.mat_btn:hover {
+    cursor: pointer;
+}
+
+.small_container {
+    width: 350px;
+    height: 250px;
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+    outline-width: 3px;
+    outline-style: solid;
+    outline-color: rgba(0, 0, 0, 0.3);
+    z-index: 2;
+}
+
+.full_container {
+    width: 100%;
+    height: 100%;
+    position: static;
+    z-index: -1;
+}

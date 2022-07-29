@@ -1,0 +1,40 @@
+.custom-hotspot {
+    height: 44.4px;
+    width: 80px;
+    
+}
+
+.trail_text_container {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 5;
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    color: rgb(245, 222, 179); 
+    text-shadow: 2px 2px black;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    -webkit-border-radius: 10px; 
+    padding: 2px 10px 2px 10px;
+    pointer-events: none;
+}
+
+.trail_text_container h2 {
+    margin: 0;
+    padding: 0;
+}
+
+#viewer_half {
+    /* transition: 0.5s; */
+    position: relative;
+}
+
+/* #map_half { */
+    /* transition: 0.5s; */
+/* } */
+
+/* .pnlm-controls-container {
+    transform: scale(1.1);
+} */

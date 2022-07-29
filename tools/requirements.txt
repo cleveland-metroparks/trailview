@@ -1,0 +1,11 @@
+# Requirements
+
+argparse
+pillow
+numpy
+uuid
+datetime
+dms2dec
+configparser
+geographiclib
+pyshtools
