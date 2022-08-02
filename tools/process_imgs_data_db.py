@@ -3,6 +3,13 @@ import os
 import json
 import requests
 
+'''
+Author: Matthew Oros
+Email: mjo1@clevelandmetroparks.com
+
+This script adds info from data.json to the database
+'''
+
 parser = argparse.ArgumentParser(description="Add image data to db")
 parser.add_argument('dir', type=str, help='Trails dir')
 args = parser.parse_args()

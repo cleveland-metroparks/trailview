@@ -5,6 +5,14 @@ import os
 import shutil
 import sys
 
+'''
+Author: Matthew Oros
+Email: mjo1@clevelandmetroparks.com
+
+This script should run as a service which checks trail statuses from the
+database and then calls the appropriate scripts to process them
+'''
+
 def count_jpgs(dir):
     count = 0
     for path in os.listdir(dir):
@@ -22,7 +30,7 @@ def count_jsons(dir):
     return count
 
 
-# Status: Blur, Tile, Sequence, Done
+# Status: Upload -> Blur -> Tile -> Sequence -> Done
 
 curr_path = os.path.dirname(os.path.realpath(__file__))
 

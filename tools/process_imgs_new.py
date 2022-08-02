@@ -14,8 +14,9 @@ import sys
 
 '''
 Author: Matthew Oros
-Date: 6/15/22
 Email: mjo1@clevelandmetroparks.com
+
+This script creates image tiles
 '''
 
 # Get creation date from picture
@@ -71,9 +72,7 @@ elif (args.replace == True):
     shutil.rmtree(os.path.join(directory, 'img'))
     os.makedirs(os.path.join(directory, 'img'))
 
-# if len(os.listdir(os.path.join(directory, 'img'))) != 0:
-#     print('img Directory not empty!')
-#     exit(1)
+
 done_imgs = []
 img_path = os.path.join(directory, 'img')
 for filename in os.listdir(img_path):

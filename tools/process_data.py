@@ -5,8 +5,10 @@ import datetime         # for sorting by creation date
 
 '''
 Author: Matthew Oros
-Date: 6/27/22
 Email: mjo1@clevelandmetroparks.com
+
+This script creates a master data.json file which contains
+image metadata that gets uploaded to the database
 '''
 
 # Process console arguments
@@ -73,28 +75,3 @@ with open(os.path.join(directory, "data.json"), "w") as outfile:
 
 with open(os.path.join(directory, "img_hash.json"), "w") as outfile:
     json.dump(hash_json, outfile)
-    
-
-# # create geo_sequence.json
-# prev_data = None
-# for img_data in img_data_list:
-#     # if prev_data != None:
-#     #     info = Geodesic.WGS84.Inverse(img_data['latitude'], img_data['longitude'], prev_data['latitude'], prev_data['longitude'])
-#     #     if info['s12'] >= 10:
-#     geo_json['geo_sequence'].append({
-#         'id': img_data['id'],
-#         'latitude': img_data['latitude'],
-#         'longitude': img_data['longitude']
-#     })
-#     # prev_data = img_data
-#     # else:
-#     #     geo_json['geo_sequence'].append({
-#     #         'id': img_data['id'],
-#     #         'latitude': img_data['latitude'],
-#     #         'longitude': img_data['longitude']
-#     #     })
-#     #     prev_data = img_data
-        
-# # Write json file
-# with open(os.path.join(directory, "geo_sequence.json"), "w") as outfile:
-#     json.dump(geo_json, outfile, indent=4)
