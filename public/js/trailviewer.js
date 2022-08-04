@@ -73,6 +73,10 @@ class TrailViewer {
         this._initLat = lat;
         this._initLng = lng;
 
+        this.optimalDist = 4;
+        this.neighborDistCutoff = 10;
+        this.pruneAngle = 25;
+
         if (this._navArrowMinAngle == null) {
             this._navArrowMinAngle = DefaultTrailViewerOptions.navArrowMinAngle;
         }
@@ -319,16 +323,13 @@ class TrailViewer {
      */
     _getNeighbors(scene) {
         const ruler = new CheapRuler(41, 'meters');
-        let optimalDist = 4;
-        let neighborDistCutoff = 10;
-        let pruneAngle = 25;
         let neighbors = [];
         for (let p = 0; p < this._dataArr.length; p++) {
             if (this._dataArr[p].id == scene['id']) {
                 continue;
             }
             let distance = ruler.distance([scene['longitude'], scene['latitude']], [this._dataArr[p].longitude, this._dataArr[p].latitude]);
-            if (distance <= neighborDistCutoff) {
+            if (distance <= this.neighborDistCutoff) {
                 let brng = ruler.bearing([scene['longitude'], scene['latitude']], [this._dataArr[p].longitude, this._dataArr[p].latitude]);
                 if (brng < 0) {
                     brng += 360;
@@ -338,8 +339,8 @@ class TrailViewer {
                 for (let n = 0; n < neighbors.length; n++) {
                     let neighbor = neighbors[n];
                     let diff = (this._customMod(((neighbor.neighborBearing - bearing) + 180), 360) - 180);
-                    if (Math.abs(diff) < pruneAngle) {
-                        if (Math.abs(optimalDist - distance) < Math.abs(optimalDist - neighbor.distance)) {
+                    if (Math.abs(diff) < this.pruneAngle) {
+                        if (Math.abs(this.optimalDist - distance) < Math.abs(this.optimalDist - neighbor.distance)) {
                             neighbors[n] = null;
                         } else {
                             skip = true;
