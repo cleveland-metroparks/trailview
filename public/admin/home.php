@@ -43,12 +43,11 @@ if (!isset($_SESSION['loggedin'])) {
     left: 0;
 }
 #map {
-    width: 32%;
-    height: 32%;
-    position: absolute;
+    width: 100%;
+    height: 600px;
+    position: relative;
     z-index: 5;
-    bottom: 0px;
-    left: 0px;
+    top: 600px;
 }
 /* .marker {
     height: 10px;
