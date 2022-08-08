@@ -1,7 +1,7 @@
 <?php
 	
 /*
-Returns JSON of trail statuses and if trail is flipped
+Returns JSON of trail statuses
 */
 
 // Disable error reporting
@@ -14,7 +14,7 @@ include("config.php");
 $conn = sqlsrv_connect($server, $connectionInfo);
 
 // Template for query 
-$queryTemplate = "SELECT Name, Status, Flipped FROM Trails";
+$queryTemplate = "SELECT Name, Status FROM Trails";
 
 // Parameters to fill in template for query
 $params = array();

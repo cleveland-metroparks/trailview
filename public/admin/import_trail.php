@@ -32,9 +32,6 @@ if (!isset($_SESSION['loggedin'])) {
             <label class="mt-2" for="name_input">Trail Name (CamelCase only)</label>
             <input class="form-control" id="name_input" pattern="[a-zA-Z0-9]{0,50}">
 
-            <select id="res_select" class="form-select mt-2">
-                <option disabled selected value>Select a Reservation</option>
-            </select>
             <div class="mt-3">
                 <button id="submit_button" type="submit" class="btn btn-primary">Submit</button>
                 <a href="/admin/home.php"><button type="button" class="btn btn-info">Back Home</button></a>

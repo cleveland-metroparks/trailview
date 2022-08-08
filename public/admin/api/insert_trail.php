@@ -4,7 +4,6 @@
 Accepts POST request with
 {
     'name': string,
-    'reservation': string,
 }
 
 echoes 'exists' if trail with the same name already exists
@@ -57,15 +56,14 @@ if (count($resultArr) != 0) {
 }
 
 
-$queryTemplate = "INSERT INTO Trails (Name, Reservation, InitImageID, SequenceName) VALUES
-                  (?, ?, ?, ?)";
+$queryTemplate = "INSERT INTO Trails (Name, Status) VALUES
+                  (?, ?)";
 
 
-$Reservation = $_POST['reservation'];
-$InitImageID = 'test';
 $SequenceName = $_POST['name'];
+$Status = 'Upload';
 
-$params = array(&$Name, &$Reservation, &$InitImageID, &$SequenceName);
+$params = array(&$Name, &$Status);
 
 $query = sqlsrv_prepare($conn, $queryTemplate, $params);
 

@@ -39,8 +39,6 @@ def process(data):
         if (t['Status'] == 'Sequence'):
             print("Processing Sequence: " + t['Name'])
             flip_str = '--no-flip'
-            if (t['Flipped'] == 0):
-                flip_str = '--flip'
             try:
                 sys.stdout.flush()
                 with open(os.path.join(curr_path, 'logs', 'watchdog.log'), "a") as outfile:

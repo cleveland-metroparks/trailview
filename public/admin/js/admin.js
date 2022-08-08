@@ -578,18 +578,6 @@ function onGeoChange(geo) {
 }
 
 
-function getReservations() {
-    var xmlhttp = new XMLHttpRequest();
-    var url = "/api/reservations.php";
-    xmlhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            InitSelectReservation(JSON.parse(this.responseText));
-        }
-    };
-    xmlhttp.open("GET", url, true);
-    xmlhttp.send();
-}
-
 function InitSelectReservation(resJson) {
     let reservationSelect = document.getElementById("res_select");
     for (let i = 0; i < resJson['Reservations'].length; i++) {

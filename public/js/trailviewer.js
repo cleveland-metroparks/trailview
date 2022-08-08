@@ -546,7 +546,6 @@ class TrailViewer {
         }
         this._sceneList = visibleScenes;
         this._prevImg = this._currImg;
-        this._updateInfo();
 
         // Add nav arrows
         this._addNeighborsToViewer(neighbors, this._currImg.flipped);
@@ -648,23 +647,6 @@ class TrailViewer {
         if ('onHotSpotClickFunc' in info[0]._options) {
             info[0]._options.onHotSpotClickFunc(info[1]);
         }
-    }
-    
-    /**
-     * Fetches and updates info in viewer
-     * @private
-     */
-    _updateInfo() {
-        var xmlhttp = new XMLHttpRequest();
-        var url = baseURL + "/api/img_info.php?id=" + String(this._currImg['id']);
-        let instance = this;
-        xmlhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-               instance._createLocalInfo(JSON.parse(this.responseText));
-            }
-        };
-        xmlhttp.open("GET", url, true);
-        xmlhttp.send();
     }
 
     /**

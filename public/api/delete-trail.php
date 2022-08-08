@@ -47,6 +47,18 @@ $query = sqlsrv_prepare($conn, $queryTemplate, $params);
 
 sqlsrv_execute($query);
 
+$queryTemplate = "DELETE FROM Images WHERE SequenceName = ?";
+
+// Create SQL connection
+$conn = sqlsrv_connect($server, $connectionInfo);
+
+$params = array(&$vars['name']);
+
+// Prepare query
+$query = sqlsrv_prepare($conn, $queryTemplate, $params);
+
+sqlsrv_execute($query);
+
 echo json_encode('success');
 
 ?>

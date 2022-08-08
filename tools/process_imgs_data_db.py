@@ -22,8 +22,8 @@ f.close()
 
 data = data_json['data']
 
-db_data = requests.get(url = 'https://trailview.cmparks.net/api/images.php?type=standard').json()
-db_data = db_data['imagesStandard']
+db_data = requests.get(url = 'https://trailview.cmparks.net/api/images.php?type=all').json()
+db_data = db_data['imagesAll']
 
 count = 1
 

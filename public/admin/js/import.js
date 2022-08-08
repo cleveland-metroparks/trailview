@@ -59,28 +59,10 @@ document.getElementById('submit_button').onclick = function() {
         uploader.destroy();
         return;
     }
-    let reservation_select = document.getElementById('res_select');
-    let reservation = reservation_select.options[reservation_select.selectedIndex].text;
-    if (document.getElementById('name_input').value == "") {
-        failed = true;
-        document.getElementById('console').innerHTML += "Error: Did not input a name!\n";
-        document.getElementById('console').innerHTML += "Refresh page and try again!\n";
-        uploader.destroy();
-        return;
-    }
-    if (reservation == "Select a Reservation") {
-        failed = true;
-        document.getElementById('console').innerHTML += "Error: Did not select a reservation!\n";
-        document.getElementById('console').innerHTML += "Refresh page and try again!\n";
-        uploader.destroy();
-        return;
-    }
     document.getElementById('name_input').disabled = true;
-    document.getElementById('res_select').disabled = true;
     document.getElementById('submit_button').disabled = true;
     let data = {
         'name': document.getElementById('name_input').value,
-        'reservation': reservation,
     };
     $.post('/admin/api/insert_trail.php', data)
         .done(function(data) {
@@ -98,26 +80,3 @@ document.getElementById('submit_button').onclick = function() {
     uploader.start();
     uploading = true;
   };
-
-  function getReservations() {
-    var xmlhttp = new XMLHttpRequest();
-    var url = "/api/reservations.php";
-    xmlhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            InitSelectReservation(JSON.parse(this.responseText));
-        }
-    };
-    xmlhttp.open("GET", url, true);
-    xmlhttp.send();
-}
-
-function InitSelectReservation(resJson) {
-    let reservationSelect = document.getElementById("res_select");
-    for (let i = 0; i < resJson['Reservations'].length; i++) {
-        let option = document.createElement('option');
-        option.innerHTML = resJson['Reservations'][i]['Name'];
-        reservationSelect.appendChild(option);
-    }
-}
-
-getReservations();
