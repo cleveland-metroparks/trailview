@@ -13,6 +13,7 @@ const DefaultTrailViewerOptions = {
     'onArrowsAddedFunc': null,
     'navArrowMinAngle': -25,
     'navArrowMaxAngle': -20,
+    'imageFetchType': 'standard'
 }
 
 function angle180to360(angle) {
@@ -72,7 +73,12 @@ class TrailViewer {
         this._prevNavClickedYaw = 0;
         this._initLat = lat;
         this._initLng = lng;
-
+        if (!options.imageFetchType) {
+            this._imageFetchType = DefaultTrailViewerOptions.imageFetchType;
+        } else {
+            this._imageFetchType = options.imageFetchType;
+        }
+        
         this.optimalDist = 4;
         this.neighborDistCutoff = 10;
         this.pruneAngle = 25;
@@ -435,16 +441,40 @@ class TrailViewer {
      */
     _fetchData() {
         let instance = this;
-        $.getJSON(baseURL + '/api/images.php?type=standard', null,
-            function (data, textStatus, jqXHR) {
-                instance._dataArr = data['imagesStandard'];
-                if (!instance._panViewer) {
-                    instance._initViewer();
-                } else {
-                    instance.goToImageID(instance.getCurrentImageID(), true);
+        if (this.imageFetchType == 'standard') {
+            $.getJSON(baseURL + '/api/images.php?type=standard', null,
+                function (data, textStatus, jqXHR) {
+                    instance._dataArr = data['imagesStandard'];
+                    if (!instance._panViewer) {
+                        instance._initViewer();
+                    } else {
+                        // Create index for quick lookup of data points
+                        // Format: {'imageID': index, '27fjei9djc': 8, ...}
+                        for (let i = 0; i < instance._dataArr.length; i++) {
+                            instance._dataIndex[instance._dataArr[i]['id']] = i;
+                        }
+                        instance.goToImageID(instance.getCurrentImageID(), true);
+                    }
                 }
-            }
-        );
+            );
+        } else {
+            $.getJSON(baseURL + '/api/images.php?type=all', null,
+                function (data, textStatus, jqXHR) {
+                    instance._dataArr = data['imagesAll'];
+                    if (!instance._panViewer) {
+                        instance._initViewer();
+                    } else {
+                        // Create index for quick lookup of data points
+                        // Format: {'imageID': index, '27fjei9djc': 8, ...}
+                        for (let i = 0; i < instance._dataArr.length; i++) {
+                            instance._dataIndex[instance._dataArr[i]['id']] = i;
+                        }
+                        instance.goToImageID(instance.getCurrentImageID(), true);
+                    }
+                }
+            );
+        }
+
     }
 
     /**

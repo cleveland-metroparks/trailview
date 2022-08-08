@@ -42,7 +42,6 @@ function updateMarkerRotation() {
 
 $('#pitch_range').on('change', () => {
     $('#pitch_label').text("Sequence Pitch Correction: " + $('#pitch_range').val());
-    dataArr = trailViewer._dataArr;
     for (let i = 0; i < dataArr.length; i++) {
         if (dataArr[i]['sequenceName'] == trailViewer.getCurrentSequenceName()) {
             dataArr[i]['pitchCorrection'] = $('#pitch_range').val();
@@ -60,6 +59,13 @@ $('#pitch_set_btn').on('click', () => {
     function (data, textStatus, jqXHR) {
         console.log("Update Response: " + data);
         trailViewer._fetchData();
+        $.getJSON("/api/images.php", {
+                'type': 'all'
+            },
+            function (data, textStatus, jqXHR) {
+                dataArr = data['imagesAll']
+            }
+        );
     },
     "json"
     );
@@ -88,10 +94,39 @@ $('#flip_switch').change(() => {
         function (data, textStatus, jqXHR) {
             console.log("Update Response: " + data);
             trailViewer._fetchData();
+            $.getJSON("/api/images.php", {
+                    'type': 'all'
+                },
+                function (data, textStatus, jqXHR) {
+                    dataArr = data['imagesAll']
+                }
+            );
         },
         "json"
     );
 })
+
+$('#visibility_switch').change(() => {
+    let checked = $('#visibility_switch').is(':checked');
+    $.post("/api/update-images.php", JSON.stringify({
+            'sequenceName': trailViewer.getCurrentSequenceName(),
+            'key': 'visibility',
+            'value': checked,
+        }),
+        function (data, textStatus, jqXHR) {
+            console.log("Update Response: " + data);
+            trailViewer._fetchData();
+            $.getJSON("/api/images.php", {
+                    'type': 'all'
+                },
+                function (data, textStatus, jqXHR) {
+                    dataArr = data['imagesAll']
+                }
+            );
+        },
+        "json"
+    );
+});
 
 let dark_switch = document.getElementById("dark_switch");
 dark_switch.addEventListener('change', function() {
@@ -261,10 +296,10 @@ function navArrowClicked(id) {
 
 function fetchData() {
     $.getJSON("/api/images.php", {
-            'type': 'standard'
+            'type': 'all'
         },
         function (data, textStatus, jqXHR) {
-            init(data['imagesStandard']);
+            init(data['imagesAll']);
         }
     );
 }
@@ -310,6 +345,7 @@ function startViewer(data) {
                                    'onArrowsAddedFunc': populateArrows,
                                    'onHotSpotClickFunc': onHotSpotClicked,
                                    'onInitDoneFunc': onInitDone,
+                                   'imageFetchType': 'all',
                                    }, null, data);
 }
 
@@ -355,6 +391,13 @@ function onViewerSceneChange(id) {
             $('#pitch_range').val(-trailViewer._panViewer.getHorizonPitch());
         }
         $('#pitch_label').text("Pitch Correction: " + $('#pitch_range').val());
+        for (let i = 0; i < dataArr.length; i++) {
+            if (dataArr[i].id == id.id) {
+                isVisible = dataArr[i].visibility;
+                break;
+            }
+        }
+        $('#visibility_switch').prop('checked', isVisible);
     }
 }
 

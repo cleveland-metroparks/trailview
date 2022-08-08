@@ -8,9 +8,9 @@ Accepts GET request with
 }
 Returns data from images db
     'standard' returns 
-        Id, SequenceName, Latitude, Longitude, Bearing, Flipped
+        id, sequenceName, latitude, longitude, bearing, flipped, pitchCorrection
     'all' returns 
-        Id, SequenceName, OriginalName, OriginalLatitude, OriginalLongitude, Latitude, Longitude, Bearing, Flipped, ShtHash
+        id, sequenceName, originalName, originalLatitude, originalLongitude, latitude, longitude, bearing, flipped, shtHash, pitchCorrection, visibility
 
 --------
 
@@ -48,10 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $query;
         if ($_REQUEST['id'] == null) {
-            $queryTemplate = "SELECT Id, SequenceName, Latitude, Longitude, Bearing, Flipped, PitchCorrection FROM Images";
+            $queryTemplate = "SELECT Id, SequenceName, Latitude, Longitude, Bearing, Flipped, PitchCorrection, Visibility FROM Images WHERE Visibility = 1";
             $query = sqlsrv_prepare($conn, $queryTemplate, []);
         } else {
-            $queryTemplate = "SELECT Id, SequenceName, Latitude, Longitude, Bearing, Flipped, PitchCorrection FROM Images WHERE Id = ?";
+            $queryTemplate = "SELECT Id, SequenceName, Latitude, Longitude, Bearing, Flipped, PitchCorrection FROM Images WHERE Id = ? AND Visibility = 1";
             $query = sqlsrv_prepare($conn, $queryTemplate, [&$_REQUEST['id']]);
         }
 
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $conn = sqlsrv_connect($server, $connectionInfo);
 
         // Template for query 
-        $queryTemplate = "SELECT Id, SequenceName, OriginalName, OriginalLatitude, OriginalLongitude, Latitude, Longitude, Bearing, Flipped, ShtHash, PitchCorrection FROM Images";
+        $queryTemplate = "SELECT Id, SequenceName, OriginalName, OriginalLatitude, OriginalLongitude, Latitude, Longitude, Bearing, Flipped, ShtHash, PitchCorrection, Visibility FROM Images";
 
         // Prepare query
         $query = sqlsrv_prepare($conn, $queryTemplate, []);
@@ -98,7 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'bearing' => $row['Bearing'],
                 'flipped' => $row['Flipped'] == 0 ? false : true,
                 'shtHash' => $row['ShtHash'],
-                'pitchCorrection' => $row['PitchCorrection']
+                'pitchCorrection' => $row['PitchCorrection'],
+                'visibility' => $row['Visibility'] == 0 ? false : true
             ];
         }
         echo json_encode(['imagesAll' => $resultArr]);

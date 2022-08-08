@@ -141,6 +141,11 @@ if (!isset($_SESSION['loggedin'])) {
                 <h5>Sequence Options</h5>
 
                 <div class="mt-2 form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="visibility_switch">
+                    <label class="form-check-label" for="visibility_switch">Publicly Visible</label>
+                </div>
+
+                <div class="mt-2 form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="flip_switch">
                     <label class="form-check-label" for="flip_switch">Flip sequence 180&#176;</label>
                 </div>

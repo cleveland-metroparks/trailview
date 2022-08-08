@@ -12,7 +12,7 @@ Accepts POST request with
 Updates data for images in the db
 Requires either id for a single image or sequenceName for all images in a sequence
 Valid keys for single image are
-    sequenceName, latitude, longitude, bearing, flipped
+    sequenceName, latitude, longitude, bearing, flipped, pitchCorrection, visibility
 Valid keys for sequence are
     sequenceName, flipped
 */
@@ -107,6 +107,13 @@ switch ($key) {
             $queryTemplate = "UPDATE Images SET PitchCorrection = ? WHERE SequenceName = ?";
         } else {
             $queryTemplate = "UPDATE Images SET PitchCorrection = ? WHERE Id = ?";
+        }
+        break;
+    case 'visibility':
+        if ($sequenceMode) {
+            $queryTemplate = "UPDATE Images SET Visibility = ? WHERE SequenceName = ?";
+        } else {
+            $queryTemplate = "UPDATE Images SET Visibility = ? WHERE Id = ?";
         }
         break;
     default:
