@@ -221,11 +221,15 @@ class TrailViewer {
             horizonPitch *= -1;
             yaw = 0;
         }
+        let bearing = scene['bearing'];
+        if (!scene['flipped']) {
+            bearing = customMod(bearing + 180, 360);
+        }
         let config = {
             'horizonPitch': horizonPitch,
             'hfov': 120,
             'yaw': yaw,
-            'northOffset': scene['bearing'],
+            'northOffset': bearing,
             'type': 'multires',
             'multiRes': {
                 'basePath': baseURL + '/trails/' + scene['sequenceName'] + '/img/' + scene['id'],
@@ -265,10 +269,14 @@ class TrailViewer {
                     let min = instance._navArrowMinAngle;
                     let max = instance._navArrowMaxAngle;
                     let pitch = (-((max - min) - (neighbors[i]['distance'] * (max - min)) / 9.0)) + max;
+                    let yaw = neighbors[i]['neighborBearing'];
+                    if (!flipped) {
+                        yaw = customMod((neighbors[i]['neighborBearing'] + 180), 360);
+                    }
                     instance._panViewer.addHotSpot({
                         'id': neighbors[i]['id'],
                         'pitch': pitch, //-25
-                        'yaw': neighbors[i]['neighborBearing'],
+                        'yaw': yaw,
                         'cssClass': 'custom-hotspot',
                         'type': 'scene',
                         'clickHandlerFunc': instance._onNavArrowClick,
@@ -433,7 +441,7 @@ class TrailViewer {
                 if (!instance._panViewer) {
                     instance._initViewer();
                 } else {
-                    instance.goToImageID(instance.getCurrentImageID());
+                    instance.goToImageID(instance.getCurrentImageID(), true);
                 }
             }
         );
@@ -635,8 +643,14 @@ class TrailViewer {
      * @param {string} imageID
      * @returns {TrailViewer}
      */
-    goToImageID(imageID) {
-        if (!this._sceneList.includes(imageID)) {
+    goToImageID(imageID, reset=false) {
+        if (reset || !this._sceneList.includes(imageID)) {
+            if (reset) {
+                for (let i = 0; i < this._sceneList.length; i++) {
+                    this._panViewer.removeScene(this._sceneList[i]);
+                }
+                this._sceneList = [];
+            }
             let instance = this;
             $.getJSON(baseURL + "/api/preview.php", {
                     'id': imageID

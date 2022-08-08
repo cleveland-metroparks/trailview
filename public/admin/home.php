@@ -140,18 +140,12 @@ if (!isset($_SESSION['loggedin'])) {
 
                 <h5>Sequence Options</h5>
 
-                <label for="friendly_input">Friendly Name (Supports HTML formatting)</label>
-                <div class="mt-2 input-group">
-                    <input class="form-control" id="friendly_input">
-                    <button id="friendly_button" type="button" class="btn btn-primary">Update</button>
-                </div>
-
                 <div class="mt-2 form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="flip_switch">
                     <label class="form-check-label" for="flip_switch">Flip sequence 180&#176;</label>
                 </div>
 
-                <label id="pitch_label" for="pitch_range" class="mt-3 form-label">Pitch Correction: 0.0</label>
+                <label id="pitch_label" for="pitch_range" class="mt-3 form-label">Sequence Pitch Correction: 0.0</label>
                 <input type="range" class="form-range" min="-90" max="90" step="0.5" id="pitch_range">
                 <div class="col">
                     <button id="pitch_preview_btn" type="button" class="btn btn-primary mt-2">View side (best angle)</button>
@@ -160,14 +154,17 @@ if (!isset($_SESSION['loggedin'])) {
                 
 
                 <br>
-                <label class="mt-4" for="text_input">Hover Text (Supports HTML formatting)</label>
-                <textarea class="form-control" id="text_input" rows="4"></textarea>
+                <div style="display: none;">
+                    <label class="mt-4" for="text_input">Hover Text (Supports HTML formatting)</label>
+                    <textarea class="form-control" id="text_input" rows="4"></textarea>
 
-                <button id="add_info" type="button" class="btn btn-primary mt-2">Add</button>
-                <div class="mt-1 form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="click_delete_switch">
-                    <label class="form-check-label" for="click_delete_switch">Click to Delete Info</label>
+                    <button id="add_info" type="button" class="btn btn-primary mt-2">Add</button>
+                    <div class="mt-1 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="click_delete_switch">
+                        <label class="form-check-label" for="click_delete_switch">Click to Delete Info</label>
+                    </div>
                 </div>
+                
                 <br>
 
                 <div class="mt-5">

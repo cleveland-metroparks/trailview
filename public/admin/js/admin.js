@@ -41,7 +41,8 @@ function updateMarkerRotation() {
 // var t = setInterval(updateMarkerRotation, 100);
 
 $('#pitch_range').on('change', () => {
-    $('#pitch_label').text("Pitch Correction: " + $('#pitch_range').val());
+    $('#pitch_label').text("Sequence Pitch Correction: " + $('#pitch_range').val());
+    dataArr = trailViewer._dataArr;
     for (let i = 0; i < dataArr.length; i++) {
         if (dataArr[i]['sequenceName'] == trailViewer.getCurrentSequenceName()) {
             dataArr[i]['pitchCorrection'] = $('#pitch_range').val();
@@ -76,9 +77,6 @@ if (darkmode.getSavedColorScheme() == 'light') {
 
 $('#flip_switch').change(() => {
     if (trailViewer.getFlipped() == $('#flip_switch').is(':checked')) {
-        return;
-    }
-    if (confirm("Are you sure you want to flip the sequence?") != true) {
         return;
     }
     let checked = $('#flip_switch').is(':checked');
@@ -119,19 +117,6 @@ delete_button.addEventListener('click', function() {
         };
         $.post('/admin/api/delete_trail.php', data);
     }
-});
-
-let friendly_button = document.getElementById('friendly_button');
-friendly_button.addEventListener('click', function() {
-    if (confirm("Update name?\nPress OK to confirm.") == false) {
-        return;
-    }
-    let data = {
-        'friendly': String(document.getElementById('friendly_input').value),
-        'name': String(trailViewer.getCurrentSequenceName()),
-    };
-    $.post('/admin/api/update_friendlyname.php', data);
-    alert('Updated name!');
 });
 
 button.onclick = function() {
@@ -364,7 +349,11 @@ function onViewerSceneChange(id) {
             onSequenceChange();
         }
         $('#flip_switch').prop('checked', trailViewer.getFlipped());
-        $('#pitch_range').val(trailViewer._panViewer.getHorizonPitch());
+        if (trailViewer.getFlipped()) {
+            $('#pitch_range').val(trailViewer._panViewer.getHorizonPitch());
+        } else {
+            $('#pitch_range').val(-trailViewer._panViewer.getHorizonPitch());
+        }
         $('#pitch_label').text("Pitch Correction: " + $('#pitch_range').val());
     }
 }
@@ -607,13 +596,6 @@ function updateSequenceSelect(seqJson) {
 $('#sequence_select').change(onSequenceChange);
 
 function onSequenceChange() {
-    $.getJSON("/api/friendly.php", {
-            'Name': $('#sequence_select').val()
-        },
-        function (data, textStatus, jqXHR) {
-            $('#friendly_input').val(data['Friendly']['FriendlyName']);
-        }
-)   ;
     let sequenceSelect = document.getElementById('sequence_select');
     let sequence = sequenceSelect.options[sequenceSelect.selectedIndex].text;
     if (dataArr !== null && trailViewer.getCurrentSequenceName() != sequence) {

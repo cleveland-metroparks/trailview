@@ -28,7 +28,7 @@ $conn = sqlsrv_connect($server, $connectionInfo);
 
 // Template for query 
 
-$queryTemplate = "SELECT Id, ShtHash, SequenceName, Bearing, Flipped FROM Images WHERE Id = ?";
+$queryTemplate = "SELECT Id, ShtHash FROM Images WHERE Id = ?";
 
 $params = [&$id];
 
@@ -45,12 +45,7 @@ if ($row['ShtHash'] == null) {
     exit;
 } else {
     echo json_encode([
-        'preview' => $row['ShtHash'],
-        'other' => [
-            'sequenceName' => $row['SequenceName'],
-            'bearing' => $row['Bearing'],
-            'flipped' => $row['Flipped']
-        ]
+        'preview' => $row['ShtHash']
     ]);
 }
 

@@ -26,7 +26,7 @@ $conn = sqlsrv_connect($server, $connectionInfo);
 $query;
 if ($reservation != null) {
 	// Template for query 
-	$queryTemplate = "SELECT Name, FriendlyName, Reservation, ImageURL, InitImageID, SequenceName FROM Trails WHERE Reservation = ?";
+	$queryTemplate = "SELECT Name, FriendlyName, Reservation FROM Trails WHERE Reservation = ?";
 
 	// Parameters to fill in template for query
 	$params = array(&$reservation);
@@ -35,7 +35,7 @@ if ($reservation != null) {
 	$query = sqlsrv_prepare($conn, $queryTemplate, $params);
 } else {
 	// Template for query 
-	$queryTemplate = "SELECT Name, FriendlyName, Reservation, ImageURL, InitImageID, SequenceName FROM Trails";
+	$queryTemplate = "SELECT Name, FriendlyName, Reservation FROM Trails";
 
 	// Prepare query
 	$query = sqlsrv_prepare($conn, $queryTemplate, []);
