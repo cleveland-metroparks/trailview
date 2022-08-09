@@ -146,11 +146,13 @@ function delay(time) {
 
 let delete_button = document.getElementById('delete_button');
 delete_button.addEventListener('click', function() {
-    if (confirm("Are you sure??\nThis will permanently remove the trail!\nNOTE: Trails that are processing cannot be removed!\nPress OK to delete!") == true) {
+    let name = $('#sequence_select option:selected').text()
+    if (confirm("Are you sure??\nThis will delete trail: " + name + "\nDeleted trails are moved to a different folder so can possibly be recovered.\nThis can take a while.\nPress OK to delete!") == true) {
         let data = {
-            'name': String(trailViewer.getCurrentSequenceName()),
+            'name': name,
         };
-        $.post('/admin/api/delete_trail.php', data);
+        $.post('/api/mark-delete-trail.php', JSON.stringify(data));
+        alert("Trail: " + name + "\nhas been marked for deletion.\nThis could take a while.");
     }
 });
 

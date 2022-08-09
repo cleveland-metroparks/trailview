@@ -4,6 +4,8 @@ import time
 import os
 import shutil
 import sys
+import json
+import uuid
 
 '''
 Author: Matthew Oros
@@ -12,6 +14,8 @@ Email: mjo1@clevelandmetroparks.com
 This script should run as a service which checks trail statuses from the
 database and then calls the appropriate scripts to process them
 '''
+
+
 
 def count_jpgs(dir):
     count = 0
@@ -34,6 +38,10 @@ def count_jsons(dir):
 
 curr_path = os.path.dirname(os.path.realpath(__file__))
 
+j = open(os.path.join(curr_path, '../', 'config', 'local.json'))
+api_key = json.load(j)['api_password']
+j.close()
+
 def process(data):
      for t in data['Status']:
         if (t['Status'] == 'Sequence'):
@@ -50,7 +58,7 @@ def process(data):
                 with open(os.path.join(curr_path, 'logs', 'watchdog.log'), "a") as outfile:
                     subprocess.run('python ' + os.path.join(curr_path, 'process_imgs_data_db.py E:\\trails'), stdout=outfile)
                 sys.stdout.flush()
-                requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': '2Vnhn7XjekbR55uSGhtUr7mJSqRrGcRA', 'name': t['Name'], 'status': 'Done'})
+                requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': api_key, 'name': t['Name'], 'status': 'Done'})
             except:
                 print("Error occured processing sequence!")
             return
@@ -63,7 +71,7 @@ def process(data):
                     print(original_count)
                     print(processed_count)
                     if (original_count == processed_count):
-                        requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': '2Vnhn7XjekbR55uSGhtUr7mJSqRrGcRA', 'name': t['Name'], 'status': 'Sequence'})
+                        requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': api_key, 'name': t['Name'], 'status': 'Sequence'})
                         return
                 sys.stdout.flush()
                 with open(os.path.join(curr_path, 'logs', 'watchdog.log'), "a") as outfile:
@@ -81,7 +89,7 @@ def process(data):
                     original_count = count_jpgs(os.path.join('E:\\trails', t['Name'], 'img_original'))
                     blur_count = count_jpgs(os.path.join('E:\\trails', t['Name'], 'img_blur'))
                     if (blur_count == original_count):
-                        requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': '2Vnhn7XjekbR55uSGhtUr7mJSqRrGcRA', 'name': t['Name'], 'status': 'Tile'})
+                        requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': api_key, 'name': t['Name'], 'status': 'Tile'})
                         return
                     # shutil.rmtree(os.path.join('E:\\trails', t['Name'], 'img_blur'))
                     # os.makedirs(os.path.join('E:\\trails', t['Name'], 'img_blur'))
@@ -94,6 +102,27 @@ def process(data):
                 print("Error occured blurring images!")
             return
 
+def check_delete(data):
+    for trail in data:
+        if trail['toDelete']:
+            try:
+                sys.stdout.flush()
+                print("Deleting trail: " + trail['name'])
+                source_dir = os.path.join('E:\\trails', trail['name'])
+                target_dir = os.path.join('E:\\deleted_trails', trail['name'] + '_' + str(uuid.uuid4().hex))
+                shutil.copytree(source_dir, target_dir)
+                shutil.rmtree(source_dir)
+
+                # Update db
+                requests.post(url = 'https://trailview.cmparks.net/api/delete-trail.php', json = {'pass': api_key, 'name': trail['name']})
+
+                print("Done deleting trail: " + trail['name'])
+                sys.stdout.flush()
+            except:
+                print ("Failed to delete trail!")
+            return
+           
+
 while (True):
     print("Waiting...")
     time.sleep(30)
@@ -102,4 +131,10 @@ while (True):
     data = r.json()
 
     process(data)
+
+    r = requests.get(url = 'https://trailview.cmparks.net/api/mark-delete-trail.php')
+
+    data = r.json()
+
+    check_delete(data)
     

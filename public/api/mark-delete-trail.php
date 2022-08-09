@@ -56,13 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode('success');
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
+    $queryTemplate;
     if ($_REQUEST['name'] == null) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Required parameters not specified']);
-        exit;
+        $queryTemplate = "SELECT Name, ToDelete From Trails";
+    } else {
+        $queryTemplate = "SELECT Name, ToDelete From Trails WHERE Name = ?";
     }
-
-    $queryTemplate = "SELECT ToDelete From Trails WHERE Name = ?";
 
     // Create SQL connection
     $conn = sqlsrv_connect($server, $connectionInfo);
@@ -74,9 +73,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     sqlsrv_execute($query);
 
-    $row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC);
-
-    echo json_encode(["markDelete" => $row['ToDelete']]);
+    if ($_REQUEST['name'] == null) {
+        // Convert query to PHP array
+        $resultArr = [];
+        while ($row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC)) {
+            $resultArr[] = [
+                'name' => $row['Name'],
+                'toDelete' => $row['ToDelete'] == 0 ? false : true,
+            ];
+        }
+        echo json_encode($resultArr);
+    } else {
+        $row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC);
+        echo json_encode(["toDelete" => $row['ToDelete'] == 0 ? false : true]);
+    }    
 }
 
 ?>

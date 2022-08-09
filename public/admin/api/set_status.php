@@ -23,7 +23,7 @@ $Name = $_POST['name'];
 $Status = $_POST['status'];
 
 // Accept password or login as authentication
-if ($pass != '2Vnhn7XjekbR55uSGhtUr7mJSqRrGcRA' && !isset($_SESSION['loggedin'])) {
+if ($pass != $api_pass && !isset($_SESSION['loggedin'])) {
     exit;
 }
 
