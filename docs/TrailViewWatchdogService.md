@@ -9,5 +9,3 @@ NOTE: It is best to use a Markdown editor/viewer for this file, I like MarkText
 * The service simply runs the script `tools/watchdog.py`. Any modification to this file requires restarting the service in Task Manager.
 
 * This service was created using `NSSM - the Non-Sucking Service Manager` and can be found on the desktop named `nssm`
-
-

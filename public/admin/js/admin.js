@@ -579,17 +579,6 @@ function onGeoChange(geo) {
     }
 }
 
-
-function InitSelectReservation(resJson) {
-    let reservationSelect = document.getElementById("res_select");
-    for (let i = 0; i < resJson['Reservations'].length; i++) {
-        let option = document.createElement('option');
-        option.innerHTML = resJson['Reservations'][i]['Name'];
-        reservationSelect.appendChild(option);
-    }
-    reservationSelect.addEventListener('change', getSequences);
-}
-
 function getSequences() {
     let xmlhttp = new XMLHttpRequest();
     let url = '/api/trails.php';

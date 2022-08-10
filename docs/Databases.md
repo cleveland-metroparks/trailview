@@ -1,7 +1,5 @@
 NOTE: It is best to use a Markdown editor/viewer for this file, I like MarkText
 
-
-
 * This is an explanation as to the layout of the tables in the TrailView database.
 
 ---
@@ -18,18 +16,7 @@ Contains the accounts used to log into the admin page at `/admin` on the website
 
 ---
 
-### Reservations
-
-Contains all reservations that trails use
-
-| Column       | Description                                                                                         |
-| ------------ | --------------------------------------------------------------------------------------------------- |
-| Name         | Unique name for the reservation in `CamelCase`                                                      |
-| FriendlyName | The display name of the reservation on the website, usually supports HTML formatting such at `<br>` |
-
----
-
-### TrailInfo
+### TrailInfo - NOT USED CURRENTLY
 
 Contains the data for any info bubbles added on the trail images from the admin page.
 
@@ -51,14 +38,8 @@ Contains the data for any info bubbles added on the trail images from the admin 
 
 Contains all the info for trails
 
-| Column       | Description                                                                                                                                                                           |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name         | Unique name for trail, uses `CamelCase`                                                                                                                                               |
-| FriendlyName | Display name for the trail. Supports HTML formatting                                                                                                                                  |
-| Reservation  | The reservation the trail is a part of. Should use a reservation specified in the `Name` column of the `Reservations` table                                                           |
-| ImageURL     | Unused                                                                                                                                                                                |
-| InitImageID  | Unused                                                                                                                                                                                |
-| SequenceName | The name of the folder that the trail is located in at `E:\trails` on the web server. By default it is the same as the `Name` column                                                  |
-| Visibility   | Unused                                                                                                                                                                                |
-| Status       | The processing status of the trail. In order they are: `Upload`, `Blur`, `Sequence`, `Done` and are usually automatically updated by the `trailview_watchdog` service and admin site. |
-| Flipped      | Whether or not the trail is flipped 180°                                                                                                                                              |
+| Column   | Description                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name     | Unique name for trail, uses `CamelCase`. Same name as folder found in `E:\trails` on the web-server                                                                                   |
+| Status   | The processing status of the trail. In order they are: `Upload`, `Blur`, `Sequence`, `Done` and are usually automatically updated by the `trailview_watchdog` service and admin site. |
+| ToDelete | This marks whether the trail should be deleted. If `0` then it is normal. If `1` then the `trailview_watchdog` service will delete the trail when all other scripts finish.           |
