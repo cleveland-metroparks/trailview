@@ -52,6 +52,9 @@ document.getElementById('submit_button').onclick = function() {
     if (failed == true || uploading == true) {
         return;
     }
+    window.onbeforeunload = function() {
+        return true;
+    };
     if (uploader.files.length == 0) {
         failed = true;
         document.getElementById('console').innerHTML += "Error: No input files!\n";

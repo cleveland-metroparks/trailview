@@ -1,0 +1,1 @@
+This folder will contain zip files of downloaded trails

@@ -71,6 +71,41 @@ $('#pitch_set_btn').on('click', () => {
     );
 });
 
+var isDownloading = false;
+
+$('#download_btn').on('click', () => {
+    if (isDownloading == false) {
+        let downloadTrail = trailViewer.getCurrentSequenceName();
+        if (!confirm("Are you sure you want to start downloading: " + downloadTrail + "?")) {
+            return;
+        }
+        isDownloading = true;
+        window.onbeforeunload = function() {
+            return true;
+        };
+        $('#download_complete_alert').hide();
+        $('#zipping_alert').show();
+        $('#zipping_text').html("Zipping trail: " + downloadTrail);
+        $.getJSON("/api/download-images.php", {
+                'name': downloadTrail
+            },
+            function (data, textStatus, jqXHR) {
+                if (data['success'] != null) {
+                    $('#zipping_alert').hide();
+                    $('#download_complete_alert').show().html("Success!: <a href='" + data['success'] + "'>Download " + downloadTrail + "</a>");
+                } else {
+                    alert('Download failed!');
+                }
+                isDownloading = false;
+                window.onbeforeunload = null;
+            }
+        );
+    } else {
+        alert("Another download is in progress, only one request at a time.");
+    }
+    
+});
+
 $('#pitch_preview_btn').on('click', () => {
     trailViewer._panViewer.lookAt(0, 90, 120, false);
 });

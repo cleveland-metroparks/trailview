@@ -1,6 +1,13 @@
 # contains mapbox key
 public/config/mapbox-key.js
 
+# downloads folder
+public/downloads/*.zip
+!public/downloads/README.md
+
+# run script
+tools/run_clean_downloads.bat
+
 # contains sensitive local information
 config/local.json
 

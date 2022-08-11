@@ -172,8 +172,19 @@ if (!isset($_SESSION['loggedin'])) {
                 
                 <br>
 
-                <div class="mt-5">
+                <div class="col mt-2">
+                    <div id="zipping_alert" class="alert alert-warning" style="display: none;">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <span id="zipping_text"></span>
+                    </div>
+                    <div id="download_complete_alert" class="alert alert-success" style="display: none">Download complete!</div>
+                </div>
+
+                <div class="mt-2">
+                    <button id="download_btn" type="button" class="btn btn-success">Download Sequence Images</button>
                     <button id="delete_button" type="button" class="btn btn-danger">Delete Trail</button>
+                </div>
+                <div class="mt-2">
                     <a href="/admin/import_trail.php"><button type="button" class="btn btn-info">Import New Trail</button></a>
                     <a href="/admin/logout.php"><button type="button" class="btn btn-secondary">Logout</button></a>
                 </div>
