@@ -84,7 +84,7 @@ if (!isset($_SESSION['loggedin'])) {
 
 <body style="margin: 0; padding: 0; background-color: rgb(255, 255, 255);">
     <div class="row mt-5 mx-3">
-        <div class="col-xs-12 col-md-7 my-3">
+        <div class="col-xs-12 col-md-7 my-3" style="height: 1200px;">
             <div id="viewer-container">
                 <div id="panorama" style="margin: 0; padding: 0; width: 100%; height: 600px; background-color: D6D6D6;">
                 </div>
