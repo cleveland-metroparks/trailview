@@ -18,8 +18,8 @@ function setDark(dark) {
 }
 
 function deg2Rad(degrees) {
-  var pi = Math.PI;
-  return degrees * (pi/180);
+    var pi = Math.PI;
+    return degrees * (pi / 180);
 }
 
 function updateArrowsRotation(angle) {
@@ -33,12 +33,8 @@ function updateArrowsRotation(angle) {
 function updateMarkerRotation() {
     if (trailViewer && trailViewer._panViewer) {
         let angle = trailViewer.getBearing();
-        // updateArrowsRotation(angle);
-       // current_marker.setRotation((angle + 225) % 360);
     }
 }
-
-// var t = setInterval(updateMarkerRotation, 100);
 
 $('#pitch_range').on('change', () => {
     $('#pitch_label').text("Sequence Pitch Correction: " + $('#pitch_range').val());
@@ -56,18 +52,18 @@ $('#pitch_set_btn').on('click', () => {
         'key': 'pitchCorrection',
         'value': $('#pitch_range').val(),
     }),
-    function (data, textStatus, jqXHR) {
-        console.log("Update Response: " + data);
-        trailViewer._fetchData();
-        $.getJSON("/api/images.php", {
+        function (data, textStatus, jqXHR) {
+            console.log("Update Response: " + data);
+            trailViewer._fetchData();
+            $.getJSON("/api/images.php", {
                 'type': 'all'
             },
-            function (data, textStatus, jqXHR) {
-                dataArr = data['imagesAll']
-            }
-        );
-    },
-    "json"
+                function (data, textStatus, jqXHR) {
+                    dataArr = data['imagesAll']
+                }
+            );
+        },
+        "json"
     );
 });
 
@@ -80,15 +76,15 @@ $('#download_btn').on('click', () => {
             return;
         }
         isDownloading = true;
-        window.onbeforeunload = function() {
+        window.onbeforeunload = function () {
             return true;
         };
         $('#download_complete_alert').hide();
         $('#zipping_alert').show();
         $('#zipping_text').html("Zipping trail: " + downloadTrail);
         $.getJSON("/api/download-images.php", {
-                'name': downloadTrail
-            },
+            'name': downloadTrail
+        },
             function (data, textStatus, jqXHR) {
                 if (data['success'] != null) {
                     $('#zipping_alert').hide();
@@ -103,7 +99,7 @@ $('#download_btn').on('click', () => {
     } else {
         alert("Another download is in progress, only one request at a time.");
     }
-    
+
 });
 
 $('#pitch_preview_btn').on('click', () => {
@@ -122,16 +118,16 @@ $('#flip_switch').change(() => {
     }
     let checked = $('#flip_switch').is(':checked');
     $.post("/api/update-images.php", JSON.stringify({
-            'sequenceName': trailViewer.getCurrentSequenceName(),
-            'key': 'flipped',
-            'value': checked,
-        }),
+        'sequenceName': trailViewer.getCurrentSequenceName(),
+        'key': 'flipped',
+        'value': checked,
+    }),
         function (data, textStatus, jqXHR) {
             console.log("Update Response: " + data);
             trailViewer._fetchData();
             $.getJSON("/api/images.php", {
-                    'type': 'all'
-                },
+                'type': 'all'
+            },
                 function (data, textStatus, jqXHR) {
                     dataArr = data['imagesAll']
                 }
@@ -144,18 +140,42 @@ $('#flip_switch').change(() => {
 $('#visibility_switch').change(() => {
     let checked = $('#visibility_switch').is(':checked');
     $.post("/api/update-images.php", JSON.stringify({
-            'sequenceName': trailViewer.getCurrentSequenceName(),
-            'key': 'visibility',
-            'value': checked,
-        }),
+        'sequenceName': trailViewer.getCurrentSequenceName(),
+        'key': 'visibility',
+        'value': checked,
+    }),
         function (data, textStatus, jqXHR) {
             console.log("Update Response: " + data);
             trailViewer._fetchData();
             $.getJSON("/api/images.php", {
-                    'type': 'all'
-                },
+                'type': 'all'
+            },
                 function (data, textStatus, jqXHR) {
                     dataArr = data['imagesAll']
+                    createMapLayer(dataArr);
+                }
+            );
+        },
+        "json"
+    );
+});
+
+$('#img_visibility_switch').change(() => {
+    let checked = $('#img_visibility_switch').is(':checked');
+    $.post("/api/update-images.php", JSON.stringify({
+        'id': trailViewer.getCurrentImageID(),
+        'key': 'visibility',
+        'value': checked,
+    }),
+        function (data, textStatus, jqXHR) {
+            console.log("Update Response: " + data);
+            trailViewer._fetchData();
+            $.getJSON("/api/images.php", {
+                'type': 'all'
+            },
+                function (data, textStatus, jqXHR) {
+                    dataArr = data['imagesAll'];
+                    createMapLayer(dataArr);
                 }
             );
         },
@@ -164,14 +184,14 @@ $('#visibility_switch').change(() => {
 });
 
 let dark_switch = document.getElementById("dark_switch");
-dark_switch.addEventListener('change', function() {
+dark_switch.addEventListener('change', function () {
     setDark(dark_switch.checked);
 });
 
 var click_delete = false;
 
 let click_delete_switch = document.getElementById("click_delete_switch");
-click_delete_switch.addEventListener('change', function() {
+click_delete_switch.addEventListener('change', function () {
     click_delete = dark_switch.checked;
 });
 
@@ -180,7 +200,7 @@ function delay(time) {
 }
 
 let delete_button = document.getElementById('delete_button');
-delete_button.addEventListener('click', function() {
+delete_button.addEventListener('click', function () {
     let name = $('#sequence_select option:selected').text()
     if (confirm("Are you sure??\nThis will delete trail: " + name + "\nDeleted trails are moved to a different folder so can possibly be recovered.\nThis can take a while.\nPress OK to delete!") == true) {
         let data = {
@@ -191,7 +211,7 @@ delete_button.addEventListener('click', function() {
     }
 });
 
-button.onclick = function() {
+button.onclick = function () {
     let data = {
         'ImageID': String(trailViewer.getCurrentImageID()),
         'Pitch': trailViewer._panViewer.getPitch(),
@@ -230,6 +250,11 @@ function onInitDone(viewer) {
 }
 
 function createMapLayer(data) {
+    if (map.getSource('dots')) {
+        map.removeLayer('dots');
+        map.removeSource('dots');
+    }
+
     let layerData = {
         'type': 'geojson',
         'data': {
@@ -243,7 +268,8 @@ function createMapLayer(data) {
             'type': 'Feature',
             'properties': {
                 'sequenceName': data[i]['sequence'],
-                'imageID': data[i]['id']
+                'imageID': data[i]['id'],
+                'visible': data[i]['visibility']
             },
             'geometry': {
                 'type': 'Point',
@@ -252,16 +278,21 @@ function createMapLayer(data) {
         }
         features.push(f);
     }
-    layerData['data']['features'] = features;
+    layerData['data']['features'] = features
     map.addSource('dots', layerData);
-
+    
     map.addLayer({
         'id': 'dots',
         'type': 'circle',
         'source': 'dots',
         'paint': {
             'circle-radius': 10,
-            'circle-color': '#00a108',
+            'circle-color': [
+                'case', 
+                ['==', ['get', 'visible'], true],
+                '#00a108',
+                '#db8904'
+            ],
         }
     });
     map.setPaintProperty('dots', 'circle-radius', [
@@ -297,7 +328,7 @@ function createMapLayer(data) {
 
         20,
         1
-    ]);   
+    ]);
 }
 
 
@@ -305,7 +336,7 @@ function createMapLayer(data) {
  * Updates navigation arrows transform
  * Called by setInterval()
  */
- function updateNavArrows() {
+function updateNavArrows() {
     if (trailViewer) {
         // Arrow rotation
         $('.new_nav').each(function (index, element) {
@@ -333,8 +364,8 @@ function navArrowClicked(id) {
 
 function fetchData() {
     $.getJSON("/api/images.php", {
-            'type': 'all'
-        },
+        'type': 'all'
+    },
         function (data, textStatus, jqXHR) {
             init(data['imagesAll']);
         }
@@ -345,7 +376,7 @@ function fetchData() {
  * 
  * @param {Object} hotspots - JSON object from pannellum config
  */
- function populateArrows(hotspots) {
+function populateArrows(hotspots) {
     $('.new_nav').remove();
     if (!hotspots) {
         return;
@@ -357,7 +388,7 @@ function fetchData() {
         $(link).data('yaw', hotspots[i].yaw);
         $(link).data('id', hotspots[i]['clickHandlerArgs']['id']);
         $(link).hide(0);
-        $(link).click(function (e) { 
+        $(link).click(function (e) {
             e.preventDefault();
             navArrowClicked($(this).data('id'));
             $('.new_nav').fadeOut(10);
@@ -377,13 +408,14 @@ function startViewer(data) {
     }
     started = true;
 
-    trailViewer = new TrailViewer({'onSceneChangeFunc': onViewerSceneChange,
-                                   'onGeoChangeFunc': onGeoChange,
-                                   'onArrowsAddedFunc': populateArrows,
-                                   'onHotSpotClickFunc': onHotSpotClicked,
-                                   'onInitDoneFunc': onInitDone,
-                                   'imageFetchType': 'all',
-                                   }, null, data);
+    trailViewer = new TrailViewer({
+        'onSceneChangeFunc': onViewerSceneChange,
+        'onGeoChangeFunc': onGeoChange,
+        'onArrowsAddedFunc': populateArrows,
+        'onHotSpotClickFunc': onHotSpotClicked,
+        'onInitDoneFunc': onInitDone,
+        'imageFetchType': 'all',
+    }, null, data);
 }
 
 var dataArr = null;
@@ -435,6 +467,7 @@ function onViewerSceneChange(id) {
             }
         }
         $('#visibility_switch').prop('checked', isVisible);
+        $('#img_visibility_switch').prop('checked', isVisible);
     }
 }
 
@@ -447,9 +480,10 @@ function start(seq, imageID = null) {
 
     //var view = startViewer(seq);
     trailViewer = new TrailViewer({
-                                   'onGeoChangeFunc': onGeoChange,
-                                   'onHotSpotClickFunc': onHotSpotClicked}, 
-    imageID, null);
+        'onGeoChangeFunc': onGeoChange,
+        'onHotSpotClickFunc': onHotSpotClicked
+    },
+        imageID, null);
 
     document.getElementById('panorama').scrollIntoView(true);
 }
@@ -491,7 +525,7 @@ function startMap(data) {
     });
 
     // Once loaded, create dots layer
-    map.on('load', function() {
+    map.on('load', function () {
         createMapLayer(data);
     });
 
@@ -600,7 +634,7 @@ function createGeoSequence(geoSeqJson) {
             'icon-allow-overlap': false,
             'icon-padding': 2,
         }
-        });
+    });
 
 }
 
@@ -617,7 +651,7 @@ function onGeoChange(geo) {
 function getSequences() {
     let xmlhttp = new XMLHttpRequest();
     let url = '/api/trails.php';
-    xmlhttp.onreadystatechange = function() {
+    xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             updateSequenceSelect(JSON.parse(this.responseText));
         }
@@ -665,11 +699,43 @@ function onSequenceChange() {
             }
         }
     }
-        
+
 
     // fetchStatus();
     //start(sequence);
 }
+
+function updateStatusTable(data) {
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].Status != 'Done' || data[i].ToDelete != 0) {
+            let row = document.createElement('tr');
+
+            let name = document.createElement('td');
+            name.innerHTML = data[i].Name;
+            row.appendChild(name);
+
+            let status = document.createElement('td');
+            status.innerHTML = data[i].Status;
+            row.appendChild(status);
+
+            let toDelete = document.createElement('td');
+            toDelete.innerHTML = data[i].ToDelete == 1 ? true : false;
+            row.appendChild(toDelete);
+
+            $('#status_table_body').append(row);
+        }
+    }
+}
+
+function updateStatuses() {
+    $.getJSON("/api/status.php", {},
+        function (data, textStatus, jqXHR) {
+            updateStatusTable(data['Status'])
+        }
+    );
+}
+
+updateStatuses();
 
 getSequences();
 

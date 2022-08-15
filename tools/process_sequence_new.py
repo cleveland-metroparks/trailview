@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 seq_dir = str(args.dir)
 img_dir = os.path.join(seq_dir, 'img')
-flipped = args.flip
+flipped = True;#args.flip
 
 # Create json structure
 sequence_json = {
