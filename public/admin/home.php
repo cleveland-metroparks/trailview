@@ -84,7 +84,7 @@ if (!isset($_SESSION['loggedin'])) {
 
 <body style="margin: 0; padding: 0; background-color: rgb(255, 255, 255);">
     <div class="row mt-5 mx-3">
-        <div class="col-xs-12 col-md-8 my-3">
+        <div class="col-xs-12 col-md-7 my-3">
             <div id="viewer-container">
                 <div id="panorama" style="margin: 0; padding: 0; width: 100%; height: 600px; background-color: D6D6D6;">
                 </div>
@@ -95,7 +95,7 @@ if (!isset($_SESSION['loggedin'])) {
             </div>
 
         </div>
-        <div class="col-xs-12 col-md-4 my-3">
+        <div class="col-xs-12 col-md-5 my-3">
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="dark_switch">
                 <label class="form-check-label" for="dark_switch">Dark Mode</label>

@@ -141,6 +141,25 @@ $('#flip_switch').change(() => {
 $('#visibility_switch').change(() => {
     let checked = $('#visibility_switch').is(':checked');
     let seqName = trailViewer.getCurrentSequenceName();
+    let same = true;
+    let sameVal = null;
+    for (let i = 0; i < dataArr.length; i++) {
+        if (dataArr[i].sequenceName == seqName) {
+            if (sameVal == null) {
+                sameVal = dataArr[i].visibility;
+            } else {
+                if (dataArr[i].visibility != sameVal) {
+                    same = false;
+                    break;
+                }
+            }
+        }
+    }
+    if (!same) {
+        if (!confirm("There are images in the sequence with specific visibility options set.\nAre you sure you want to override all the visibility settings for the images in this sequence?")) {
+            return;
+        }
+    }
     $.post("/api/update-images.php", JSON.stringify({
         'sequenceName': seqName,
         'key': 'visibility',
