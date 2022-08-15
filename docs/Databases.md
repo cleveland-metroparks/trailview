@@ -1,5 +1,3 @@
-NOTE: It is best to use a Markdown editor/viewer for this file, I like MarkText
-
 * This is an explanation as to the layout of the tables in the TrailView database.
 
 ---

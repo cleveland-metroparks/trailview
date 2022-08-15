@@ -1,5 +1,3 @@
-NOTE: It is best to use a Markdown editor/viewer for this file, I like MarkText
-
 NOTE: Some paths might have to be changed according to where you're building from
 
 1. Install MSYS2 https://www.msys2.org/
