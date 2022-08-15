@@ -1,9 +1,15 @@
 var started = false;    // If started
 var trailViewer;        // TrailViewer object
-let text_input = document.getElementById("text_input");
-let button = document.getElementById("add_info");
-var mouseOnDot = false;
+var mouseOnDot = false; // If mouse is hovering over map dots (used for cursor changing)
+var isDownloading = false;  // If a sequence download is occuring
+var dataArr = null; // Base data for TrailViewer
+var currentMarker; // Current TrailView marker on mapbox map
+var map;    // Mapbox map object
 
+/**
+ * Sets dark mode for the admin page
+ * @param {Boolean} dark - true if dark is enabled
+ */
 function setDark(dark) {
     let dark_switch = document.getElementById('dark_switch');
     if (dark) {
@@ -17,244 +23,20 @@ function setDark(dark) {
     }
 }
 
+/**
+ * Converts degress to radians
+ * @param {Number} degrees 
+ * @returns {Number} Returns radians
+ */
 function deg2Rad(degrees) {
     var pi = Math.PI;
     return degrees * (pi / 180);
 }
 
-function updateArrowsRotation(angle) {
-    let arrow = document.getElementById("my_arrow");
-    let x = Math.sin(deg2Rad(angle)) * 100;
-    let y = Math.cos(deg2Rad(angle)) * 100;
-    let trans = "translate(-50%, -50%) translate(" + x + "px, " + y + "px) " + "rotateZ(" + ((360 - (angle + 180)) % 360) + "deg)";
-    arrow.style.transform = trans;
-}
-
-function updateMarkerRotation() {
-    if (trailViewer && trailViewer._panViewer) {
-        let angle = trailViewer.getBearing();
-    }
-}
-
-$('#pitch_range').on('change', () => {
-    $('#pitch_label').text("Sequence Pitch Correction: " + $('#pitch_range').val());
-    for (let i = 0; i < dataArr.length; i++) {
-        if (dataArr[i]['sequenceName'] == trailViewer.getCurrentSequenceName()) {
-            dataArr[i]['pitchCorrection'] = $('#pitch_range').val();
-        }
-    }
-    trailViewer.setData(dataArr);
-});
-
-$('#pitch_set_btn').on('click', () => {
-    let seqName = trailViewer.getCurrentSequenceName();
-    let pitchVal = $('#pitch_range').val();
-    $.post("/api/update-images.php", JSON.stringify({
-        'sequenceName': seqName,
-        'key': 'pitchCorrection',
-        'value': pitchVal,
-    }),
-        function (data, textStatus, jqXHR) {
-            console.log("Update Response: " + data);
-            for (let i = 0; i < dataArr.length; i++) {
-                if (dataArr[i].sequenceName == seqName) {
-                    dataArr[i].pitchCorrection = pitchVal;
-                }
-            }
-            trailViewer._data = dataArr;
-            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
-        },
-        "json"
-    );
-});
-
-var isDownloading = false;
-
-$('#download_btn').on('click', () => {
-    if (isDownloading == false) {
-        let downloadTrail = trailViewer.getCurrentSequenceName();
-        if (!confirm("Are you sure you want to start downloading: " + downloadTrail + "?")) {
-            return;
-        }
-        isDownloading = true;
-        window.onbeforeunload = function () {
-            return true;
-        };
-        $('#download_complete_alert').hide();
-        $('#zipping_alert').show();
-        $('#zipping_text').html("Zipping trail: " + downloadTrail);
-        $.getJSON("/api/download-images.php", {
-            'name': downloadTrail
-        },
-            function (data, textStatus, jqXHR) {
-                if (data['success'] != null) {
-                    $('#zipping_alert').hide();
-                    $('#download_complete_alert').show().html("Success!: <a href='" + data['success'] + "'>Download " + downloadTrail + "</a>");
-                } else {
-                    alert('Download failed!');
-                }
-                isDownloading = false;
-                window.onbeforeunload = null;
-            }
-        );
-    } else {
-        alert("Another download is in progress, only one request at a time.");
-    }
-
-});
-
-$('#pitch_preview_btn').on('click', () => {
-    trailViewer._panViewer.lookAt(0, 90, 120, false);
-});
-
-if (darkmode.getSavedColorScheme() == 'light') {
-    setDark(false);
-} else {
-    setDark(true);
-}
-
-$('#flip_switch').change(() => {
-    if (trailViewer.getFlipped() == $('#flip_switch').is(':checked')) {
-        return;
-    }
-    let checked = $('#flip_switch').is(':checked');
-    let seqName = trailViewer.getCurrentSequenceName()
-    $.post("/api/update-images.php", JSON.stringify({
-        'sequenceName': seqName,
-        'key': 'flipped',
-        'value': checked,
-    }),
-        function (data, textStatus, jqXHR) {
-            console.log("Update Response: " + data);
-            for (let i = 0; i < dataArr.length; i++) {
-                if (dataArr[i].sequenceName == seqName) {
-                    dataArr[i].flipped = checked;
-                }
-            }
-            trailViewer._data = dataArr;
-            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
-        },
-        "json"
-    );
-})
-
-$('#visibility_switch').change(() => {
-    let checked = $('#visibility_switch').is(':checked');
-    let seqName = trailViewer.getCurrentSequenceName();
-    let same = true;
-    let sameVal = null;
-    for (let i = 0; i < dataArr.length; i++) {
-        if (dataArr[i].sequenceName == seqName) {
-            if (sameVal == null) {
-                sameVal = dataArr[i].visibility;
-            } else {
-                if (dataArr[i].visibility != sameVal) {
-                    same = false;
-                    break;
-                }
-            }
-        }
-    }
-    if (!same) {
-        if (!confirm("There are images in the sequence with specific visibility options set.\nAre you sure you want to override all the visibility settings for the images in this sequence?")) {
-            return;
-        }
-    }
-    $.post("/api/update-images.php", JSON.stringify({
-        'sequenceName': seqName,
-        'key': 'visibility',
-        'value': checked,
-    }),
-        function (data, textStatus, jqXHR) {
-            console.log("Update Response: " + data);
-            for (let i = 0; i < dataArr.length; i++) {
-                if (dataArr[i].sequenceName == seqName) {
-                    dataArr[i].visibility = checked;
-                }
-            }
-            trailViewer._data = dataArr;
-            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
-            createMapLayer(dataArr);
-        },
-        "json"
-    );
-});
-
-$('#img_visibility_switch').change(() => {
-    let checked = $('#img_visibility_switch').is(':checked');
-    let imgId = trailViewer.getCurrentImageID()
-    $.post("/api/update-images.php", JSON.stringify({
-        'id': imgId,
-        'key': 'visibility',
-        'value': checked,
-    }),
-        function (data, textStatus, jqXHR) {
-            console.log("Update Response: " + data);
-            for (let i = 0; i < dataArr.length; i++) {
-                if (dataArr[i].id == imgId) {
-                    dataArr[i].visibility = checked;
-                    trailViewer._data = dataArr;
-                    trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
-                    createMapLayer(dataArr);
-                    break;
-                }
-            }
-        },
-        "json"
-    );
-});
-
-let dark_switch = document.getElementById("dark_switch");
-dark_switch.addEventListener('change', function () {
-    setDark(dark_switch.checked);
-});
-
-var click_delete = false;
-
-let click_delete_switch = document.getElementById("click_delete_switch");
-click_delete_switch.addEventListener('change', function () {
-    click_delete = dark_switch.checked;
-});
-
-function delay(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
-}
-
-let delete_button = document.getElementById('delete_button');
-delete_button.addEventListener('click', function () {
-    let name = $('#sequence_select option:selected').text()
-    if (confirm("Are you sure??\nThis will delete trail: " + name + "\nDeleted trails are moved to a different folder so can possibly be recovered.\nThis can take a while.\nPress OK to delete!") == true) {
-        let data = {
-            'name': name,
-        };
-        $.post('/api/mark-delete-trail.php', JSON.stringify(data));
-        alert("Trail: " + name + "\nhas been marked for deletion.\nThis could take a while.");
-    }
-});
-
-button.onclick = function () {
-    let data = {
-        'ImageID': String(trailViewer.getCurrentImageID()),
-        'Pitch': trailViewer._panViewer.getPitch(),
-        'Yaw': trailViewer._panViewer.getYaw(),
-        'HoverText': text_input.value,
-    };
-    $.post('/admin/api/create_trailinfo.php', data);
-    delay(500).then(() => trailViewer._updateInfo());
-};
-
-function onHotSpotClicked(id) {
-    if (document.getElementById("click_delete_switch").checked == true) {
-        if (confirm("Delete info?\nPress OK to confirm.") == true) {
-            let data = {
-                'ID': String(id),
-            };
-            $.post('/admin/api/delete_trailinfo.php', data);
-            delay(500).then(() => trailViewer._updateInfo());
-        }
-    }
-}
-
+/**
+ * Updates navigation arrow rotation/transformation
+ * Called by setInterval()
+ */
 function updateMarkerRotation() {
     if (trailViewer && trailViewer._panViewer && currentMarker) {
         let angle = trailViewer.getBearing();
@@ -262,14 +44,24 @@ function updateMarkerRotation() {
     }
 }
 
+/**
+ * Called when TrailViewer is done initializing
+ * @param {TrailViewer} viewer - The initialized TrailViewer object
+ */
 function onInitDone(viewer) {
     // Update map marker rotation on a set interval
     setInterval(updateMarkerRotation, 13);
 
     // Update nav arrow rotation on a set interval
     setInterval(updateNavArrows, 13);
+    trailViewer = viewer;
+    onViewerSceneChange(viewer._currImg);
 }
 
+/**
+ * Create/recreates the mapbox layer for TrailView dots
+ * @param {Object} data - TrailView base data
+ */
 function createMapLayer(data) {
     if (map.getSource('dots')) {
         map.removeLayer('dots');
@@ -394,7 +186,8 @@ function fetchData() {
 }
 
 /**
- * 
+ * Populates navigation arrows on TrailViewer container
+ * Used as a callback on TrailView object
  * @param {Object} hotspots - JSON object from pannellum config
  */
 function populateArrows(hotspots) {
@@ -423,6 +216,10 @@ function populateArrows(hotspots) {
 
 }
 
+/**
+ * Initializes TrailViewer
+ * @param {Object} data - TrailView base data 
+ */
 function startViewer(data) {
     if (started == true) {
         trailViewer.destroy();
@@ -433,46 +230,33 @@ function startViewer(data) {
         'onSceneChangeFunc': onViewerSceneChange,
         'onGeoChangeFunc': onGeoChange,
         'onArrowsAddedFunc': populateArrows,
-        'onHotSpotClickFunc': onHotSpotClicked,
         'onInitDoneFunc': onInitDone,
         'imageFetchType': 'all',
     }, null, data);
 }
 
-var dataArr = null;
-
+/**
+ * Called when base TrailView data has been fetched
+ * @param {Object} data - base TrailView data 
+ */
 function init(data) {
-    originalDataArr = data;
     dataArr = data;
     startMap(data);
     startViewer(data);
 }
 
-
-// function fetchStatus() {
-//     var xmlhttp = new XMLHttpRequest();
-//     var url = "/admin/api/status.php";
-//     xmlhttp.onreadystatechange = function() {
-//         if (this.readyState == 4 && this.status == 200) {
-//             try {
-//                 setStatus(JSON.parse(this.responseText));
-//             } catch (error) {
-//                 console.log(error);
-//             }
-//         }
-//     };
-//     xmlhttp.open("GET", url, true);
-//     xmlhttp.send();
-// }
-
-function onViewerSceneChange(id) {
+/**
+ * Used as callback when TrailView scene/img changes
+ * @param {Object} img - Scene object that is being changed to
+ */
+function onViewerSceneChange(img) {
     // fetchStatus();
-    $('#image-id').val(id.id);
+    $('#image-id').val(img.id);
     if (trailViewer) {
         let sequenceName = trailViewer.getCurrentSequenceName();
         if (sequenceName != $('#sequence_select').val()) {
             $('#sequence_select').val(String(sequenceName));
-            onSequenceChange();
+            onSequenceUIChange();
         }
         $('#flip_switch').prop('checked', trailViewer.getFlipped());
         if (trailViewer.getFlipped()) {
@@ -482,7 +266,7 @@ function onViewerSceneChange(id) {
         }
         $('#pitch_label').text("Pitch Correction: " + $('#pitch_range').val());
         for (let i = 0; i < dataArr.length; i++) {
-            if (dataArr[i].id == id.id) {
+            if (dataArr[i].id == img.id) {
                 isVisible = dataArr[i].visibility;
                 break;
             }
@@ -492,45 +276,10 @@ function onViewerSceneChange(id) {
     }
 }
 
-function start(seq, imageID = null) {
-    if (started == true) {
-        trailViewer.destroy();
-    }
-
-    started = true;
-
-    //var view = startViewer(seq);
-    trailViewer = new TrailViewer({
-        'onGeoChangeFunc': onGeoChange,
-        'onHotSpotClickFunc': onHotSpotClicked
-    },
-        imageID, null);
-
-    document.getElementById('panorama').scrollIntoView(true);
-}
-
-
-
-// function setStatus(statusJson) {
-//     for (let i = 0; i < statusJson['Status'].length; i++) {
-//         if (statusJson['Status'][i]['Name'] == String(trailViewer.getCurrentSequenceName())) {
-//             if (statusJson['Status'][i]['Status'] != 'Done') {
-//                 document.getElementById('processing_status').hidden = false;
-//             } else {
-//                 document.getElementById('processing_status').hidden = true;
-//             }
-//             if (statusJson['Status'][i]['Flipped'] == 0) {
-//                 document.getElementById('flip_switch').checked = false;
-//             } else {
-//                 document.getElementById('flip_switch').checked = true;
-//             }
-//         }
-//     }
-// }
-
-var currentMarker;
-var map;
-
+/**
+ * Initializes the MapBox map
+ * @param {Object} data - Base TrailView data 
+ */
 function startMap(data) {
     // Create map
     mapboxgl.accessToken = mapboxKey;
@@ -601,64 +350,10 @@ function startMap(data) {
     });
 }
 
-
-var currentMarkers = []
-
-function createGeoSequence(geoSeqJson) {
-    for (let i = 0; i < currentMarkers.length; i++) {
-        currentMarkers[i].remove();
-    }
-    geoSeq = geoSeqJson['geo_data'];
-    // for (let i = 0; i < geoSeq.length; i++) {
-    //     const el = document.createElement('div');
-    //     el.classList.add('marker');
-    //     el.dataset.imageId = geoSeq[i]['id'];
-    //     el.addEventListener('click', (evt) => {
-    //         trailViewer.goToScene(evt.currentTarget.dataset.imageId);
-    //         console.log(evt.currentTarget.dataset.imageId);
-    //     })
-    //     let marker = new mapboxgl.Marker(el)
-    //         .setLngLat([geoSeq[i]['longitude'], geoSeq[i]['latitude']])
-    //         .addTo(map);
-    //     currentMarkers.push(marker);
-    // }
-    let data = {
-        'type': 'geojson',
-        'data': {
-            'type': 'FeatureCollection',
-            'features': []
-        }
-    }
-    let features = [];
-    for (let i = 0; i < geoSeq.length; i++) {
-        let f = {
-            'type': 'Feature',
-            'properties': {
-                'imageID': geoSeq[i]['id']
-            },
-            'geometry': {
-                'type': 'Point',
-                'coordinates': [geoSeq[i]['longitude'], geoSeq[i]['latitude']]
-            }
-        }
-        features.push(f);
-    }
-    data['data']['features'] = features;
-    map.addSource('dots', data);
-    map.addLayer({
-        'id': 'dots',
-        'type': 'symbol',
-        'source': 'dots',
-        'layout': {
-            'icon-image': 'dot',
-            'icon-size': 0.2,
-            'icon-allow-overlap': false,
-            'icon-padding': 2,
-        }
-    });
-
-}
-
+/**
+ * Used as callback for when scene geo location changes on TrailViewer
+ * @param {Object} geo - lat & lng object {'latitude', 'longitude'}
+ */
 function onGeoChange(geo) {
     if (currentMarker != null) {
         currentMarker.setLngLat([geo['longitude'], geo['latitude']]);
@@ -669,6 +364,10 @@ function onGeoChange(geo) {
     }
 }
 
+/**
+ * Retrieves list of all trails to populate sequence selection
+ * Called on page load
+ */
 function getSequences() {
     let xmlhttp = new XMLHttpRequest();
     let url = '/api/trails.php';
@@ -681,10 +380,12 @@ function getSequences() {
     xmlhttp.send();
 }
 
-var sequences;
-
+/**
+ * Sets sequence selection UI
+ * Called by getSequences()
+ * @param {Object} seqJson - sequence data
+ */
 function updateSequenceSelect(seqJson) {
-    sequences = seqJson;
     let sequenceSelect = document.getElementById('sequence_select');
     while (sequenceSelect.firstChild) {
         sequenceSelect.removeChild(sequenceSelect.firstChild);
@@ -702,12 +403,13 @@ function updateSequenceSelect(seqJson) {
         option.value = seqJson['Trails'][i]['Name'];
         sequenceSelect.appendChild(option);
     }
-    sequenceSelect.addEventListener('change', onSequenceChange);
+    sequenceSelect.addEventListener('change', onSequenceUIChange);
 }
 
-$('#sequence_select').change(onSequenceChange);
-
-function onSequenceChange() {
+/**
+ * Called when sequence UI selection changes
+ */
+function onSequenceUIChange() {
     let sequenceSelect = document.getElementById('sequence_select');
     let sequence = sequenceSelect.options[sequenceSelect.selectedIndex].text;
     if (dataArr !== null && trailViewer.getCurrentSequenceName() != sequence) {
@@ -720,12 +422,13 @@ function onSequenceChange() {
             }
         }
     }
-
-
-    // fetchStatus();
-    //start(sequence);
 }
 
+/**
+ * Updates status table
+ * Called by updateStatuses()
+ * @param {Object} data - Status data
+ */
 function updateStatusTable(data) {
     for (let i = 0; i < data.length; i++) {
         if (data[i].Status != 'Done' || data[i].ToDelete != 0) {
@@ -748,6 +451,9 @@ function updateStatusTable(data) {
     }
 }
 
+/**
+ * Updates status table
+ */
 function updateStatuses() {
     $.getJSON("/api/status.php", {},
         function (data, textStatus, jqXHR) {
@@ -756,8 +462,207 @@ function updateStatuses() {
     );
 }
 
+// here
+
+// On sequence select change
+$('#sequence_select').change(onSequenceUIChange);
+
+// On delete button clicked
+$('#delete_button').on('click', () => {
+    let name = $('#sequence_select option:selected').text()
+    if (confirm("Are you sure??\nThis will delete trail: " + name + "\nDeleted trails are moved to a different folder so can possibly be recovered.\nThis can take a while.\nPress OK to delete!") == true) {
+        let data = {
+            'name': name,
+        };
+        $.post('/api/mark-delete-trail.php', JSON.stringify(data));
+        alert("Trail: " + name + "\nhas been marked for deletion.\nThis could take a while.");
+    }
+});
+
+// On dark toggle switch change
+$('#dark_switch').on('change', () => {
+    setDark($('#dark_switch').is(':checked'));
+});
+
+// On pitch slider change
+$('#pitch_range').on('change', () => {
+    $('#pitch_label').text("Sequence Pitch Correction: " + $('#pitch_range').val());
+    for (let i = 0; i < dataArr.length; i++) {
+        if (dataArr[i]['sequenceName'] == trailViewer.getCurrentSequenceName()) {
+            dataArr[i]['pitchCorrection'] = $('#pitch_range').val();
+        }
+    }
+    trailViewer.setData(dataArr);
+});
+
+// On pitch set button click
+$('#pitch_set_btn').on('click', () => {
+    let seqName = trailViewer.getCurrentSequenceName();
+    let pitchVal = $('#pitch_range').val();
+    $.post("/api/update-images.php", JSON.stringify({
+        'sequenceName': seqName,
+        'key': 'pitchCorrection',
+        'value': pitchVal,
+    }),
+        function (data, textStatus, jqXHR) {
+            console.log("Update Response: " + data);
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].sequenceName == seqName) {
+                    dataArr[i].pitchCorrection = pitchVal;
+                }
+            }
+            trailViewer._data = dataArr;
+            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
+        },
+        "json"
+    );
+});
+
+// On sequence download button click
+$('#download_btn').on('click', () => {
+    if (isDownloading == false) {
+        let downloadTrail = trailViewer.getCurrentSequenceName();
+        if (!confirm("Are you sure you want to start downloading: " + downloadTrail + "?")) {
+            return;
+        }
+        isDownloading = true;
+        window.onbeforeunload = function () {
+            return true;
+        };
+        $('#download_complete_alert').hide();
+        $('#zipping_alert').show();
+        $('#zipping_text').html("Zipping trail: " + downloadTrail);
+        $.getJSON("/api/download-images.php", {
+            'name': downloadTrail
+        },
+            function (data, textStatus, jqXHR) {
+                if (data['success'] != null) {
+                    $('#zipping_alert').hide();
+                    $('#download_complete_alert').show().html("Success!: <a href='" + data['success'] + "'>Download " + downloadTrail + "</a>");
+                } else {
+                    alert('Download failed!');
+                }
+                isDownloading = false;
+                window.onbeforeunload = null;
+            }
+        );
+    } else {
+        alert("Another download is in progress, only one request at a time.");
+    }
+
+});
+
+// On pitch view side button click
+$('#pitch_preview_btn').on('click', () => {
+    trailViewer._panViewer.lookAt(0, 90, 120, false);
+});
+
+// On sequence flip switch change
+$('#flip_switch').on('change', () => {
+    if (trailViewer.getFlipped() == $('#flip_switch').is(':checked')) {
+        return;
+    }
+    let checked = $('#flip_switch').is(':checked');
+    let seqName = trailViewer.getCurrentSequenceName()
+    $.post("/api/update-images.php", JSON.stringify({
+        'sequenceName': seqName,
+        'key': 'flipped',
+        'value': checked,
+    }),
+        function (data, textStatus, jqXHR) {
+            console.log("Update Response: " + data);
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].sequenceName == seqName) {
+                    dataArr[i].flipped = checked;
+                }
+            }
+            trailViewer._data = dataArr;
+            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
+        },
+        "json"
+    );
+});
+
+// On sequence visibility switch change
+$('#visibility_switch').on('change', () => {
+    let checked = $('#visibility_switch').is(':checked');
+    let seqName = trailViewer.getCurrentSequenceName();
+    let same = true;
+    let sameVal = null;
+    for (let i = 0; i < dataArr.length; i++) {
+        if (dataArr[i].sequenceName == seqName) {
+            if (sameVal == null) {
+                sameVal = dataArr[i].visibility;
+            } else {
+                if (dataArr[i].visibility != sameVal) {
+                    same = false;
+                    break;
+                }
+            }
+        }
+    }
+    if (!same) {
+        if (!confirm("There are images in the sequence with specific visibility options set.\nAre you sure you want to override all the visibility settings for the images in this sequence?")) {
+            return;
+        }
+    }
+    $.post("/api/update-images.php", JSON.stringify({
+        'sequenceName': seqName,
+        'key': 'visibility',
+        'value': checked,
+    }),
+        function (data, textStatus, jqXHR) {
+            console.log("Update Response: " + data);
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].sequenceName == seqName) {
+                    dataArr[i].visibility = checked;
+                }
+            }
+            trailViewer._data = dataArr;
+            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
+            createMapLayer(dataArr);
+        },
+        "json"
+    );
+});
+
+// On image visibility switch change
+$('#img_visibility_switch').on('change', () => {
+    let checked = $('#img_visibility_switch').is(':checked');
+    let imgId = trailViewer.getCurrentImageID()
+    $.post("/api/update-images.php", JSON.stringify({
+        'id': imgId,
+        'key': 'visibility',
+        'value': checked,
+    }),
+        function (data, textStatus, jqXHR) {
+            console.log("Update Response: " + data);
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].id == imgId) {
+                    dataArr[i].visibility = checked;
+                    trailViewer._data = dataArr;
+                    trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
+                    createMapLayer(dataArr);
+                    break;
+                }
+            }
+        },
+        "json"
+    );
+});
+
+// Update dark mode from previous session
+if (darkmode.getSavedColorScheme() == 'light') {
+    setDark(false);
+} else {
+    setDark(true);
+}
+
+// Update status table
 updateStatuses();
 
+// Populate sequence selection UI
 getSequences();
 
+// fetch base TrailView data (then calls init())
 fetchData();
