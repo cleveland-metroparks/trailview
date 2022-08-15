@@ -47,21 +47,22 @@ $('#pitch_range').on('change', () => {
 });
 
 $('#pitch_set_btn').on('click', () => {
+    let seqName = trailViewer.getCurrentSequenceName();
+    let pitchVal = $('#pitch_range').val();
     $.post("/api/update-images.php", JSON.stringify({
-        'sequenceName': trailViewer.getCurrentSequenceName(),
+        'sequenceName': seqName,
         'key': 'pitchCorrection',
-        'value': $('#pitch_range').val(),
+        'value': pitchVal,
     }),
         function (data, textStatus, jqXHR) {
             console.log("Update Response: " + data);
-            trailViewer._fetchData();
-            $.getJSON("/api/images.php", {
-                'type': 'all'
-            },
-                function (data, textStatus, jqXHR) {
-                    dataArr = data['imagesAll']
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].sequenceName == seqName) {
+                    dataArr[i].pitchCorrection = pitchVal;
                 }
-            );
+            }
+            trailViewer._data = dataArr;
+            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
         },
         "json"
     );
@@ -117,21 +118,21 @@ $('#flip_switch').change(() => {
         return;
     }
     let checked = $('#flip_switch').is(':checked');
+    let seqName = trailViewer.getCurrentSequenceName()
     $.post("/api/update-images.php", JSON.stringify({
-        'sequenceName': trailViewer.getCurrentSequenceName(),
+        'sequenceName': seqName,
         'key': 'flipped',
         'value': checked,
     }),
         function (data, textStatus, jqXHR) {
             console.log("Update Response: " + data);
-            trailViewer._fetchData();
-            $.getJSON("/api/images.php", {
-                'type': 'all'
-            },
-                function (data, textStatus, jqXHR) {
-                    dataArr = data['imagesAll']
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].sequenceName == seqName) {
+                    dataArr[i].flipped = checked;
                 }
-            );
+            }
+            trailViewer._data = dataArr;
+            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
         },
         "json"
     );
@@ -139,22 +140,22 @@ $('#flip_switch').change(() => {
 
 $('#visibility_switch').change(() => {
     let checked = $('#visibility_switch').is(':checked');
+    let seqName = trailViewer.getCurrentSequenceName();
     $.post("/api/update-images.php", JSON.stringify({
-        'sequenceName': trailViewer.getCurrentSequenceName(),
+        'sequenceName': seqName,
         'key': 'visibility',
         'value': checked,
     }),
         function (data, textStatus, jqXHR) {
             console.log("Update Response: " + data);
-            trailViewer._fetchData();
-            $.getJSON("/api/images.php", {
-                'type': 'all'
-            },
-                function (data, textStatus, jqXHR) {
-                    dataArr = data['imagesAll']
-                    createMapLayer(dataArr);
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].sequenceName == seqName) {
+                    dataArr[i].visibility = checked;
                 }
-            );
+            }
+            trailViewer._data = dataArr;
+            trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
+            createMapLayer(dataArr);
         },
         "json"
     );
@@ -162,22 +163,23 @@ $('#visibility_switch').change(() => {
 
 $('#img_visibility_switch').change(() => {
     let checked = $('#img_visibility_switch').is(':checked');
+    let imgId = trailViewer.getCurrentImageID()
     $.post("/api/update-images.php", JSON.stringify({
-        'id': trailViewer.getCurrentImageID(),
+        'id': imgId,
         'key': 'visibility',
         'value': checked,
     }),
         function (data, textStatus, jqXHR) {
             console.log("Update Response: " + data);
-            trailViewer._fetchData();
-            $.getJSON("/api/images.php", {
-                'type': 'all'
-            },
-                function (data, textStatus, jqXHR) {
-                    dataArr = data['imagesAll'];
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i].id == imgId) {
+                    dataArr[i].visibility = checked;
+                    trailViewer._data = dataArr;
+                    trailViewer.goToImageID(trailViewer.getCurrentImageID(), true);
                     createMapLayer(dataArr);
+                    break;
                 }
-            );
+            }
         },
         "json"
     );
@@ -280,7 +282,7 @@ function createMapLayer(data) {
     }
     layerData['data']['features'] = features
     map.addSource('dots', layerData);
-    
+
     map.addLayer({
         'id': 'dots',
         'type': 'circle',
@@ -288,7 +290,7 @@ function createMapLayer(data) {
         'paint': {
             'circle-radius': 10,
             'circle-color': [
-                'case', 
+                'case',
                 ['==', ['get', 'visible'], true],
                 '#00a108',
                 '#db8904'
