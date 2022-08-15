@@ -484,9 +484,13 @@ $('#dark_switch').on('change', () => {
     setDark($('#dark_switch').is(':checked'));
 });
 
-// On pitch slider change
-$('#pitch_range').on('change', () => {
+// On pitch slider input (while sliding)
+$('#pitch_range').on('input', () => {
     $('#pitch_label').text("Sequence Pitch Correction: " + $('#pitch_range').val());
+});
+
+// On pitch slider change (when done sliding)
+$('#pitch_range').on('change', () => {
     for (let i = 0; i < dataArr.length; i++) {
         if (dataArr[i]['sequenceName'] == trailViewer.getCurrentSequenceName()) {
             dataArr[i]['pitchCorrection'] = $('#pitch_range').val();
@@ -603,6 +607,7 @@ $('#visibility_switch').on('change', () => {
     }
     if (!same) {
         if (!confirm("There are images in the sequence with specific visibility options set.\nAre you sure you want to override all the visibility settings for the images in this sequence?")) {
+            $('#visibility_switch').prop('checked', !$('#visibility_switch').is(':checked'));
             return;
         }
     }
