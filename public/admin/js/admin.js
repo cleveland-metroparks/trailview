@@ -365,45 +365,40 @@ function onGeoChange(geo) {
 }
 
 /**
- * Retrieves list of all trails to populate sequence selection
+ * Fetches and populates sequence data for selection UI
  * Called on page load
  */
-function getSequences() {
-    let xmlhttp = new XMLHttpRequest();
-    let url = '/api/trails.php';
-    xmlhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            updateSequenceSelect(JSON.parse(this.responseText));
+function populateSequencesUI() {
+    $.ajax({
+        type: "GET",
+        url: "/api/trails.php",
+        dataType: "application/json",
+        complete: function (jqXHR, textStatus) {
+            let data = JSON.parse(jqXHR.responseText);
+            if (data.status == 200) {
+                let sequenceSelect = document.getElementById('sequence_select');
+                while (sequenceSelect.firstChild) {
+                    sequenceSelect.removeChild(sequenceSelect.firstChild);
+                }
+                // disabled selected value
+                let emptyOption = document.createElement('option');
+                emptyOption.setAttribute('disabled', '');
+                emptyOption.setAttribute('selected', '');
+                emptyOption.setAttribute('value', '');
+                emptyOption.innerHTML = 'Select a Sequence';
+                sequenceSelect.appendChild(emptyOption);
+                for (let i = 0; i < data['trails'].length; i++) {
+                    let option = document.createElement('option');
+                    option.innerHTML = data['trails'][i]['Name'];
+                    option.value = data['trails'][i]['Name'];
+                    sequenceSelect.appendChild(option);
+                }
+                sequenceSelect.addEventListener('change', onSequenceUIChange);
+            } else {
+                alert('Error fetching sequence data\n' + data.detail);
+            }
         }
-    };
-    xmlhttp.open('GET', url, true);
-    xmlhttp.send();
-}
-
-/**
- * Sets sequence selection UI
- * Called by getSequences()
- * @param {Object} seqJson - sequence data
- */
-function updateSequenceSelect(seqJson) {
-    let sequenceSelect = document.getElementById('sequence_select');
-    while (sequenceSelect.firstChild) {
-        sequenceSelect.removeChild(sequenceSelect.firstChild);
-    }
-    // disabled selected value
-    let emptyOption = document.createElement('option');
-    emptyOption.setAttribute('disabled', '');
-    emptyOption.setAttribute('selected', '');
-    emptyOption.setAttribute('value', '');
-    emptyOption.innerHTML = 'Select a Sequence';
-    sequenceSelect.appendChild(emptyOption);
-    for (let i = 0; i < seqJson['Trails'].length; i++) {
-        let option = document.createElement('option');
-        option.innerHTML = seqJson['Trails'][i]['Name'];
-        option.value = seqJson['Trails'][i]['Name'];
-        sequenceSelect.appendChild(option);
-    }
-    sequenceSelect.addEventListener('change', onSequenceUIChange);
+    });
 }
 
 /**
@@ -461,8 +456,6 @@ function updateStatuses() {
         }
     );
 }
-
-// here
 
 // On sequence select change
 $('#sequence_select').change(onSequenceUIChange);
@@ -667,7 +660,7 @@ if (darkmode.getSavedColorScheme() == 'light') {
 updateStatuses();
 
 // Populate sequence selection UI
-getSequences();
+populateSequencesUI();
 
 // fetch base TrailView data (then calls init())
 fetchData();
