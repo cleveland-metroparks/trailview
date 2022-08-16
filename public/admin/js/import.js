@@ -10,10 +10,10 @@ var uploading = false; // If currently uploading
 
 
 $('#name_input').on('input', () => {
-    if (this.checkValidity()) {
-        prevNameVal = this.value;
+    if ($('#name_input')[0].checkValidity()) {
+        prevNameVal = $('#name_input').val();
     } else {
-        this.value = prevNameVal;
+        $('#name_input').val(prevNameVal)
     }
 });
 
@@ -44,7 +44,12 @@ uploader.bind('UploadComplete', function (up, files) {
         'name': document.getElementById('name_input').value,
         'status': 'Blur',
     };
-    $.post('/admin/api/set_status.php', data);
+    $.ajax({
+        type: "POST",
+        url: "/api/status.php",
+        data: JSON.stringify(data),
+        dataType: "application/json"
+    });
     document.getElementById('console').innerHTML += "<strong>DONE! You can now close this window!</strong>\n";
     window.onbeforeunload = function () {
         return;
@@ -55,9 +60,6 @@ $('#submit_button').on('click', () => {
     if (failed == true || uploading == true) {
         return;
     }
-    window.onbeforeunload = function () {
-        return true;
-    };
     if (uploader.files.length == 0) {
         failed = true;
         document.getElementById('console').innerHTML += "Error: No input files!\n";
@@ -67,22 +69,33 @@ $('#submit_button').on('click', () => {
     }
     document.getElementById('name_input').disabled = true;
     document.getElementById('submit_button').disabled = true;
-    let data = {
+    let postData = {
         'name': document.getElementById('name_input').value,
     };
-    $.post('/admin/api/insert_trail.php', data)
-        .done(function (data) {
-            if (data == 'exists') {
+    $.ajax({
+        type: "POST",
+        url: "/api/trails.php",
+        data: JSON.stringify(postData),
+        dataType: "application/json",
+        complete: function (jqXHR, textStatus) {
+            let data = JSON.parse(jqXHR.responseText);
+            if (data.status != 200) {
+                alert('Failed to start upload\n' + data.detail);
                 failed = true;
-                document.getElementById('console').innerHTML += "Error: Trail already exists, not importing!\n";
+                document.getElementById('console').innerHTML += ("Error: " + data.detail + "\n");
                 document.getElementById('console').innerHTML += "Refresh page and try again!\n";
                 uploader.destroy();
-                return;
-            }
-        });
-    uploader.setOption('multipart_params', {
-        'trail_name': document.getElementById('name_input').value,
-    })
-    uploader.start();
-    uploading = true;
+            } else {
+                window.onbeforeunload = function () {
+                    return true;
+                };
+                uploader.setOption('multipart_params', {
+                    'trail_name': document.getElementById('name_input').value,
+                })
+                uploader.start();
+                console.log("Starting upload");
+                uploading = true;
+            } 
+        }
+    });
 });

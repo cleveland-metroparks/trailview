@@ -70,7 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'pitchCorrection' => $row['PitchCorrection']
             ];
         }
-        echo json_encode(["imagesStandard" => $resultArr]);
+        echo json_encode([
+            'status' => '200',
+            'imagesStandard' => $resultArr
+        ]);
 
     } else if ($type === 'all') {
         // Create SQL connection
@@ -102,9 +105,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'visibility' => $row['Visibility'] == 0 ? false : true
             ];
         }
-        echo json_encode(['imagesAll' => $resultArr]);
+        echo json_encode([
+            'status' => '200',
+            'imagesAll' => $resultArr
+        ]);
     } else {
-        echo json_encode(['error' => 'Unknown GET request type (options are standard and all)']);
+        echo json_encode([
+            'error' => 'badRequest',
+            'detail' => 'Unknown GET request type (options are standard and all)',
+            'status' => '400'
+        ]);
         http_response_code(400);
         exit;
     }
@@ -112,12 +122,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // $vars = json_decode(file_get_contents('php://input'), true);
     $vars = $_REQUEST;
     if ($vars['pass'] == null || $vars['id'] == null) {
-        echo json_encode(['error' => 'New entries require both pass and id']);
+        echo json_encode([
+            'error' => 'no_pass_or_id',
+            'detail' => 'API key or id is not specified',
+            'status' => '400'
+        ]);
         http_response_code(400);
         exit;
     } else if ($vars['pass'] !== $api_pass) {
-        echo json_encode(['error' => 'Incorrect password']);
-        http_response_code(400);
+        echo json_encode([
+            'error' => 'unauthorized',
+            'detail' => 'Insufficient credentials from API key',
+            'status' => '403'
+        ]);
+        http_response_code(403);
         exit;
     } else {
         // Create SQL connection
@@ -146,11 +164,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         sqlsrv_execute($query);
 
         if (sqlsrv_rows_affected($query) == false) {
-            echo json_encode(['error' => 'No rows effected']);
+            echo json_encode([
+                'error' => 'notEffected',
+                'detail' => 'No data was updated, maybe duplicates',
+                'status' => '400'
+            ]);
             http_response_code(400);
             exit;
         } else {
-            echo json_encode('success');
+            echo json_encode([
+                'status' => '200'
+            ]);
         }
     }
 }

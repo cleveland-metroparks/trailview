@@ -14,8 +14,12 @@ error_reporting(0);
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_GET['id'] == null) {
+    echo json_encode([
+        'error' => 'no_id',
+        'detail' => 'No image id specified',
+        'status' => '400'
+    ]);
     http_response_code(400);
-    echo json_encode(['error' => 'No image id specified']);
     exit;
 }
 
@@ -40,11 +44,16 @@ sqlsrv_execute($query);
 
 $row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC);
 if ($row['ShtHash'] == null) {
+    echo json_encode([
+        'error' => 'no_preview',
+        'detail' => 'No image preview found',
+        'status' => '400'
+    ]);
     http_response_code(400);
-    echo json_encode(['error' => 'Preview not found']);
     exit;
 } else {
     echo json_encode([
+        'status' => '200',
         'preview' => $row['ShtHash']
     ]);
 }

@@ -33,7 +33,11 @@ $vars = json_decode(file_get_contents('php://input'), true);
 
 // Require login
 if (!isset($_SESSION['loggedin']) && $vars['pass'] !== $api_pass) {
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode([
+        'error' => 'unauthorized',
+        'detail' => 'Insufficient credentials from either API key or session info',
+        'status' => '403'
+    ]);
     http_response_code(403);
     exit;
 }
@@ -43,13 +47,21 @@ if (
     $vars['key'] == null ||
     $vars['value'] === null
 ) {
+    echo json_encode([
+        'error' => 'no_id_or_sequenceName_or_key_or_value',
+        'detail' => 'Required parameters not specified',
+        'status' => '400'
+    ]);
     http_response_code(400);
-    echo json_encode(['error' => 'Required parameters not specified']);
     exit;
 }
 if ($vars['id'] != null && $vars['sequenceName'] != null) {
+    echo json_encode([
+        'error' => 'badRequest',
+        'detail' => 'Either image id or sequenceName can be accepted, not both',
+        'status' => '400'
+    ]);
     http_response_code(400);
-    echo json_encode(['error' => 'Either image id or sequenceName can be accepted, not both']);
     exit;
 }
 
@@ -70,8 +82,12 @@ switch ($key) {
         break;
     case 'latitude':
         if ($sequenceMode) {
+            echo json_encode([
+                'error' => 'badRequest',
+                'detail' => 'Cannot change latitude for entire sequence',
+                'status' => '400'
+            ]);
             http_response_code(400);
-            echo json_encode(['error' => 'Cannot change latitude for entire sequence']);
             exit;
         } else {
             $queryTemplate = "UPDATE Images SET Latitude = ? WHERE Id = ?";
@@ -80,7 +96,11 @@ switch ($key) {
     case 'longitude':
         if ($sequenceMode) {
             http_response_code(400);
-            echo json_encode(['error' => 'Cannot change longitude for entire sequence']);
+            echo json_encode([
+                'error' => 'badRequest',
+                'detail' => 'Cannot change longitude for entire sequence',
+                'status' => '400'
+            ]);
             exit;
         } else {
             $queryTemplate = "UPDATE Images SET Longitude = ? WHERE Id = ?";
@@ -88,8 +108,12 @@ switch ($key) {
         break;
     case 'bearing':
         if ($sequenceMode) {
+            echo json_encode([
+                'error' => 'badRequest',
+                'detail' => 'Cannot change bearing for entire sequence',
+                'status' => '400'
+            ]);
             http_response_code(400);
-            echo json_encode(['error' => 'Cannot change bearing for entire sequence']);
             exit;
         } else {
             $queryTemplate = "UPDATE Images SET Bearing = ? WHERE Id = ?";
@@ -117,8 +141,12 @@ switch ($key) {
         }
         break;
     default:
+        echo json_encode([
+            'error' => 'invalid_key',
+            'detail' => 'The  provided key is invalid',
+            'status' => '400'
+        ]);
         http_response_code(400);
-        echo json_encode(['error' => 'Invalid key']);
         exit;
 }
 
@@ -143,7 +171,9 @@ $query = sqlsrv_prepare($conn, $queryTemplate, $params);
 
 sqlsrv_execute($query);
 
-echo json_encode('success');
+echo json_encode([
+    'status' => '200'
+]);
 
 
 ?>

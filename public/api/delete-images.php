@@ -24,14 +24,22 @@ $vars = json_decode(file_get_contents('php://input'), true);
 
 // Require login
 if (!isset($_SESSION['loggedin']) && $vars['pass'] !== $api_pass) {
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode([
+        'error' => 'Uuauthorized',
+        'detail' => 'Insufficient credentials from either API key or session info',
+        'status' => '403'
+    ]);
     http_response_code(403);
     exit;
 }
 
 if ($vars['sequenceName'] == null) {
+    echo json_encode([
+        'error' => 'no_sequenceName',
+        'detail' => 'Sequence name was not specified',
+        'status' => '400'
+    ]);
     http_response_code(400);
-    echo json_encode(['error' => 'Required parameters not specified']);
     exit;
 }
 
@@ -47,6 +55,8 @@ $query = sqlsrv_prepare($conn, $queryTemplate, $params);
 
 sqlsrv_execute($query);
 
-echo json_encode('success');
+echo json_encode([
+    'status' => '200'
+]);
 
 ?>

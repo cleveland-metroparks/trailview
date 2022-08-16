@@ -17,7 +17,7 @@ session_start();
 
 // Require login
 if (!isset($_SESSION['loggedin'])) {
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 
