@@ -452,7 +452,7 @@ function updateStatusTable(data) {
 function updateStatuses() {
     $.getJSON("/api/status.php", {},
         function (data, textStatus, jqXHR) {
-            updateStatusTable(data['Status'])
+            updateStatusTable(data['sequenceStatus'])
         }
     );
 }

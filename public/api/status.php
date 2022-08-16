@@ -9,6 +9,8 @@ error_reporting(0);
 
 // config.php is only local and includes sensitive database information
 include("config.php");
+
+header('Content-Type: application/json; charset=utf-8');
 			
 // Create SQL connection
 $conn = sqlsrv_connect($server, $connectionInfo);
@@ -33,8 +35,10 @@ if ($query != null) {
 	}
 	
 	// echo the json output of the result
-	header('Content-Type: application/json; charset=utf-8');
-	echo json_encode(["Status" => $resultArr]);
+	echo json_encode([
+		'status' => '200',
+		"sequenceStatus" => $resultArr
+	]);
 }
 
 // Free resources
