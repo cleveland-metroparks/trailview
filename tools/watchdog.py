@@ -41,7 +41,7 @@ api_key = json.load(j)['api_password']
 j.close()
 
 def process(data):
-     for t in data['Status']:
+     for t in data['sequenceStatus']:
         if (t['Status'] == 'Sequence'):
             print("Processing Sequence: " + t['Name'])
             flip_str = '--no-flip'
@@ -124,7 +124,7 @@ def check_delete(data):
 while (True):
     print("Waiting...")
     time.sleep(30)
-    r = requests.get(url = 'https://trailview.cmparks.net/admin/api/status.php')
+    r = requests.get(url = 'https://trailview.cmparks.net/api/status.php')
 
     data = r.json()
 
