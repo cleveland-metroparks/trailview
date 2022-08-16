@@ -15,8 +15,6 @@ This script should run as a service which checks trail statuses from the
 database and then calls the appropriate scripts to process them
 '''
 
-
-
 def count_jpgs(dir):
     count = 0
     for path in os.listdir(dir):
@@ -58,7 +56,7 @@ def process(data):
                 with open(os.path.join(curr_path, 'logs', 'watchdog.log'), "a") as outfile:
                     subprocess.run('python ' + os.path.join(curr_path, 'process_imgs_data_db.py E:\\trails'), stdout=outfile)
                 sys.stdout.flush()
-                requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': api_key, 'name': t['Name'], 'status': 'Done'})
+                requests.post(url = 'https://trailview.cmparks.net/api/status.php', data = json.dumps({'pass': api_key, 'name': t['Name'], 'status': 'Done'}))
             except:
                 print("Error occured processing sequence!")
             return
@@ -71,7 +69,7 @@ def process(data):
                     print(original_count)
                     print(processed_count)
                     if (original_count == processed_count):
-                        requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': api_key, 'name': t['Name'], 'status': 'Sequence'})
+                        requests.post(url = 'https://trailview.cmparks.net/api/status.php', data = json.dumps({'pass': api_key, 'name': t['Name'], 'status': 'Sequence'}))
                         return
                 sys.stdout.flush()
                 with open(os.path.join(curr_path, 'logs', 'watchdog.log'), "a") as outfile:
@@ -89,7 +87,7 @@ def process(data):
                     original_count = count_jpgs(os.path.join('E:\\trails', t['Name'], 'img_original'))
                     blur_count = count_jpgs(os.path.join('E:\\trails', t['Name'], 'img_blur'))
                     if (blur_count == original_count):
-                        requests.post(url = 'https://trailview.cmparks.net/admin/api/set_status.php', data = {'pass': api_key, 'name': t['Name'], 'status': 'Tile'})
+                        requests.post(url = 'https://trailview.cmparks.net/api/status.php', data = json.dumps({'pass': api_key, 'name': t['Name'], 'status': 'Tile'}))
                         return
                     # shutil.rmtree(os.path.join('E:\\trails', t['Name'], 'img_blur'))
                     # os.makedirs(os.path.join('E:\\trails', t['Name'], 'img_blur'))

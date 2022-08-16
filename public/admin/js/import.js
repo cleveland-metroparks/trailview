@@ -44,7 +44,12 @@ uploader.bind('UploadComplete', function (up, files) {
         'name': document.getElementById('name_input').value,
         'status': 'Blur',
     };
-    $.post('/admin/api/set_status.php', data);
+    $.ajax({
+        type: "POST",
+        url: "/api/status.php",
+        data: JSON.stringify(data),
+        dataType: "application/json"
+    });
     document.getElementById('console').innerHTML += "<strong>DONE! You can now close this window!</strong>\n";
     window.onbeforeunload = function () {
         return;

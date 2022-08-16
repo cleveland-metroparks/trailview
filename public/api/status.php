@@ -2,6 +2,14 @@
 	
 /*
 Returns JSON of trail statuses
+
+Accepts POST request with
+{
+    'pass': string (optional),
+    'name': string,
+    'status': string,
+}
+
 */
 
 // Disable error reporting
@@ -11,36 +19,89 @@ error_reporting(0);
 include("config.php");
 
 header('Content-Type: application/json; charset=utf-8');
-			
-// Create SQL connection
-$conn = sqlsrv_connect($server, $connectionInfo);
 
-// Template for query 
-$queryTemplate = "SELECT Name, Status, ToDelete FROM Trails";
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
-// Parameters to fill in template for query
-$params = array();
+	// Create SQL connection
+	$conn = sqlsrv_connect($server, $connectionInfo);
 
-// Prepare query
-$query = sqlsrv_prepare($conn, $queryTemplate, $params);
+	// Template for query 
+	$queryTemplate = "SELECT Name, Status, ToDelete FROM Trails";
 
-sqlsrv_execute($query);
+	// Parameters to fill in template for query
+	$params = array();
 
-if ($query != null) {
+	// Prepare query
+	$query = sqlsrv_prepare($conn, $queryTemplate, $params);
+
+	sqlsrv_execute($query);
+
+	if ($query != null) {
+		
+		// Put query into a PHP array
+		$resultArr = [];
+		while ($row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC)) {
+			$resultArr[] = $row;
+		}
+		
+		// echo the json output of the result
+		echo json_encode([
+			'status' => '200',
+			"sequenceStatus" => $resultArr
+		]);
+	}
+
+	// Free resources
+	sqlsrv_free_stmt($query);
+
+} else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+	session_start();
+
+	$vars = json_decode(file_get_contents('php://input'), true);
+
+	$pass = $vars['pass'];
+	$Name = $vars['name'];
+	$Status = $vars['status'];
 	
-	// Put query into a PHP array
-	$resultArr = [];
-	while ($row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC)) {
-		$resultArr[] = $row;
+	// Accept password or login as authentication
+	if ($pass != $api_pass && !isset($_SESSION['loggedin'])) {
+		echo json_encode([
+			'error' => 'unauthorized',
+			'detail' => 'Insufficient credentials from either API key or session info',
+			'status' => '403'
+		]);
+		http_response_code(403);
+		exit;
 	}
 	
-	// echo the json output of the result
+	if ($Name == null || $Status == null) {
+		echo json_encode([
+			'error' => 'badRequest',
+			'detail' => 'Name or status not specified',
+			'status' => '403'
+		]);
+		http_response_code(400);
+		exit;
+	}
+	
+	$conn = sqlsrv_connect($server, $connectionInfo);
+	
+	// Template for query 
+	$queryTemplate1 = "UPDATE Trails SET Status = ? WHERE Name = ?";
+	
+	// Parameters to fill in template for query
+	$params1 = array(&$Status, &$Name);
+	
+	// Prepare query
+	$query1 = sqlsrv_prepare($conn, $queryTemplate1, $params1);
+	
+	sqlsrv_execute($query1);
+	
+	sqlsrv_free_stmt($query1);
+
 	echo json_encode([
-		'status' => '200',
-		"sequenceStatus" => $resultArr
+		'status' => '200'
 	]);
 }
-
-// Free resources
-sqlsrv_free_stmt($query);
 ?>
