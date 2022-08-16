@@ -136,5 +136,5 @@ while (True):
 
     data = r.json()
 
-    check_delete(data)
+    check_delete(data['marked'])
     

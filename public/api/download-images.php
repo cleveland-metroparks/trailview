@@ -34,13 +34,21 @@ header('Content-Type: application/json; charset=utf-8');
 
 // Require login
 if (!isset($_SESSION['loggedin']) && $_REQUEST['pass'] !== $api_pass) {
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode([
+        'error' => 'unauthorized',
+        'detail' => 'Insufficient credentials from either API key or session info',
+        'status' => '403'
+    ]);
     http_response_code(403);
     exit;
 }
 
 if ($_REQUEST['name'] == null) {
-    echo json_encode(['error' => 'Required parameters not specified']);
+    echo json_encode([
+        'error' => 'no_name',
+        'detail' => 'Name not specified',
+        'status' => '400'
+    ]);
     http_response_code(400);
     exit;
 }
@@ -53,6 +61,9 @@ $zip_file = '../downloads/' . $zip_name . '.zip';
 
 new GoodZipArchive('E:\\trails\\' . $_REQUEST['name'] . '\\img_original', $zip_file);
 
-echo json_encode(['success' => 'https://trailview.cmparks.net/downloads/' . $zip_name . '.zip']);
+echo json_encode([
+    'status' => '200',
+    'link' => 'https://trailview.cmparks.net/downloads/' . $zip_name . '.zip'
+]);
 
 ?>

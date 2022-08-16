@@ -34,11 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 	if ($query != null) {
 		
-		// Put query into a PHP array
-		$resultArr = [];
-		while ($row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC)) {
-			$resultArr[] = $row;
-		}
+		// Convert query to PHP array
+        $resultArr = [];
+        while ($row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC)) {
+            $resultArr[] = [
+                'name' => $row['Name'],
+            ];
+        }
 
 		// echo the json output of the result
 		echo json_encode([

@@ -30,14 +30,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Require login
     if (!isset($_SESSION['loggedin']) && $vars['pass'] !== $api_pass) {
-        echo json_encode(['error' => 'Unauthorized']);
+        echo json_encode([
+			'error' => 'unauthorized',
+			'detail' => 'Insufficient credentials from either API key or session info',
+			'status' => '403'
+		]);
         http_response_code(403);
         exit;
     }
 
     if ($vars['name'] == null) {
+        echo json_encode([
+            'error' => 'no_name',
+            'detail' => 'Name not specified',
+            'status' => '400'
+        ]);
         http_response_code(400);
-        echo json_encode(['error' => 'Required parameters not specified']);
         exit;
     }
 
@@ -53,7 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     sqlsrv_execute($query);
 
-    echo json_encode('success');
+    echo json_encode([
+        'status' => '200'
+    ]);
+
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $queryTemplate;
@@ -82,10 +93,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'toDelete' => $row['ToDelete'] == 0 ? false : true,
             ];
         }
-        echo json_encode($resultArr);
+        echo json_encode([
+            'status' => '200',
+            'marked' => $resultArr
+        ]);
     } else {
         $row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC);
-        echo json_encode(["toDelete" => $row['ToDelete'] == 0 ? false : true]);
+        echo json_encode([
+            'status' => '200',
+            'toDelete' => $row['ToDelete'] == 0 ? false : true
+        ]);
     }    
 }
 

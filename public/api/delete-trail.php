@@ -24,14 +24,22 @@ $vars = json_decode(file_get_contents('php://input'), true);
 
 // Require login
 if (!isset($_SESSION['loggedin']) && $vars['pass'] !== $api_pass) {
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode([
+        'error' => 'unauthorized',
+        'detail' => 'Insufficient credentials from either API key or session info',
+        'status' => '403'
+    ]);
     http_response_code(403);
     exit;
 }
 
 if ($vars['name'] == null) {
     http_response_code(400);
-    echo json_encode(['error' => 'Required parameters not specified']);
+    echo json_encode([
+        'error' => 'no_name',
+        'detail' => 'Name not specified',
+        'status' => '400'
+    ]);
     exit;
 }
 
@@ -59,6 +67,8 @@ $query = sqlsrv_prepare($conn, $queryTemplate, $params);
 
 sqlsrv_execute($query);
 
-echo json_encode('success');
+echo json_encode([
+    'status' => '200'
+]);
 
 ?>

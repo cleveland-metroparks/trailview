@@ -389,8 +389,8 @@ function populateSequencesUI() {
                 sequenceSelect.appendChild(emptyOption);
                 for (let i = 0; i < data['trails'].length; i++) {
                     let option = document.createElement('option');
-                    option.innerHTML = data['trails'][i]['Name'];
-                    option.value = data['trails'][i]['Name'];
+                    option.innerHTML = data['trails'][i]['name'];
+                    option.value = data['trails'][i]['name'];
                     sequenceSelect.appendChild(option);
                 }
                 sequenceSelect.addEventListener('change', onSequenceUIChange);
@@ -533,9 +533,9 @@ $('#download_btn').on('click', () => {
             'name': downloadTrail
         },
             function (data, textStatus, jqXHR) {
-                if (data['success'] != null) {
+                if (data['status'] == 200) {
                     $('#zipping_alert').hide();
-                    $('#download_complete_alert').show().html("Success!: <a href='" + data['success'] + "'>Download " + downloadTrail + "</a>");
+                    $('#download_complete_alert').show().html("Success!: <a href='" + data['link'] + "'>Download " + downloadTrail + "</a>");
                 } else {
                     alert('Download failed!');
                 }
