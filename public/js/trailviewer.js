@@ -5,12 +5,10 @@ Email: mjo1@clevelandmetroparks.com
 
 /** Structure of default options for TrailViewer */
 const DefaultTrailViewerOptions = {
-    'useURLHashing': false,
     'onSceneChangeFunc': null,
     'onGeoChangeFunc': null,
     'onHotSpotClickFunc': null,
     'onInitDoneFunc': null,
-    'onArrowsAddedFunc': null,
     'navArrowMinAngle': -25,
     'navArrowMaxAngle': -20,
     'imageFetchType': 'standard'
@@ -73,6 +71,8 @@ class TrailViewer {
         this._prevNavClickedYaw = 0;
         this._initLat = lat;
         this._initLng = lng;
+        this._navArrowFull = true;
+        this._navArrowInterval;
         if (!options.imageFetchType) {
             this._imageFetchType = DefaultTrailViewerOptions.imageFetchType;
         } else {
@@ -104,6 +104,30 @@ class TrailViewer {
      */
     getOptions() {
         return this._options;
+    }
+
+    /**
+     * Updates navigation arrows transform
+     * Called by setInterval()
+     */
+    _updateNavArrows(instance) {
+        // Arrow rotation
+        $('.nav-arrow').each(function (index, element) {
+            let yaw = customMod(((360 - angle180to360(instance._panViewer.getYaw())) + $(element).data('yaw')), 360);
+            if (instance._navArrowFull) {
+                $(element).css('transform', 'rotateZ(' + yaw + 'deg) translateY(-100px)');
+            } else {
+                $(element).css('transform', 'rotateZ(' + yaw + 'deg) translateY(-50px)');
+            }
+        });
+        // Container rotation
+        let rot = (instance._panViewer.getPitch() + 90) / 2.5;
+        if (rot > 80) {
+            rot = 80
+        } else if (rot < 0) {
+            rot = 0;
+        }
+        $('#nav_container').css('transform', 'perspective(300px) rotateX(' + rot + 'deg)');
     }
 
     /** 
@@ -299,9 +323,7 @@ class TrailViewer {
         }
         // Call onArrowsAddedFunc callback
         $.when(...requests).done(() => {
-            if ('onArrowsAddedFunc' in instance._options) {
-                instance._options.onArrowsAddedFunc(instance._panViewer.getConfig()['hotSpots']);
-            }
+            this._populateArrows(instance._panViewer.getConfig()['hotSpots']);
         });
         
         return this;
@@ -383,6 +405,51 @@ class TrailViewer {
         return neighbors;
     }
 
+    /**
+     * Called when navigation arrow is clicked
+     * @param {String} id - Image ID to navigate to
+     */
+    _navArrowClicked(id) {
+        this.goToImageID(id);
+    }
+
+    /**
+     * Populates navigation arrows on TrailViewer container
+     * Used as a callback on TrailView object
+     * @param {Object} hotspots - JSON object from pannellum config
+     */
+    _populateArrows(hotspots) {
+        $('.nav-arrow').remove();
+        if (!hotspots) {
+            return;
+        }
+        let instance = this;
+        for (let i = 0; i < hotspots.length; i++) {
+            let link = document.createElement('img');
+            $(link).addClass('nav-arrow');
+            if (this._navArrowFull) {
+                $('#nav_container').removeClass('nav_container-small').addClass('nav_container-full');
+                $(link).addClass('nav_arrow-full');
+            } else {
+                $('#nav_container').removeClass('nav_container-full').addClass('nav_container-small');
+                $(link).addClass('nav_arrow-small');
+            }
+            $(link).attr('src', baseURL + '/assets/images/ui/nav-arrow.png');
+            $(link).data('yaw', hotspots[i].yaw);
+            $(link).data('id', hotspots[i]['clickHandlerArgs']['id']);
+            $(link).hide(0);
+            $(link).click(function (e) {
+                e.preventDefault();
+                instance._navArrowClicked($(this).data('id'));
+                $('.nav-arrow').fadeOut(10);
+            });
+            $(link).attr('draggable', false);
+            $('#nav_container').append($(link));
+        }
+        this._updateNavArrows(this);
+        $('.nav-arrow').fadeIn(200);
+    }
+
     /** 
      * Intialize the Viewer
      * @private
@@ -411,6 +478,11 @@ class TrailViewer {
         this._sceneList.push(this._currImg['id']);
         this._panViewer = pannellum.viewer('panorama', config);
 
+        let navContainer = document.createElement('div');
+        navContainer.id = 'nav_container';
+        navContainer.classList.add('nav_container-full');
+        $('#panorama').append(navContainer);
+
         // Set up onSceneChange event listener
         let instance = this;
         this._panViewer.on("scenechange", function(imgId) {
@@ -429,10 +501,23 @@ class TrailViewer {
             this._panViewer.removeHotSpot(this._hotSpotList[i]);
         }
         this._addNeighborsToViewer(neighbors, this._currImg.flipped);
+
+        // Update nav arrow rotation on a set interval
+        this._navArrowInterval = setInterval(this._updateNavArrows, 13, this);
+
         if ('onInitDoneFunc' in this._options) {
             this._options.onInitDoneFunc(this);
         }
         return this;
+    }
+
+    /**
+     * Sets nav arrow/container size
+     * @param {Boolean} full - true for full-size, false for small-size
+     */
+    setNavSize(full) {
+        this._navArrowFull = full;
+        this._populateArrows(this._panViewer.getConfig()['hotSpots']);
     }
 
     /** 
@@ -551,7 +636,7 @@ class TrailViewer {
         this._addNeighborsToViewer(neighbors, this._currImg.flipped);
 
         if ('onSceneChangeFunc' in this._options) {
-            this._options.onSceneChangeFunc(this._currImg);
+            this._options.onSceneChangeFunc(this._currImg.id);
         }
     }
 
@@ -594,6 +679,10 @@ class TrailViewer {
     destroy() {
         if (this._panViewer != null) {
             this._panViewer.destroy();
+        }
+        if (this._navArrowInterval) {
+            clearInterval(this._navArrowInterval);
+            this._navArrowInterval = null;
         }
     }
 

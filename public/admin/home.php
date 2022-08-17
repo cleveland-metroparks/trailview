@@ -20,6 +20,7 @@ if (!isset($_SESSION['loggedin'])) {
     <link rel="stylesheet" href="/css/viewer-desktop.css" />
     <link rel="stylesheet" href="/css/map.css" />
     <link rel="stylesheet" href="/css/map-desktop.css" />
+    <link rel="stylesheet" href="/css/trailviewer.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-dark-5@1.1.3/dist/css/bootstrap-nightshade.min.css" rel="stylesheet">
     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> -->
     <script type="text/javascript" src="/dist/pannellum-metroparks/build/pannellum.js"></script>
@@ -87,9 +88,6 @@ if (!isset($_SESSION['loggedin'])) {
         <div class="col-xs-12 col-md-7 my-3" style="height: 1200px;">
             <div id="viewer-container">
                 <div id="panorama" style="margin: 0; padding: 0; width: 100%; height: 600px; background-color: D6D6D6;">
-                </div>
-                <div id="nav_container" class="nav_container-full">
-                    <a><img class="new_nav" src="/assets/images/ui/arrow_new_small_white.png" draggable="false"></a>
                 </div>
                 <div id="map"></div>
             </div>
