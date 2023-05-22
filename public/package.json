@@ -1,0 +1,18 @@
+{
+    "name": "trailview",
+    "scripts": {
+        "build": "rollup -c ./js/rollup.config.js --bundleConfigAsCjs"
+    },
+    "author": "Matthew Oros",
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^25.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.2",
+        "@rollup/plugin-typescript": "^11.1.1",
+        "typescript": "^5.0.4"
+    },
+    "dependencies": {
+        "@rollup/plugin-terser": "^0.4.3",
+        "cheap-ruler": "^3.0.2",
+        "tslib": "^2.5.2"
+    }
+}
