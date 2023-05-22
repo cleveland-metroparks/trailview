@@ -6,6 +6,7 @@ import terser from '@rollup/plugin-terser';
 export default {
     input: 'js/src/trailviewer.ts',
     output: {
+        name: "TrailViewer",
         file: 'js/dist/bundle.js',
         format: 'iife',
     },

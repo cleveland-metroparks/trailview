@@ -166,7 +166,7 @@ function startViewer(data) {
     }
     started = true;
 
-    trailViewer = new TrailViewer({
+    trailViewer = new TrailViewer.TrailViewer({
         'onSceneChangeFunc': onViewerSceneChange,
         'onGeoChangeFunc': onGeoChange,
         'onInitDoneFunc': onInitDone,
