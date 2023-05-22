@@ -2,7 +2,7 @@
 // Uploader object
 var uploader = new plupload.Uploader({
     browse_button: 'browse', // Id of element
-    url: '/admin/api/upload.php',
+    url: '/api/upload.php',
 });
 var prevNameVal = "";   // Previous name input value (used for validation)
 var failed = false; // If upload failed

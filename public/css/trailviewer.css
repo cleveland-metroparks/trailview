@@ -36,7 +36,7 @@
     bottom: 5px;
 }
 
-.new_nav {
+.nav-arrow {
     position: absolute;
     height: 55.5px;
     width: 100px;
@@ -50,7 +50,7 @@
     user-select: none;
 }
 
-.new_nav-small {
+.nav_arrow-small {
     height: 41.625px !important;
     width: 75px !important;
 }

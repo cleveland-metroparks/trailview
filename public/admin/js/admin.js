@@ -34,7 +34,7 @@ function deg2Rad(degrees) {
 }
 
 /**
- * Updates navigation arrow rotation/transformation
+ * Updates TrailView current map marker
  * Called by setInterval()
  */
 function updateMarkerRotation() {
@@ -52,10 +52,8 @@ function onInitDone(viewer) {
     // Update map marker rotation on a set interval
     setInterval(updateMarkerRotation, 13);
 
-    // Update nav arrow rotation on a set interval
-    setInterval(updateNavArrows, 13);
     trailViewer = viewer;
-    onViewerSceneChange(viewer._currImg);
+    onViewerSceneChange(viewer.getCurrentImageID());
 }
 
 /**
@@ -144,37 +142,10 @@ function createMapLayer(data) {
     ]);
 }
 
-
 /**
- * Updates navigation arrows transform
- * Called by setInterval()
+ * Fetches TrailView base data
+ * Called on page load
  */
-function updateNavArrows() {
-    if (trailViewer) {
-        // Arrow rotation
-        $('.new_nav').each(function (index, element) {
-            let yaw = customMod(((360 - angle180to360(trailViewer._panViewer.getYaw())) + $(element).data('yaw')), 360);
-            $(element).css('transform', 'rotateZ(' + yaw + 'deg) translateY(-100px)');
-        });
-        // Container rotation
-        let rot = (trailViewer._panViewer.getPitch() + 90) / 2.0;
-        if (rot > 80) {
-            rot = 80
-        } else if (rot < 0) {
-            rot = 0;
-        }
-        $('#nav_container').css('transform', 'perspective(300px) rotateX(' + rot + 'deg)');
-    }
-}
-
-/**
- * Called when navigation arrow is clicked
- * @param {String} id - Image ID to navigate to
- */
-function navArrowClicked(id) {
-    trailViewer.goToImageID(id);
-}
-
 function fetchData() {
     $.getJSON("/api/images.php", {
         'type': 'all'
@@ -183,37 +154,6 @@ function fetchData() {
             init(data['imagesAll']);
         }
     );
-}
-
-/**
- * Populates navigation arrows on TrailViewer container
- * Used as a callback on TrailView object
- * @param {Object} hotspots - JSON object from pannellum config
- */
-function populateArrows(hotspots) {
-    $('.new_nav').remove();
-    if (!hotspots) {
-        return;
-    }
-    for (let i = 0; i < hotspots.length; i++) {
-        let link = document.createElement('img');
-        $(link).addClass('new_nav');
-        $(link).attr('src', '/assets/images/ui/arrow_new_small_white.png');
-        $(link).data('yaw', hotspots[i].yaw);
-        $(link).data('id', hotspots[i]['clickHandlerArgs']['id']);
-        $(link).hide(0);
-        $(link).click(function (e) {
-            e.preventDefault();
-            navArrowClicked($(this).data('id'));
-            $('.new_nav').fadeOut(10);
-        });
-        $(link).attr('draggable', false);
-        //$(link).css('transform', 'rotateZ(' + hotspots[i].yaw + 'deg) translateY(-100px)');
-        $('#nav_container').append($(link));
-    }
-    updateNavArrows();
-    $('.new_nav').fadeIn(200);
-
 }
 
 /**
@@ -229,7 +169,6 @@ function startViewer(data) {
     trailViewer = new TrailViewer({
         'onSceneChangeFunc': onViewerSceneChange,
         'onGeoChangeFunc': onGeoChange,
-        'onArrowsAddedFunc': populateArrows,
         'onInitDoneFunc': onInitDone,
         'imageFetchType': 'all',
     }, null, data);
@@ -247,11 +186,10 @@ function init(data) {
 
 /**
  * Used as callback when TrailView scene/img changes
- * @param {Object} img - Scene object that is being changed to
+ * @param {String} id - Image ID that is being changed to
  */
-function onViewerSceneChange(img) {
-    // fetchStatus();
-    $('#image-id').val(img.id);
+function onViewerSceneChange(id) {
+    $('#image-id').val(id);
     if (trailViewer) {
         let sequenceName = trailViewer.getCurrentSequenceName();
         if (sequenceName != $('#sequence_select').val()) {
@@ -266,7 +204,7 @@ function onViewerSceneChange(img) {
         }
         $('#pitch_label').text("Pitch Correction: " + $('#pitch_range').val());
         for (let i = 0; i < dataArr.length; i++) {
-            if (dataArr[i].id == img.id) {
+            if (dataArr[i].id == id) {
                 isVisible = dataArr[i].visibility;
                 break;
             }
