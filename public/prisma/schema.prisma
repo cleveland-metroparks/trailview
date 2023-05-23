@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model AdminAccounts {
+  ID       Int    @id(map: "PK__AdminAcc__3214EC275845B40D") @default(autoincrement())
+  Username String @db.VarChar(50)
+  Password String @db.VarChar(255)
+}
+
+model Images {
+  Id                String   @id(map: "PK_Images") @db.VarChar(50)
+  SequenceName      String?  @db.VarChar(50)
+  OriginalLatitude  Float?
+  OriginalLongitude Float?
+  Latitude          Float?
+  Longitude         Float?
+  Bearing           Float?
+  Flipped           Boolean?
+  ShtHash           String?  @db.Text
+  OriginalName      String?  @db.Text
+  PitchCorrection   Float?   @default(0.0, map: "DF_Images_PitchCorrection")
+  Visibility        Boolean  @default(false, map: "DF_Images_Visibility")
+}
+
+model TrailInfo {
+  ID          Int     @id(map: "PK_TrailInfo") @default(autoincrement())
+  ImageID     String? @db.VarChar(50)
+  Pitch       Float?
+  Yaw         Float?
+  HoverText   String? @db.Text
+  TargetPitch Float?
+  TargetYaw   Float?
+  TargetHFOV  Float?
+  CSSClass    String? @db.Text
+}
+
+model Trails {
+  Name     String  @id(map: "PK_TrailsNewNewNew") @db.VarChar(50)
+  Status   String? @db.Text
+  ToDelete Boolean @default(false, map: "DF_TrailsNewNewNew_ToDelete")
+}

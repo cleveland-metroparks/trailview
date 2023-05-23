@@ -1,1 +1,5 @@
-{ "compilerOptions": { "target": "ES2022", "strict": true, "moduleResolution": "nodenext" } }
+{ "compilerOptions": { 
+    "target": "ES2022", 
+    "strict": true,
+    "moduleResolution": "nodenext"
+     } }
