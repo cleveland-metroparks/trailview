@@ -4,6 +4,61 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width" />
+		<style>
+			#viewer-container {
+				width: 100%;
+				height: 600px;
+				position: relative;
+			}
+
+			#panorama {
+				width: 100%;
+				height: 100%;
+
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+
+			#map {
+				width: 100%;
+				height: 600px;
+				position: relative;
+				z-index: 5;
+				top: 600px;
+			}
+
+			#nav_arrows_container {
+				position: absolute;
+				margin: 0;
+				width: 35%;
+				height: 45%;
+				left: 50%;
+				bottom: 10%;
+				transform: translateX(-50%);
+			}
+
+			.inside {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+
+				background-color: gray;
+				display: block;
+			}
+
+			.nav_arrow_new {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+			}
+			.custom-hotspot {
+				background-size: cover;
+				height: 55.5px;
+				width: 100px;
+				background-image: url('/img/arrow_new_small.png');
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

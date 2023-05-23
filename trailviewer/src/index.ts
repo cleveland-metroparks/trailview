@@ -4,24 +4,14 @@ declare var pannellum: any;
 type PannellumViewer = any;
 
 export interface TrailViewerOptions {
-    useURLHashing: boolean;
-    onSceneChangeFunc: Function | null;
-    onGeoChangeFunc: Function | null;
-    onHotSpotClickFunc: Function | null;
-    onInitDoneFunc: Function | null;
-    onArrowsAddedFunc: Function | null;
+    baseUrl: string;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
 }
 
 export const defaultTrailViewerOptions: TrailViewerOptions = {
-    useURLHashing: false,
-    onSceneChangeFunc: null,
-    onGeoChangeFunc: null,
-    onHotSpotClickFunc: null,
-    onInitDoneFunc: null,
-    onArrowsAddedFunc: null,
+    baseUrl: 'https://trailview.cmparks.net',
     navArrowMinAngle: -25,
     navArrowMaxAngle: -20,
     imageFetchType: 'standard',
@@ -45,47 +35,40 @@ function customMod(a: number, b: number): number {
     return a - Math.floor(a / b) * b;
 }
 
-const baseURL = 'https://trailview.cmparks.net';
-
 export class TrailViewer {
     private _options: TrailViewerOptions = defaultTrailViewerOptions;
-    private _initImageId: string | null;
-    private _panViewer: PannellumViewer | null = null;
-    private _infoJson: any = null;
+    private _panViewer: PannellumViewer | undefined;
+    private _infoJson: any = undefined;
     private _geo = { latitude: 0, longitude: 0 };
     private _prevNorthOffset: number = 0;
     private _prevYaw: number = 0;
     private _currImg: any;
-    private _dataArr: any[] | null;
+    private _dataArr: any[] | undefined;
     private _dataIndex: any = {};
     private _sceneList: any[] = [];
     private _hotSpotList: any[] = [];
     private _prevImg: string | null = null;
-    private _navArrowMinAngle: number;
-    private _navArrowMaxAngle: number;
     private _prevNavClickedYaw: number = 0;
-    private _initLat: number | null;
-    private _initLng: number | null;
-    private _imageFetchType: 'standard' | 'all';
+    private _initLat: number | undefined;
+    private _initLng: number | undefined;
     private optimalDist = 4;
     private neighborDistCutoff = 10;
     private pruneAngle = 25;
     private _firstScene: any = null;
 
     constructor(
-        options: TrailViewerOptions,
-        initImageId: string | null,
-        data = null,
-        lat = null,
-        lng = null
+        options: TrailViewerOptions = defaultTrailViewerOptions,
+        initImageId: string | undefined,
+        data = undefined,
+        lat = undefined,
+        lng = undefined
     ) {
         this._options = options;
-        this._initImageId = initImageId;
         this._currImg = initImageId;
         if (data !== null) {
             this._dataArr = data;
         } else {
-            this._dataArr = null;
+            this._dataArr = undefined;
             this._fetchData().then((dataArr: any[]) => {
                 this._dataArr = dataArr;
                 if (this._panViewer !== null) {
@@ -102,22 +85,7 @@ export class TrailViewer {
                 }
             });
         }
-        this._navArrowMinAngle = options.navArrowMinAngle;
-        this._navArrowMaxAngle = options.navArrowMaxAngle;
-        this._initLat = lat;
-        this._initLng = lng;
-        this._imageFetchType = options.imageFetchType;
-
-        if (this._dataArr === null) {
-            this._fetchData();
-        } else {
-            this._initViewer();
-        }
         return this;
-    }
-
-    getOptions() {
-        return this._options;
     }
 
     setData(data: any[]) {

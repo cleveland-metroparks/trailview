@@ -8,7 +8,7 @@ const app = express();
 const port = 3000;
 
 app.get('/images/standard/:imageId?', async (req: Request, res: Response) => {
-    if (req.params.imageId === null) {
+    if (req.params.imageId === undefined) {
         const images = await db.images.findMany({
             where: { Visibility: true, Id: req.params.imageId },
         });
@@ -94,6 +94,18 @@ app.get('/images/all/:imageId', async (req: Request, res: Response) => {
                 visibility: image.Visibility,
             },
         });
+    }
+});
+
+app.get('/preview/:imageId', async (req: Request, res: Response) => {
+    const image = await db.images.findUnique({
+        where: { Id: req.params.imageId },
+        select: { ShtHash: true },
+    });
+    if (!image) {
+        return res.json({ success: false });
+    } else {
+        return res.json({ success: true, preview: image.ShtHash });
     }
 });
 
