@@ -16,9 +16,9 @@ model AdminAccount {
 
 model Session {
   Id             String       @id @default(uuid())
+  AdminAccountId Int
   createdAt      DateTime     @default(now())
   Account        AdminAccount @relation(fields: [AdminAccountId], references: [Id])
-  AdminAccountId Int
 }
 
 model Images {

@@ -7,21 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Images {
-  Id                String   @id(map: "PK_Images") @db.VarChar(50)
-  SequenceName      String?  @db.VarChar(50)
-  OriginalLatitude  Float?
-  OriginalLongitude Float?
-  Latitude          Float?
-  Longitude         Float?
-  Bearing           Float?
-  Flipped           Boolean?
-  ShtHash           String?  @db.Text
-  OriginalName      String?  @db.Text
-  PitchCorrection   Float?   @default(0.0, map: "DF_Images_PitchCorrection")
-  Visibility        Boolean  @default(false, map: "DF_Images_Visibility")
-}
-
 model TrailInfo {
   ID          Int     @id(map: "PK_TrailInfo") @default(autoincrement())
   ImageID     String? @db.VarChar(50)
@@ -52,4 +37,18 @@ model Session {
   AdminAccountId Int
   createdAt      DateTime     @default(now())
   AdminAccount   AdminAccount @relation(fields: [AdminAccountId], references: [Id])
+}
+
+model Image {
+  id                String  @id @db.VarChar(50)
+  sequenceName      String
+  originalLatitude  Float
+  originalLongitude Float
+  latitude          Float
+  longitude         Float
+  bearing           Float
+  flipped           Boolean
+  shtHash           String
+  pitchCorrection   Float
+  visibility        Boolean
 }

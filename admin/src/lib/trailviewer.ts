@@ -66,6 +66,7 @@ export class TrailViewer {
 	private _firstScene: any = null;
 	private _emitter: mitt.Emitter<any>;
 	private _map: mapboxgl.Map | undefined;
+	private _mapMarker: mapboxgl.Marker | undefined;
 
 	constructor(
 		options: TrailViewerOptions = defaultTrailViewerOptions,
@@ -198,7 +199,6 @@ export class TrailViewer {
 			touchPitch: false,
 			boxZoom: false
 		});
-		console.log(this._map);
 
 		// Once loaded, create dots layer
 		this._map.on('load', () => {
@@ -231,29 +231,32 @@ export class TrailViewer {
 		// });
 
 		// // Create currentMarker icon
-		// const currentMarker_wrap = document.createElement('div');
-		// currentMarker_wrap.classList.add('marker_current_wrapper');
-		// const currentMarker_div = document.createElement('div');
-		// currentMarker_div.classList.add('marker_current');
-		// const currentMarker_view_div = document.createElement('div');
-		// currentMarker_view_div.classList.add('marker_viewer');
-		// currentMarker_wrap.appendChild(currentMarker_div);
-		// currentMarker_wrap.appendChild(currentMarker_view_div);
-		// currentMarker = new mapboxgl.Marker(currentMarker_wrap)
-		// 	.setLngLat([-81.682665, 41.4097766])
-		// 	.addTo(map)
-		// 	.setRotationAlignment('map');
+		const currentMarker_wrap = document.createElement('div');
+		currentMarker_wrap.classList.add('marker_current_wrapper');
+		const currentMarker_div = document.createElement('div');
+		currentMarker_div.classList.add('marker_current');
+		const currentMarker_view_div = document.createElement('div');
+		currentMarker_view_div.classList.add('marker_viewer');
+		currentMarker_wrap.appendChild(currentMarker_div);
+		currentMarker_wrap.appendChild(currentMarker_view_div);
+		this._mapMarker = new mapboxgl.Marker(currentMarker_wrap)
+			.setLngLat([-81.682665, 41.4097766])
+			.addTo(this._map)
+			.setRotationAlignment('map');
 
-		// map.jumpTo({
-		// 	center: currentMarker.getLngLat(),
-		// 	zoom: 16,
-		// 	bearing: 0
-		// });
+		this._map.jumpTo({
+			center: this._mapMarker.getLngLat(),
+			zoom: 16,
+			bearing: 0
+		});
 
 		// // Handle when dots are clicked
-		// map.on('click', 'dots', (e) => {
-		// 	trailViewer.goToImageID(e.features[0].properties.imageID);
-		// });
+		this._map.on('click', 'dots', (e) => {
+			if (e.features === undefined || e.features[0].properties === null) {
+				return;
+			}
+			this.goToImageID(e.features[0].properties.imageID);
+		});
 	}
 
 	setData(data: any[]) {
