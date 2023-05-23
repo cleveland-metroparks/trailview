@@ -22,8 +22,8 @@
 
 <div id="viewer-container">
 	<div
-		id="panorama"
+		id="trailview_panorama"
 		style="margin: 0; padding: 0; width: 100%; height: 600px; background-color: D6D6D6;"
 	/>
-	<div id="map" />
+	<div id="trailview_map" />
 </div>

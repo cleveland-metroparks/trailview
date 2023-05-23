@@ -1,9 +1,16 @@
 import CheapRuler from 'cheap-ruler';
+import * as mitt from 'mitt';
+import mapboxgl from 'mapbox-gl';
+import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import type { Feature, FeatureCollection } from 'geojson';
 
 declare const pannellum: any;
 type PannellumViewer = any;
 
 export interface TrailViewerOptions {
+	panoramaTarget: string;
+	mapTarget: string;
 	baseUrl: string;
 	navArrowMinAngle: number;
 	navArrowMaxAngle: number;
@@ -11,6 +18,8 @@ export interface TrailViewerOptions {
 }
 
 export const defaultTrailViewerOptions: TrailViewerOptions = {
+	panoramaTarget: 'trailview_panorama',
+	mapTarget: 'trailview_map',
 	baseUrl: 'https://trailview.cmparks.net',
 	navArrowMinAngle: -25,
 	navArrowMaxAngle: -20,
@@ -55,6 +64,8 @@ export class TrailViewer {
 	private neighborDistCutoff = 10;
 	private pruneAngle = 25;
 	private _firstScene: any = null;
+	private _emitter: mitt.Emitter<any>;
+	private _map: mapboxgl.Map | undefined;
 
 	constructor(
 		options: TrailViewerOptions = defaultTrailViewerOptions,
@@ -63,6 +74,7 @@ export class TrailViewer {
 		lat = undefined,
 		lng = undefined
 	) {
+		this._emitter = mitt.default();
 		this._options = options;
 		this._currImg = initImageId;
 		if (data !== undefined) {
@@ -85,6 +97,165 @@ export class TrailViewer {
 		return this;
 	}
 
+	public on(event: string, listener: (...args: any[]) => void): void {
+		this._emitter.on(event, listener);
+	}
+
+	private _createMapLayer(data: any) {
+		if (this._map === undefined) {
+			return;
+		}
+		if (this._map.getSource('dots')) {
+			this._map.removeLayer('dots');
+			this._map.removeSource('dots');
+		}
+
+		const features: FeatureCollection = {
+			type: 'FeatureCollection',
+			features: []
+		};
+		for (let i = 0; i < data.length; i++) {
+			const f: Feature = {
+				type: 'Feature',
+				properties: {
+					sequenceName: data[i]['sequence'],
+					imageID: data[i]['id'],
+					visible: data[i]['visibility']
+				},
+				geometry: {
+					type: 'Point',
+					coordinates: [data[i]['longitude'], data[i]['latitude']]
+				}
+			};
+			features.features.push(f);
+		}
+
+		const layerData: mapboxgl.AnySourceData = {
+			type: 'geojson',
+			data: {
+				type: 'FeatureCollection',
+				features: features.features
+			}
+		};
+
+		this._map.addSource('dots', layerData);
+
+		this._map.addLayer({
+			id: 'dots',
+			type: 'circle',
+			source: 'dots',
+			paint: {
+				'circle-radius': 10,
+				'circle-color': ['case', ['==', ['get', 'visible'], true], '#00a108', '#db8904']
+			}
+		});
+		this._map.setPaintProperty('dots', 'circle-radius', [
+			'interpolate',
+
+			['exponential', 0.5],
+			['zoom'],
+			13,
+			3,
+
+			16,
+			5,
+
+			17,
+			7,
+
+			20,
+			8
+		]);
+		this._map.setPaintProperty('dots', 'circle-opacity', [
+			'interpolate',
+
+			['exponential', 0.5],
+			['zoom'],
+			13,
+			0.05,
+
+			15,
+			0.1,
+
+			17,
+			0.25,
+
+			20,
+			1
+		]);
+	}
+
+	private _startMap(data: any) {
+		// Create map
+		mapboxgl.accessToken = PUBLIC_MAPBOX_KEY;
+		this._map = new mapboxgl.Map({
+			container: this._options.mapTarget,
+			style: 'mapbox://styles/cleveland-metroparks/cisvvmgwe00112xlk4jnmrehn?optimize=true',
+			center: [-81.682665, 41.4097766],
+			zoom: 9.5,
+			pitchWithRotate: false,
+			dragRotate: false,
+			touchPitch: false,
+			boxZoom: false
+		});
+		console.log(this._map);
+
+		// Once loaded, create dots layer
+		this._map.on('load', () => {
+			this._createMapLayer(data);
+		});
+
+		// // Update visual cursor
+		// map.on('mouseenter', 'dots', () => {
+		// 	mouseOnDot = true;
+		// 	map.getCanvas().style.cursor = 'pointer';
+		// });
+
+		// map.on('mouseleave', 'dots', () => {
+		// 	mouseOnDot = false;
+		// 	map.getCanvas().style.cursor = 'grab';
+		// });
+
+		// map.on('mousedown', () => {
+		// 	if (!mouseOnDot) {
+		// 		map.getCanvas().style.cursor = 'grabbing';
+		// 	}
+		// });
+
+		// map.on('mouseup', () => {
+		// 	if (mouseOnDot) {
+		// 		map.getCanvas().style.cursor = 'pointer';
+		// 	} else {
+		// 		map.getCanvas().style.cursor = 'grab';
+		// 	}
+		// });
+
+		// // Create currentMarker icon
+		// const currentMarker_wrap = document.createElement('div');
+		// currentMarker_wrap.classList.add('marker_current_wrapper');
+		// const currentMarker_div = document.createElement('div');
+		// currentMarker_div.classList.add('marker_current');
+		// const currentMarker_view_div = document.createElement('div');
+		// currentMarker_view_div.classList.add('marker_viewer');
+		// currentMarker_wrap.appendChild(currentMarker_div);
+		// currentMarker_wrap.appendChild(currentMarker_view_div);
+		// currentMarker = new mapboxgl.Marker(currentMarker_wrap)
+		// 	.setLngLat([-81.682665, 41.4097766])
+		// 	.addTo(map)
+		// 	.setRotationAlignment('map');
+
+		// map.jumpTo({
+		// 	center: currentMarker.getLngLat(),
+		// 	zoom: 16,
+		// 	bearing: 0
+		// });
+
+		// // Handle when dots are clicked
+		// map.on('click', 'dots', (e) => {
+		// 	trailViewer.goToImageID(e.features[0].properties.imageID);
+		// });
+	}
+
 	setData(data: any[]) {
 		this._dataArr = data;
 		// Create index for quick lookup of data points
@@ -102,6 +273,10 @@ export class TrailViewer {
 		}
 		this._addSceneToViewer(this._dataArr[this._dataIndex[this._currImg['id']]]);
 		this.goToImageID(this._currImg['id']);
+	}
+
+	getData(): any {
+		return this._dataArr;
 	}
 
 	getCurrentImageID(): string | undefined {
@@ -330,7 +505,7 @@ export class TrailViewer {
 		this._currImg = this._dataArr[this._dataIndex[this._firstScene]];
 		config = this._addSceneToConfig(config, this._currImg);
 		this._sceneList.push(this._currImg['id']);
-		this._panViewer = pannellum.viewer('panorama', config);
+		this._panViewer = pannellum.viewer(this._options.panoramaTarget, config);
 
 		// Set up onSceneChange event listener
 		this._panViewer.on('scenechange', (imgId: any) => {
@@ -352,7 +527,8 @@ export class TrailViewer {
 			this._panViewer.removeHotSpot(this._hotSpotList[i]);
 		}
 		this._addNeighborsToViewer(neighbors, this._currImg.flipped);
-		//TODO on-init-done
+		this._emitter.emit('on-init-done');
+		this._startMap(this._dataArr);
 	}
 
 	/**
