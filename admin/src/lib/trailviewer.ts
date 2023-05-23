@@ -1,6 +1,7 @@
 import CheapRuler from 'cheap-ruler';
 import mapboxgl from 'mapbox-gl';
 import type { Feature, FeatureCollection } from 'geojson';
+import { EventEmitter } from 'events';
 
 declare const pannellum: any;
 type PannellumViewer = any;
@@ -43,6 +44,21 @@ function customMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
 
+export interface Image {
+	id: string;
+	sequenceName: string;
+	latitude: number;
+	longitude: number;
+	bearing: number;
+	flipped: boolean;
+	pitchCorrection: number;
+	visibility: boolean;
+}
+
+export interface TrailViewer {
+	on(event: 'image-change', listener: (image: Image) => void): void;
+}
+
 export class TrailViewer {
 	private _options: TrailViewerOptions = defaultTrailViewerOptions;
 	private _panViewer: PannellumViewer | undefined;
@@ -50,12 +66,12 @@ export class TrailViewer {
 	private _geo = { latitude: 0, longitude: 0 };
 	private _prevNorthOffset = 0;
 	private _prevYaw = 0;
-	private _currImg: any;
+	private _currImg: Image | undefined;
 	private _dataArr: any[] | undefined;
 	private _dataIndex: any = {};
 	private _sceneList: any[] = [];
 	private _hotSpotList: any[] = [];
-	private _prevImg: string | null = null;
+	private _prevImg: Image | undefined;
 	private _prevNavClickedYaw = 0;
 	private _initLat: number | undefined;
 	private _initLng: number | undefined;
@@ -66,16 +82,16 @@ export class TrailViewer {
 	private _map: mapboxgl.Map | undefined;
 	private _mapMarker: mapboxgl.Marker | undefined;
 	private _markerRotationInterval: ReturnType<typeof setInterval> | undefined;
+	private _emitter: EventEmitter;
 
 	constructor(
 		options: TrailViewerOptions = defaultTrailViewerOptions,
-		initImageId: string | undefined = undefined,
 		data = undefined,
 		lat = undefined,
 		lng = undefined
 	) {
+		this._emitter = new EventEmitter();
 		this._options = options;
-		this._currImg = initImageId;
 		if (data !== undefined) {
 			this._dataArr = data;
 		} else {
@@ -96,9 +112,9 @@ export class TrailViewer {
 		return this;
 	}
 
-	// public on(event: string, listener: (...args: any[]) => void): void {
-	// 	this._emitter.on(event, listener);
-	// }
+	public on(event: string, listener: (...args: any[]) => void): void {
+		this._emitter.on(event, listener);
+	}
 
 	private _createMapLayer(data: any) {
 		if (this._map === undefined) {
@@ -283,8 +299,10 @@ export class TrailViewer {
 		for (let i = 0; i < this._sceneList.length; i++) {
 			this._panViewer.removeScene(this._sceneList[i]);
 		}
-		this._addSceneToViewer(this._dataArr[this._dataIndex[this._currImg['id']]]);
-		this.goToImageID(this._currImg['id']);
+		if (this._currImg) {
+			this._addSceneToViewer(this._dataArr[this._dataIndex[this._currImg.id]]);
+			this.goToImageID(this._currImg.id);
+		}
 	}
 
 	getData(): any {
@@ -297,12 +315,20 @@ export class TrailViewer {
 		}
 	}
 
-	getFlipped(): boolean {
-		return this._currImg['flipped'];
+	getFlipped(): boolean | undefined {
+		if (this._currImg) {
+			return this._currImg.flipped;
+		} else {
+			return undefined;
+		}
 	}
 
-	getCurrentSequenceName(): string {
-		return this._currImg['sequenceName'];
+	getCurrentSequenceName(): string | undefined {
+		if (this._currImg) {
+			return this._currImg.sequenceName;
+		} else {
+			return undefined;
+		}
 	}
 
 	private _createViewerConfig(firstScene: string): any {
@@ -500,7 +526,7 @@ export class TrailViewer {
 		}
 
 		// Set firstScene, if not specified then use first scene in data array
-		if (this._currImg == null) {
+		if (this._currImg === undefined) {
 			if (this._initLat && this._initLng) {
 				this._firstScene = this.getNearestImageId(
 					this._initLat,
@@ -516,7 +542,9 @@ export class TrailViewer {
 		let config = this._createViewerConfig(this._firstScene);
 		this._currImg = this._dataArr[this._dataIndex[this._firstScene]];
 		config = this._addSceneToConfig(config, this._currImg);
-		this._sceneList.push(this._currImg['id']);
+		if (this._currImg) {
+			this._sceneList.push(this._currImg.id);
+		}
 		this._panViewer = pannellum.viewer(this._options.panoramaTarget, config);
 
 		// Set up onSceneChange event listener
@@ -525,10 +553,12 @@ export class TrailViewer {
 		});
 		this._onSceneChange(this._panViewer.getScene());
 
-		if (this._currImg.flipped) {
-			this._panViewer.setYaw(180, false);
-		} else {
-			this._panViewer.setYaw(0, false);
+		if (this._currImg !== undefined) {
+			if (this._currImg.flipped) {
+				this._panViewer.setYaw(180, false);
+			} else {
+				this._panViewer.setYaw(0, false);
+			}
 		}
 
 		const neighbors = this._getNeighbors(this._currImg);
@@ -538,7 +568,9 @@ export class TrailViewer {
 		for (let i = 0; i < this._hotSpotList.length; i++) {
 			this._panViewer.removeHotSpot(this._hotSpotList[i]);
 		}
-		this._addNeighborsToViewer(neighbors, this._currImg.flipped);
+		if (this._currImg !== undefined) {
+			this._addNeighborsToViewer(neighbors, this._currImg.flipped);
+		}
 		// this._emitter.emit('on-init-done');
 		this._startMap(this._dataArr);
 	}
@@ -644,11 +676,12 @@ export class TrailViewer {
 		this._prevImg = this._currImg;
 
 		// Add nav arrows
-		if (neighbors !== null) {
+		if (neighbors !== null && this._currImg !== undefined) {
 			this._addNeighborsToViewer(neighbors, this._currImg.flipped);
 		}
-
-		// TODO: on-scene-change
+		if (this._currImg !== undefined) {
+			this._emitter.emit('image-change', this._currImg);
+		}
 	}
 
 	/**
