@@ -6,6 +6,7 @@
         "outDir": "./dist",
         "strict": true,
         "declaration": true,
-        "moduleResolution": "bundler"
+        "moduleResolution": "bundler",
+        "esModuleInterop": true
     }
 }

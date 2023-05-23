@@ -1,629 +1,760 @@
 import CheapRuler from 'cheap-ruler';
+import mapboxgl from 'mapbox-gl';
+import type { Feature, FeatureCollection } from 'geojson';
 
-declare var pannellum: any;
+declare const pannellum: any;
 type PannellumViewer = any;
 
 export interface TrailViewerOptions {
-    baseUrl: string;
-    navArrowMinAngle: number;
-    navArrowMaxAngle: number;
-    imageFetchType: 'standard' | 'all';
+	panoramaTarget: string;
+	mapTarget: string;
+	baseUrl: string;
+	mapboxKey: string | undefined;
+	navArrowMinAngle: number;
+	navArrowMaxAngle: number;
+	imageFetchType: 'standard' | 'all';
 }
 
 export const defaultTrailViewerOptions: TrailViewerOptions = {
-    baseUrl: 'https://trailview.cmparks.net',
-    navArrowMinAngle: -25,
-    navArrowMaxAngle: -20,
-    imageFetchType: 'standard',
+	panoramaTarget: 'trailview_panorama',
+	mapTarget: 'trailview_map',
+	baseUrl: 'https://trailview.cmparks.net',
+	mapboxKey: undefined,
+	navArrowMinAngle: -25,
+	navArrowMaxAngle: -20,
+	imageFetchType: 'standard'
 };
 
 function angle180to360(angle: number): number {
-    if (angle < 0) {
-        angle = 360 + angle;
-    }
-    return angle;
+	if (angle < 0) {
+		angle = 360 + angle;
+	}
+	return angle;
 }
 
 function angle360to180(angle: number): number {
-    if (angle > 180) {
-        angle = -(360 - angle);
-    }
-    return angle;
+	if (angle > 180) {
+		angle = -(360 - angle);
+	}
+	return angle;
 }
 
 function customMod(a: number, b: number): number {
-    return a - Math.floor(a / b) * b;
+	return a - Math.floor(a / b) * b;
 }
 
 export class TrailViewer {
-    private _options: TrailViewerOptions = defaultTrailViewerOptions;
-    private _panViewer: PannellumViewer | undefined;
-    private _infoJson: any = undefined;
-    private _geo = { latitude: 0, longitude: 0 };
-    private _prevNorthOffset: number = 0;
-    private _prevYaw: number = 0;
-    private _currImg: any;
-    private _dataArr: any[] | undefined;
-    private _dataIndex: any = {};
-    private _sceneList: any[] = [];
-    private _hotSpotList: any[] = [];
-    private _prevImg: string | null = null;
-    private _prevNavClickedYaw: number = 0;
-    private _initLat: number | undefined;
-    private _initLng: number | undefined;
-    private optimalDist = 4;
-    private neighborDistCutoff = 10;
-    private pruneAngle = 25;
-    private _firstScene: any = null;
+	private _options: TrailViewerOptions = defaultTrailViewerOptions;
+	private _panViewer: PannellumViewer | undefined;
+	private _infoJson: any = undefined;
+	private _geo = { latitude: 0, longitude: 0 };
+	private _prevNorthOffset = 0;
+	private _prevYaw = 0;
+	private _currImg: any;
+	private _dataArr: any[] | undefined;
+	private _dataIndex: any = {};
+	private _sceneList: any[] = [];
+	private _hotSpotList: any[] = [];
+	private _prevImg: string | null = null;
+	private _prevNavClickedYaw = 0;
+	private _initLat: number | undefined;
+	private _initLng: number | undefined;
+	private optimalDist = 4;
+	private neighborDistCutoff = 10;
+	private pruneAngle = 25;
+	private _firstScene: any = null;
+	private _map: mapboxgl.Map | undefined;
+	private _mapMarker: mapboxgl.Marker | undefined;
+	private _markerRotationInterval: ReturnType<typeof setInterval> | undefined;
 
-    constructor(
-        options: TrailViewerOptions = defaultTrailViewerOptions,
-        initImageId: string | undefined,
-        data = undefined,
-        lat = undefined,
-        lng = undefined
-    ) {
-        this._options = options;
-        this._currImg = initImageId;
-        if (data !== null) {
-            this._dataArr = data;
-        } else {
-            this._dataArr = undefined;
-            this._fetchData().then((dataArr: any[]) => {
-                this._dataArr = dataArr;
-                if (this._panViewer !== null) {
-                    this._initViewer();
-                } else {
-                    // Create index for quick lookup of data points
-                    // Format: {'imageID': index, '27fjei9djc': 8, ...}
-                    for (let i = 0; i < this._dataArr.length; i++) {
-                        this._dataIndex[this._dataArr[i]['id']] = i;
-                    }
-                    if (this._currImg) {
-                        this.goToImageID(this._currImg['id'], true);
-                    }
-                }
-            });
-        }
-        return this;
-    }
+	constructor(
+		options: TrailViewerOptions = defaultTrailViewerOptions,
+		initImageId: string | undefined = undefined,
+		data = undefined,
+		lat = undefined,
+		lng = undefined
+	) {
+		this._options = options;
+		this._currImg = initImageId;
+		if (data !== undefined) {
+			this._dataArr = data;
+		} else {
+			this._dataArr = undefined;
+			this._fetchData().then((dataArr: any[]) => {
+				this._dataArr = dataArr;
+				this._initViewer();
+				// Create index for quick lookup of data points
+				// Format: {'imageID': index, '27fjei9djc': 8, ...}
+				for (let i = 0; i < this._dataArr.length; i++) {
+					this._dataIndex[this._dataArr[i]['id']] = i;
+				}
+				if (this._currImg) {
+					this.goToImageID(this._currImg['id'], true);
+				}
+			});
+		}
+		return this;
+	}
 
-    setData(data: any[]) {
-        this._dataArr = data;
-        // Create index for quick lookup of data points
-        // Format: {'imageID': index, '27fjei9djc': 8, ...}
-        for (let i = 0; i < this._dataArr.length; i++) {
-            this._dataIndex[this._dataArr[i]['id']] = i;
-        }
-        // Remove all hotspots
-        for (let i = 0; i < this._hotSpotList.length; i++) {
-            this._panViewer.removeHotSpot(this._hotSpotList[i], this._currImg);
-        }
-        // Remove all scenes
-        for (let i = 0; i < this._sceneList.length; i++) {
-            this._panViewer.removeScene(this._sceneList[i]);
-        }
-        this._addSceneToViewer(
-            this._dataArr[this._dataIndex[this._currImg['id']]]
-        );
-        this.goToImageID(this._currImg['id']);
-    }
+	// public on(event: string, listener: (...args: any[]) => void): void {
+	// 	this._emitter.on(event, listener);
+	// }
 
-    getCurrentImageID(): string | undefined {
-        if (this._currImg) {
-            return this._currImg['id'];
-        }
-    }
+	private _createMapLayer(data: any) {
+		if (this._map === undefined) {
+			return;
+		}
+		if (this._map.getSource('dots')) {
+			this._map.removeLayer('dots');
+			this._map.removeSource('dots');
+		}
 
-    getFlipped(): boolean {
-        return this._currImg['flipped'];
-    }
+		const features: FeatureCollection = {
+			type: 'FeatureCollection',
+			features: []
+		};
+		for (let i = 0; i < data.length; i++) {
+			const f: Feature = {
+				type: 'Feature',
+				properties: {
+					sequenceName: data[i]['sequence'],
+					imageID: data[i]['id'],
+					visible: data[i]['visibility']
+				},
+				geometry: {
+					type: 'Point',
+					coordinates: [data[i]['longitude'], data[i]['latitude']]
+				}
+			};
+			features.features.push(f);
+		}
 
-    getCurrentSequenceName(): string {
-        return this._currImg['sequenceName'];
-    }
+		const layerData: mapboxgl.AnySourceData = {
+			type: 'geojson',
+			data: {
+				type: 'FeatureCollection',
+				features: features.features
+			}
+		};
 
-    _createViewerConfig(firstScene: string): any {
-        let config = {
-            default: {
-                firstScene: firstScene,
-                sceneFadeDuration: 1500,
-                compass: false,
-                autoLoad: true,
-                showControls: false,
-                crossOrigin: 'use-credentials',
-            },
-            scenes: {},
-        };
-        return config;
-    }
+		this._map.addSource('dots', layerData);
 
-    _addSceneToConfig(config: any, scene: any): any {
-        config['scenes'][String(scene['id'])] = {
-            horizonPitch: scene['pitchCorrection'],
-            hfov: 120,
-            yaw: 0,
-            northOffset: scene['bearing'],
-            type: 'multires',
-            multiRes: {
-                basePath:
-                    baseURL +
-                    '/trails/' +
-                    scene['sequenceName'] +
-                    '/img/' +
-                    scene['id'],
-                path: '/%l/%s%y_%x',
-                extension: 'jpg',
-                tileResolution: 512,
-                maxLevel: 3,
-                cubeResolution: 1832,
-            },
-        };
-        return config;
-    }
+		this._map.addLayer({
+			id: 'dots',
+			type: 'circle',
+			source: 'dots',
+			paint: {
+				'circle-radius': 10,
+				'circle-color': ['case', ['==', ['get', 'visible'], true], '#00a108', '#db8904']
+			}
+		});
+		this._map.setPaintProperty('dots', 'circle-radius', [
+			'interpolate',
 
-    _addSceneToViewer(scene: any, shtHash: string | null = null): TrailViewer {
-        this._sceneList.push(scene['id']);
-        let horizonPitch = scene['pitchCorrection'];
-        let yaw = 180;
-        if (!scene['flipped']) {
-            horizonPitch *= -1;
-            yaw = 0;
-        }
-        let bearing = scene['bearing'];
-        if (!scene['flipped']) {
-            bearing = customMod(bearing + 180, 360);
-        }
-        let config = {
-            horizonPitch: horizonPitch,
-            hfov: 120,
-            yaw: yaw,
-            northOffset: bearing,
-            type: 'multires',
-            multiRes: {
-                basePath:
-                    baseURL +
-                    '/trails/' +
-                    scene['sequenceName'] +
-                    '/img/' +
-                    scene['id'],
-                path: '/%l/%s%y_%x',
-                fallbackPath: '/fallback/%s',
-                extension: 'jpg',
-                tileResolution: 512,
-                maxLevel: 3,
-                cubeResolution: 1832,
-                shtHash,
-            },
-        };
-        if (shtHash != null) {
-            config.multiRes.shtHash = shtHash;
-        }
-        this._panViewer.addScene(scene['id'], config);
+			['exponential', 0.5],
+			['zoom'],
+			13,
+			3,
 
-        return this;
-    }
+			16,
+			5,
 
-    /**
-     * Adds navigation arrows to viewer from neighbors array
-     * */
-    async _addNeighborsToViewer(neighbors: any[], flipped: boolean = false) {
-        let instance = this;
-        for (let i = 0; i < neighbors.length; i++) {
-            const req = await fetch(`${baseURL}/api/preview.php`, {
-                method: 'GET',
-                body: JSON.stringify({
-                    id: neighbors[i]['id'],
-                }),
-            });
+			17,
+			7,
 
-            const data = await req.json();
+			20,
+			8
+		]);
+		this._map.setPaintProperty('dots', 'circle-opacity', [
+			'interpolate',
 
-            instance._addSceneToViewer(neighbors[i], data['preview']);
-            instance._hotSpotList.push(neighbors[i]['id']);
-            let min = instance._navArrowMinAngle;
-            let max = instance._navArrowMaxAngle;
-            let pitch =
-                -(max - min - (neighbors[i]['distance'] * (max - min)) / 9.0) +
-                max;
-            let yaw = neighbors[i]['neighborBearing'];
-            if (!flipped) {
-                yaw = customMod(neighbors[i]['neighborBearing'] + 180, 360);
-            }
-            instance._panViewer.addHotSpot({
-                id: neighbors[i]['id'],
-                pitch: pitch, //-25
-                yaw: yaw,
-                cssClass: 'custom-hotspot',
-                type: 'scene',
-                clickHandlerFunc: instance._onNavArrowClick,
-                clickHandlerArgs: {
-                    this: instance,
-                    id: neighbors[i]['id'],
-                    yaw: neighbors[i]['neighborBearing'],
-                    pitch: pitch,
-                },
-            });
-        }
-        if (instance._options.onArrowsAddedFunc !== null) {
-            instance._options.onArrowsAddedFunc(
-                instance._panViewer.getConfig()['hotSpots']
-            );
-        }
-    }
+			['exponential', 0.5],
+			['zoom'],
+			13,
+			0.05,
 
-    /**
-     * Called when a navigation arrow is clicked
-     */
-    _onNavArrowClick(evt: Event, info: any) {
-        info['this']._prevNavClickedYaw = info.yaw;
-        info['this']._panViewer.loadScene(info.id, 'same', 'same', 'same');
-    }
+			15,
+			0.1,
 
-    _customMod(a: number, b: number): number {
-        return a - Math.floor(a / b) * b;
-    }
+			17,
+			0.25,
 
-    /**
-     * Calculates neighbors based on provided imageID
-     * Returns array of scene-like objects
-     */
-    _getNeighbors(scene: any): any[] | null {
-        const ruler = new CheapRuler(41, 'meters');
-        let neighbors: any[] = [];
-        if (this._dataArr === null) {
-            return null;
-        }
-        for (let p = 0; p < this._dataArr.length; p++) {
-            if (this._dataArr[p].id == scene['id']) {
-                continue;
-            }
-            let distance = ruler.distance(
-                [scene['longitude'], scene['latitude']],
-                [this._dataArr[p].longitude, this._dataArr[p].latitude]
-            );
-            if (distance <= this.neighborDistCutoff) {
-                let brng = ruler.bearing(
-                    [scene['longitude'], scene['latitude']],
-                    [this._dataArr[p].longitude, this._dataArr[p].latitude]
-                );
-                if (brng < 0) {
-                    brng += 360;
-                }
-                let bearing = this._customMod(
-                    this._customMod(brng - scene['bearing'], 360) + 180,
-                    360
-                );
-                let skip = false;
-                for (let n = 0; n < neighbors.length; n++) {
-                    let neighbor = neighbors[n];
-                    let diff =
-                        this._customMod(
-                            neighbor.neighborBearing - bearing + 180,
-                            360
-                        ) - 180;
-                    if (Math.abs(diff) < this.pruneAngle) {
-                        if (
-                            Math.abs(this.optimalDist - distance) <
-                            Math.abs(this.optimalDist - neighbor.distance)
-                        ) {
-                            neighbors[n] = null;
-                        } else {
-                            skip = true;
-                        }
-                    }
-                }
-                neighbors = neighbors.filter(function (n) {
-                    return n != null;
-                });
-                if (skip == false) {
-                    neighbors.push({
-                        sequenceName: this._dataArr[p].sequenceName,
-                        id: this._dataArr[p].id,
-                        bearing: this._dataArr[p].bearing,
-                        neighborBearing: bearing,
-                        flipped: this._dataArr[p].flipped,
-                        distance: distance,
-                        latitude: this._dataArr[p].latitude,
-                        longitude: this._dataArr[p].longitude,
-                        shtHash: this._dataArr[p].shtHash,
-                        pitchCorrection: this._dataArr[p].pitchCorrection,
-                    });
-                }
-            }
-        }
-        return neighbors;
-    }
+			20,
+			1
+		]);
+	}
 
-    _initViewer() {
-        if (this._dataArr === null) {
-            console.error('Cannot initialize viewer because dataArr is null');
-            return;
-        }
-        // Create index for quick lookup of data points
-        // Format: {'imageID': index, '27fjei9djc': 8, ...}
-        for (let i = 0; i < this._dataArr.length; i++) {
-            this._dataIndex[this._dataArr[i]['id']] = i;
-        }
+	private _startMap(data: any) {
+		// Create map
+		if (!this._options.mapboxKey) {
+			console.warn('No MapBox key specified');
+			return;
+		}
+		mapboxgl.accessToken = this._options.mapboxKey;
+		this._map = new mapboxgl.Map({
+			container: this._options.mapTarget,
+			style: 'mapbox://styles/cleveland-metroparks/cisvvmgwe00112xlk4jnmrehn?optimize=true',
+			center: [-81.682665, 41.4097766],
+			zoom: 9.5,
+			pitchWithRotate: false,
+			dragRotate: false,
+			touchPitch: false,
+			boxZoom: false
+		});
 
-        // Set firstScene, if not specified then use first scene in data array
-        if (this._initImageId == null) {
-            if (this._initLat && this._initLng) {
-                this._firstScene = this.getNearestImageId(
-                    this._initLat,
-                    this._initLng,
-                    Number.MAX_SAFE_INTEGER
-                );
-            } else {
-                this._firstScene = this._dataArr[0]['id'];
-            }
-        } else {
-            this._firstScene = this._initImageId;
-        }
-        let config = this._createViewerConfig(this._firstScene);
-        this._currImg = this._dataArr[this._dataIndex[this._firstScene]];
-        config = this._addSceneToConfig(config, this._currImg);
-        this._sceneList.push(this._currImg['id']);
-        this._panViewer = pannellum.viewer('panorama', config);
+		// Once loaded, create dots layer
+		this._map.on('load', () => {
+			this._createMapLayer(data);
+		});
 
-        // Set up onSceneChange event listener
-        let instance = this;
-        this._panViewer.on('scenechange', function (imgId: any) {
-            instance._onSceneChange(imgId);
-        });
-        this._onSceneChange(this._panViewer.getScene());
+		// // Update visual cursor
+		// map.on('mouseenter', 'dots', () => {
+		// 	mouseOnDot = true;
+		// 	map.getCanvas().style.cursor = 'pointer';
+		// });
 
-        if (this._currImg.flipped) {
-            this._panViewer.setYaw(180, false);
-        } else {
-            this._panViewer.setYaw(0, false);
-        }
+		// map.on('mouseleave', 'dots', () => {
+		// 	mouseOnDot = false;
+		// 	map.getCanvas().style.cursor = 'grab';
+		// });
 
-        let neighbors = this._getNeighbors(this._currImg);
-        if (neighbors === null) {
-            return;
-        }
-        for (let i = 0; i < this._hotSpotList.length; i++) {
-            this._panViewer.removeHotSpot(this._hotSpotList[i]);
-        }
-        this._addNeighborsToViewer(neighbors, this._currImg.flipped);
-        if (this._options.onInitDoneFunc !== null) {
-            this._options.onInitDoneFunc(this);
-        }
-    }
+		// map.on('mousedown', () => {
+		// 	if (!mouseOnDot) {
+		// 		map.getCanvas().style.cursor = 'grabbing';
+		// 	}
+		// });
 
-    /**
-     * Fetches data and then initializes viewer
-     * @private
-     */
-    async _fetchData(): Promise<any[]> {
-        let instance = this;
-        if (this._imageFetchType == 'standard') {
-            const res = await fetch(`${baseURL}/api/images.php?type=standard`);
-            const data = await res.json();
-            return data['imagesStandard'];
-        } else {
-            const res = await fetch(`${baseURL}/api/images.php?type=all`);
-            const data = await res.json();
+		// map.on('mouseup', () => {
+		// 	if (mouseOnDot) {
+		// 		map.getCanvas().style.cursor = 'pointer';
+		// 	} else {
+		// 		map.getCanvas().style.cursor = 'grab';
+		// 	}
+		// });
 
-            instance._dataArr = data['imagesAll'];
-            return data['imagesAll'];
-        }
-    }
+		// // Create currentMarker icon
+		const currentMarker_wrap = document.createElement('div');
+		currentMarker_wrap.classList.add('marker_current_wrapper');
+		const currentMarker_div = document.createElement('div');
+		currentMarker_div.classList.add('marker_current');
+		const currentMarker_view_div = document.createElement('div');
+		currentMarker_view_div.classList.add('marker_viewer');
+		currentMarker_wrap.appendChild(currentMarker_div);
+		currentMarker_wrap.appendChild(currentMarker_view_div);
+		this._mapMarker = new mapboxgl.Marker(currentMarker_wrap)
+			.setLngLat([-81.682665, 41.4097766])
+			.addTo(this._map)
+			.setRotationAlignment('map');
 
-    /**
-     * Returns nearest hotspot from yaw angle
-     * Returns nearest hotspot config
-     */
-    _getNearestHotspot(yaw: number): any {
-        let config = this._panViewer.getConfig();
-        let hotspots = config['hotSpots'];
-        if (!hotspots) {
-            return null;
-        }
-        let nearest = hotspots[0];
-        let nearestDiff;
-        for (let i = 0; i < hotspots.length; i++) {
-            let diff = Math.abs(
-                this._customMod(
-                    angle180to360(hotspots[i].yaw) - yaw + 180,
-                    360
-                ) - 180
-            );
-            nearestDiff = Math.abs(
-                this._customMod(angle180to360(nearest.yaw) - yaw + 180, 360) -
-                    180
-            );
-            if (diff < nearestDiff) {
-                nearest = hotspots[i];
-                nearestDiff = diff;
-            }
-        }
-        return nearest;
-    }
+		this._markerRotationInterval = setInterval(() => {
+			if (this._panViewer !== undefined && this._mapMarker !== undefined) {
+				const angle = this.getBearing();
+				this._mapMarker.setRotation((angle + 225) % 360);
+			}
+		}, 20);
 
-    _onSceneChange(img: string) {
-        if (this._dataArr === null) {
-            console.error('Error on scene change, dataArr is null');
-            return;
-        }
-        this._currImg = this._dataArr[this._dataIndex[img]];
+		this._map.jumpTo({
+			center: this._mapMarker.getLngLat(),
+			zoom: 16,
+			bearing: 0
+		});
 
-        // Keep the same bearing on scene change
-        this._prevYaw = this._panViewer.getYaw();
-        let newYaw =
-            (((this._prevNorthOffset - this._panViewer.getNorthOffset()) %
-                360) +
-                this._prevYaw) %
-            360;
-        this._panViewer.setYaw(newYaw, false);
-        this._prevNorthOffset = this._panViewer.getNorthOffset();
+		// // Handle when dots are clicked
+		this._map.on('click', 'dots', (e) => {
+			if (e.features === undefined || e.features[0].properties === null) {
+				return;
+			}
+			this.goToImageID(e.features[0].properties.imageID);
+		});
+	}
 
-        // Update geo
-        this._geo['latitude'] = this._dataArr[this._dataIndex[img]]['latitude'];
-        this._geo['longitude'] =
-            this._dataArr[this._dataIndex[img]]['longitude'];
+	setData(data: any[]) {
+		this._dataArr = data;
+		// Create index for quick lookup of data points
+		// Format: {'imageID': index, '27fjei9djc': 8, ...}
+		for (let i = 0; i < this._dataArr.length; i++) {
+			this._dataIndex[this._dataArr[i]['id']] = i;
+		}
+		// Remove all hotspots
+		for (let i = 0; i < this._hotSpotList.length; i++) {
+			this._panViewer.removeHotSpot(this._hotSpotList[i], this._currImg);
+		}
+		// Remove all scenes
+		for (let i = 0; i < this._sceneList.length; i++) {
+			this._panViewer.removeScene(this._sceneList[i]);
+		}
+		this._addSceneToViewer(this._dataArr[this._dataIndex[this._currImg['id']]]);
+		this.goToImageID(this._currImg['id']);
+	}
 
-        if (this._options.onGeoChangeFunc !== null) {
-            this._options.onGeoChangeFunc(this._geo);
-        }
+	getData(): any {
+		return this._dataArr;
+	}
 
-        // Remove previous hotspots
-        for (let i = 0; i < this._hotSpotList.length; i++) {
-            this._panViewer.removeHotSpot(this._hotSpotList[i], this._prevImg);
-        }
-        this._hotSpotList = [];
-        let hotspots = document.getElementsByClassName('pnlm-hotspot-base');
-        for (let i = 0; i < hotspots.length; i++) {
-            hotspots[i].remove();
-        }
+	getCurrentImageID(): string | undefined {
+		if (this._currImg) {
+			return this._currImg['id'];
+		}
+	}
 
-        // Remove scenes that are not in range
-        let neighbors = this._getNeighbors(this._dataArr[this._dataIndex[img]]);
-        let visibleScenes = [img];
-        if (neighbors !== null) {
-            for (let i = 0; i < neighbors.length; i++) {
-                visibleScenes.push(neighbors[i]['id']);
-            }
-        }
-        for (let i = 0; i < this._sceneList.length; i++) {
-            if (!visibleScenes.includes(this._sceneList[i])) {
-                this._panViewer.removeScene(this._sceneList[i]);
-            }
-        }
-        this._sceneList = visibleScenes;
-        this._prevImg = this._currImg;
+	getFlipped(): boolean {
+		return this._currImg['flipped'];
+	}
 
-        // Add nav arrows
-        if (neighbors !== null) {
-            this._addNeighborsToViewer(neighbors, this._currImg.flipped);
-        }
+	getCurrentSequenceName(): string {
+		return this._currImg['sequenceName'];
+	}
 
-        if (this._options.onSceneChangeFunc !== null) {
-            this._options.onSceneChangeFunc(this._currImg);
-        }
-    }
+	private _createViewerConfig(firstScene: string): any {
+		const config = {
+			default: {
+				firstScene: firstScene,
+				sceneFadeDuration: 1500,
+				compass: false,
+				autoLoad: true,
+				showControls: false,
+				crossOrigin: 'use-credentials'
+			},
+			scenes: {}
+		};
+		return config;
+	}
 
-    /**
-     * Gets nearest image ID to specified coordinates
-     * Returns null if not in cutoff, else returns image id
-     */
-    getNearestImageId(
-        lat: number,
-        lng: number,
-        distCutoff: number = 10
-    ): string | null {
-        const ruler = new CheapRuler(41, 'meters');
-        let minDist = Number.MAX_SAFE_INTEGER;
-        let minId: string | null = null;
-        if (this._dataArr === null) {
-            return null;
-        }
-        for (let i = 0; i < this._dataArr.length; i++) {
-            let dist = ruler.distance(
-                [lng, lat],
-                [this._dataArr[i].longitude, this._dataArr[i].latitude]
-            );
-            if (dist < distCutoff) {
-                if (dist < minDist) {
-                    minId = this._dataArr[i].id;
-                    minDist = dist;
-                }
-            }
-        }
-        return minId;
-    }
+	private _addSceneToConfig(config: any, scene: any): any {
+		config['scenes'][String(scene['id'])] = {
+			horizonPitch: scene['pitchCorrection'],
+			hfov: 120,
+			yaw: 0,
+			northOffset: scene['bearing'],
+			type: 'multires',
+			multiRes: {
+				basePath:
+					this._options.baseUrl + '/trails/' + scene['sequenceName'] + '/img/' + scene['id'],
+				path: '/%l/%s%y_%x',
+				extension: 'jpg',
+				tileResolution: 512,
+				maxLevel: 3,
+				cubeResolution: 1832
+			}
+		};
+		return config;
+	}
 
-    getImageGeo(): { latitude: number; longitude: number } {
-        return this._geo;
-    }
+	private _addSceneToViewer(scene: any, shtHash: string | null = null) {
+		this._sceneList.push(scene['id']);
+		let horizonPitch = scene['pitchCorrection'];
+		let yaw = 180;
+		if (!scene['flipped']) {
+			horizonPitch *= -1;
+			yaw = 0;
+		}
+		let bearing = scene['bearing'];
+		if (!scene['flipped']) {
+			bearing = customMod(bearing + 180, 360);
+		}
+		const config = {
+			horizonPitch: horizonPitch,
+			hfov: 120,
+			yaw: yaw,
+			northOffset: bearing,
+			type: 'multires',
+			multiRes: {
+				basePath:
+					this._options.baseUrl + '/trails/' + scene['sequenceName'] + '/img/' + scene['id'],
+				path: '/%l/%s%y_%x',
+				fallbackPath: '/fallback/%s',
+				extension: 'jpg',
+				tileResolution: 512,
+				maxLevel: 3,
+				cubeResolution: 1832,
+				shtHash
+			}
+		};
+		if (shtHash != null) {
+			config.multiRes.shtHash = shtHash;
+		}
+		this._panViewer.addScene(scene['id'], config);
+	}
 
-    destroy() {
-        if (this._panViewer !== null) {
-            this._panViewer.destroy();
-        }
-    }
+	/**
+	 * Adds navigation arrows to viewer from neighbors array
+	 * */
+	private async _addNeighborsToViewer(neighbors: any[], flipped = false) {
+		for (let i = 0; i < neighbors.length; i++) {
+			const req = await fetch(`${this._options.baseUrl}/api/preview/${neighbors[i]['id']}`, {
+				method: 'GET'
+			});
+			const data = await req.json();
 
-    getBearing(): number {
-        return (
-            (this._panViewer.getNorthOffset() +
-                this._panViewer.getYaw() +
-                180) %
-            360
-        );
-    }
+			this._addSceneToViewer(neighbors[i], data['preview']);
+			this._hotSpotList.push(neighbors[i]['id']);
+			const min = this._options.navArrowMinAngle;
+			const max = this._options.navArrowMaxAngle;
+			const pitch = -(max - min - (neighbors[i]['distance'] * (max - min)) / 9.0) + max;
+			let yaw = neighbors[i]['neighborBearing'];
+			if (!flipped) {
+				yaw = customMod(neighbors[i]['neighborBearing'] + 180, 360);
+			}
+			this._panViewer.addHotSpot({
+				id: neighbors[i]['id'],
+				pitch: pitch, //-25
+				yaw: yaw,
+				cssClass: 'custom-hotspot',
+				type: 'scene',
+				clickHandlerFunc: this._onNavArrowClick,
+				clickHandlerArgs: {
+					this: this,
+					id: neighbors[i]['id'],
+					yaw: neighbors[i]['neighborBearing'],
+					pitch: pitch
+				}
+			});
+		}
+		// TODO: on-arrow-add
+	}
 
-    /**
-     * Creates info in viewer
-     */
-    _createLocalInfo(infoJson: any) {
-        if (this._infoJson != null) {
-            for (let i = 0; i < this._infoJson['ImgInfo'].length; i++) {
-                if (this._panViewer != null) {
-                    this._panViewer.removeHotSpot(
-                        this._infoJson['ImgInfo'][i]['ID'],
-                        this._infoJson['ImgInfo'][i]['ImageID']
-                    );
-                }
-            }
-        }
-        this._infoJson = infoJson;
-        let instance = this;
-        for (let i = 0; i < infoJson['ImgInfo'].length; i++) {
-            let info = infoJson['ImgInfo'][i];
-            if (this._panViewer != null) {
-                this._panViewer.addHotSpot(
-                    {
-                        id: info['ID'],
-                        pitch: info['Pitch'],
-                        yaw: info['Yaw'],
-                        type: 'info',
-                        text: info['HoverText'],
-                        clickHandlerFunc: instance._onHotSpotClicked,
-                        clickHandlerArgs: [instance, info['ID']],
-                    },
-                    info['ImageID']
-                );
-            }
-        }
-    }
+	/**
+	 * Called when a navigation arrow is clicked
+	 */
+	private _onNavArrowClick(evt: Event, info: any) {
+		info['this']._prevNavClickedYaw = info.yaw;
+		info['this']._panViewer.loadScene(info.id, 'same', 'same', 'same');
+	}
 
-    /**
-     * Called when info is clicked
-     */
-    _onHotSpotClicked(evt: Event, info: any) {
-        if ('onHotSpotClickFunc' in info[0]._options) {
-            info[0]._options.onHotSpotClickFunc(info[1]);
-        }
-    }
+	private _customMod(a: number, b: number): number {
+		return a - Math.floor(a / b) * b;
+	}
 
-    async goToImageID(imageID: string, reset = false) {
-        if (reset || !this._sceneList.includes(imageID)) {
-            if (reset) {
-                for (let i = 0; i < this._sceneList.length; i++) {
-                    this._panViewer.removeScene(this._sceneList[i]);
-                }
-                this._sceneList = [];
-            }
-            let instance = this;
-            const res = await fetch(`${baseURL}/api/preview.php`, {
-                method: 'GET',
-                body: JSON.stringify({
-                    id: imageID,
-                }),
-            });
-            const data = await res.json();
+	/**
+	 * Calculates neighbors based on provided imageID
+	 * Returns array of scene-like objects
+	 */
+	private _getNeighbors(scene: any): any[] | null {
+		const ruler = new CheapRuler(41, 'meters');
+		let neighbors: any[] = [];
+		if (this._dataArr === undefined) {
+			return null;
+		}
+		for (let p = 0; p < this._dataArr.length; p++) {
+			if (this._dataArr[p].id == scene['id']) {
+				continue;
+			}
+			const distance = ruler.distance(
+				[scene['longitude'], scene['latitude']],
+				[this._dataArr[p].longitude, this._dataArr[p].latitude]
+			);
+			if (distance <= this.neighborDistCutoff) {
+				let brng = ruler.bearing(
+					[scene['longitude'], scene['latitude']],
+					[this._dataArr[p].longitude, this._dataArr[p].latitude]
+				);
+				if (brng < 0) {
+					brng += 360;
+				}
+				const bearing = this._customMod(this._customMod(brng - scene['bearing'], 360) + 180, 360);
+				let skip = false;
+				for (let n = 0; n < neighbors.length; n++) {
+					const neighbor = neighbors[n];
+					const diff = this._customMod(neighbor.neighborBearing - bearing + 180, 360) - 180;
+					if (Math.abs(diff) < this.pruneAngle) {
+						if (
+							Math.abs(this.optimalDist - distance) < Math.abs(this.optimalDist - neighbor.distance)
+						) {
+							neighbors[n] = null;
+						} else {
+							skip = true;
+						}
+					}
+				}
+				neighbors = neighbors.filter(function (n) {
+					return n != null;
+				});
+				if (skip == false) {
+					neighbors.push({
+						sequenceName: this._dataArr[p].sequenceName,
+						id: this._dataArr[p].id,
+						bearing: this._dataArr[p].bearing,
+						neighborBearing: bearing,
+						flipped: this._dataArr[p].flipped,
+						distance: distance,
+						latitude: this._dataArr[p].latitude,
+						longitude: this._dataArr[p].longitude,
+						shtHash: this._dataArr[p].shtHash,
+						pitchCorrection: this._dataArr[p].pitchCorrection
+					});
+				}
+			}
+		}
+		return neighbors;
+	}
 
-            if (instance._dataArr !== null) {
-                instance._addSceneToViewer(
-                    instance._dataArr[instance._dataIndex[imageID]],
-                    data['preview']
-                );
-            }
-            instance._panViewer.loadScene(imageID, 'same', 'same', 'same');
-        } else {
-            this._panViewer.loadScene(imageID, 'same', 'same', 'same');
-        }
-        return this;
-    }
+	private _initViewer() {
+		if (this._dataArr === undefined) {
+			console.error('Cannot initialize viewer because dataArr is undefined');
+			return;
+		}
+		// Create index for quick lookup of data points
+		// Format: {'imageID': index, '27fjei9djc': 8, ...}
+		for (let i = 0; i < this._dataArr.length; i++) {
+			this._dataIndex[this._dataArr[i]['id']] = i;
+		}
+
+		// Set firstScene, if not specified then use first scene in data array
+		if (this._currImg == null) {
+			if (this._initLat && this._initLng) {
+				this._firstScene = this.getNearestImageId(
+					this._initLat,
+					this._initLng,
+					Number.MAX_SAFE_INTEGER
+				);
+			} else {
+				this._firstScene = this._dataArr[0]['id'];
+			}
+		} else {
+			this._firstScene = this._currImg;
+		}
+		let config = this._createViewerConfig(this._firstScene);
+		this._currImg = this._dataArr[this._dataIndex[this._firstScene]];
+		config = this._addSceneToConfig(config, this._currImg);
+		this._sceneList.push(this._currImg['id']);
+		this._panViewer = pannellum.viewer(this._options.panoramaTarget, config);
+
+		// Set up onSceneChange event listener
+		this._panViewer.on('scenechange', (imgId: any) => {
+			this._onSceneChange(imgId);
+		});
+		this._onSceneChange(this._panViewer.getScene());
+
+		if (this._currImg.flipped) {
+			this._panViewer.setYaw(180, false);
+		} else {
+			this._panViewer.setYaw(0, false);
+		}
+
+		const neighbors = this._getNeighbors(this._currImg);
+		if (neighbors === null) {
+			return;
+		}
+		for (let i = 0; i < this._hotSpotList.length; i++) {
+			this._panViewer.removeHotSpot(this._hotSpotList[i]);
+		}
+		this._addNeighborsToViewer(neighbors, this._currImg.flipped);
+		// this._emitter.emit('on-init-done');
+		this._startMap(this._dataArr);
+	}
+
+	/**
+	 * Fetches data and then initializes viewer
+	 * @private
+	 */
+	private async _fetchData(): Promise<any[]> {
+		if (this._options.imageFetchType == 'standard') {
+			const res = await fetch(`${this._options.baseUrl}/api/images/standard`, { method: 'GET' });
+			const data = await res.json();
+			return new Promise((resolve) => {
+				resolve(data['imagesStandard']);
+			});
+		} else {
+			const res = await fetch(`${this._options.baseUrl}/api/images/all`, {
+				method: 'GET'
+			});
+			const data = await res.json();
+			this._dataArr = data['imagesAll'];
+			return new Promise((resolve) => {
+				resolve(data['imagesAll']);
+			});
+		}
+	}
+
+	/**
+	 * Returns nearest hotspot from yaw angle
+	 * Returns nearest hotspot config
+	 */
+	private _getNearestHotspot(yaw: number): any {
+		const config = this._panViewer.getConfig();
+		const hotspots = config['hotSpots'];
+		if (!hotspots) {
+			return null;
+		}
+		let nearest = hotspots[0];
+		let nearestDiff;
+		for (let i = 0; i < hotspots.length; i++) {
+			const diff = Math.abs(this._customMod(angle180to360(hotspots[i].yaw) - yaw + 180, 360) - 180);
+			nearestDiff = Math.abs(this._customMod(angle180to360(nearest.yaw) - yaw + 180, 360) - 180);
+			if (diff < nearestDiff) {
+				nearest = hotspots[i];
+				nearestDiff = diff;
+			}
+		}
+		return nearest;
+	}
+
+	private _onSceneChange(img: string) {
+		if (this._dataArr === undefined) {
+			console.error('Error on scene change, dataArr is undefined');
+			return;
+		}
+		this._currImg = this._dataArr[this._dataIndex[img]];
+
+		// Keep the same bearing on scene change
+		this._prevYaw = this._panViewer.getYaw();
+		const newYaw =
+			(((this._prevNorthOffset - this._panViewer.getNorthOffset()) % 360) + this._prevYaw) % 360;
+		this._panViewer.setYaw(newYaw, false);
+		this._prevNorthOffset = this._panViewer.getNorthOffset();
+
+		// Update geo
+		this._geo['latitude'] = this._dataArr[this._dataIndex[img]]['latitude'];
+		this._geo['longitude'] = this._dataArr[this._dataIndex[img]]['longitude'];
+
+		// this._emitter.emit('on-geo-change', this._geo);
+
+		if (this._map !== undefined && this._mapMarker !== undefined) {
+			this._mapMarker.setLngLat([this._geo.longitude, this._geo.latitude]);
+			this._map.easeTo({
+				center: this._mapMarker.getLngLat(),
+				duration: 500
+			});
+		}
+
+		// Remove previous hotspots
+		for (let i = 0; i < this._hotSpotList.length; i++) {
+			this._panViewer.removeHotSpot(this._hotSpotList[i], this._prevImg);
+		}
+		this._hotSpotList = [];
+		const hotspots = document.getElementsByClassName('pnlm-hotspot-base');
+		for (let i = 0; i < hotspots.length; i++) {
+			hotspots[i].remove();
+		}
+
+		// Remove scenes that are not in range
+		const neighbors = this._getNeighbors(this._dataArr[this._dataIndex[img]]);
+		const visibleScenes = [img];
+		if (neighbors !== null) {
+			for (let i = 0; i < neighbors.length; i++) {
+				visibleScenes.push(neighbors[i]['id']);
+			}
+		}
+		for (let i = 0; i < this._sceneList.length; i++) {
+			if (!visibleScenes.includes(this._sceneList[i])) {
+				this._panViewer.removeScene(this._sceneList[i]);
+			}
+		}
+		this._sceneList = visibleScenes;
+		this._prevImg = this._currImg;
+
+		// Add nav arrows
+		if (neighbors !== null) {
+			this._addNeighborsToViewer(neighbors, this._currImg.flipped);
+		}
+
+		// TODO: on-scene-change
+	}
+
+	/**
+	 * Gets nearest image ID to specified coordinates
+	 * Returns null if not in cutoff, else returns image id
+	 */
+	getNearestImageId(lat: number, lng: number, distCutoff = 10): string | null {
+		const ruler = new CheapRuler(41, 'meters');
+		let minDist = Number.MAX_SAFE_INTEGER;
+		let minId: string | null = null;
+		if (this._dataArr === undefined) {
+			return null;
+		}
+		for (let i = 0; i < this._dataArr.length; i++) {
+			const dist = ruler.distance(
+				[lng, lat],
+				[this._dataArr[i].longitude, this._dataArr[i].latitude]
+			);
+			if (dist < distCutoff) {
+				if (dist < minDist) {
+					minId = this._dataArr[i].id;
+					minDist = dist;
+				}
+			}
+		}
+		return minId;
+	}
+
+	getImageGeo(): { latitude: number; longitude: number } {
+		return this._geo;
+	}
+
+	destroy() {
+		if (this._panViewer !== null) {
+			this._panViewer.destroy();
+		}
+		if (this._markerRotationInterval !== undefined) {
+			clearInterval(this._markerRotationInterval);
+		}
+	}
+
+	getBearing(): number {
+		return (this._panViewer.getNorthOffset() + this._panViewer.getYaw() + 180) % 360;
+	}
+
+	/**
+	 * Creates info in viewer
+	 */
+	private _createLocalInfo(infoJson: any) {
+		if (this._infoJson != null) {
+			for (let i = 0; i < this._infoJson['ImgInfo'].length; i++) {
+				if (this._panViewer != null) {
+					this._panViewer.removeHotSpot(
+						this._infoJson['ImgInfo'][i]['ID'],
+						this._infoJson['ImgInfo'][i]['ImageID']
+					);
+				}
+			}
+		}
+		this._infoJson = infoJson;
+		for (let i = 0; i < infoJson['ImgInfo'].length; i++) {
+			const info = infoJson['ImgInfo'][i];
+			if (this._panViewer != null) {
+				this._panViewer.addHotSpot(
+					{
+						id: info['ID'],
+						pitch: info['Pitch'],
+						yaw: info['Yaw'],
+						type: 'info',
+						text: info['HoverText'],
+						clickHandlerFunc: this._onHotSpotClicked,
+						clickHandlerArgs: [this, info['ID']]
+					},
+					info['ImageID']
+				);
+			}
+		}
+	}
+
+	/**
+	 * Called when info is clicked
+	 */
+	private _onHotSpotClicked(evt: Event, info: any) {
+		if ('onHotSpotClickFunc' in info[0]._options) {
+			info[0]._options.onHotSpotClickFunc(info[1]);
+		}
+	}
+
+	async goToImageID(imageID: string, reset = false) {
+		if (reset || !this._sceneList.includes(imageID)) {
+			if (reset) {
+				for (let i = 0; i < this._sceneList.length; i++) {
+					this._panViewer.removeScene(this._sceneList[i]);
+				}
+				this._sceneList = [];
+			}
+			const res = await fetch(`${this._options.baseUrl}/api/preview/${imageID}`, { method: 'GET' });
+			const data = await res.json();
+
+			if (this._dataArr !== undefined) {
+				this._addSceneToViewer(this._dataArr[this._dataIndex[imageID]], data['preview']);
+			}
+			this._panViewer.loadScene(imageID, 'same', 'same', 'same');
+		} else {
+			this._panViewer.loadScene(imageID, 'same', 'same', 'same');
+		}
+		return this;
+	}
 }

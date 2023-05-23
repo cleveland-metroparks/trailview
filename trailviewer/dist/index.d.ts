@@ -1,10 +1,10 @@
+import 'mapbox-gl/dist/mapbox-gl.css';
+import './styles/index.css';
 export interface TrailViewerOptions {
-    useURLHashing: boolean;
-    onSceneChangeFunc: Function | null;
-    onGeoChangeFunc: Function | null;
-    onHotSpotClickFunc: Function | null;
-    onInitDoneFunc: Function | null;
-    onArrowsAddedFunc: Function | null;
+    panoramaTarget: string;
+    mapTarget: string;
+    baseUrl: string;
+    mapboxKey: string | undefined;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
@@ -12,7 +12,6 @@ export interface TrailViewerOptions {
 export declare const defaultTrailViewerOptions: TrailViewerOptions;
 export declare class TrailViewer {
     private _options;
-    private _initImageId;
     private _panViewer;
     private _infoJson;
     private _geo;
@@ -24,51 +23,52 @@ export declare class TrailViewer {
     private _sceneList;
     private _hotSpotList;
     private _prevImg;
-    private _navArrowMinAngle;
-    private _navArrowMaxAngle;
     private _prevNavClickedYaw;
     private _initLat;
     private _initLng;
-    private _imageFetchType;
     private optimalDist;
     private neighborDistCutoff;
     private pruneAngle;
     private _firstScene;
-    constructor(options: TrailViewerOptions, initImageId: string | null, data?: null, lat?: null, lng?: null);
-    getOptions(): TrailViewerOptions;
+    private _map;
+    private _mapMarker;
+    constructor(options?: TrailViewerOptions, initImageId?: string | undefined, data?: undefined, lat?: undefined, lng?: undefined);
+    private _createMapLayer;
+    private _startMap;
     setData(data: any[]): void;
+    getData(): any;
     getCurrentImageID(): string | undefined;
     getFlipped(): boolean;
     getCurrentSequenceName(): string;
-    _createViewerConfig(firstScene: string): any;
-    _addSceneToConfig(config: any, scene: any): any;
-    _addSceneToViewer(scene: any, shtHash?: string | null): TrailViewer;
+    private _createViewerConfig;
+    private _addSceneToConfig;
+    private _addSceneToViewer;
     /**
      * Adds navigation arrows to viewer from neighbors array
      * */
-    _addNeighborsToViewer(neighbors: any[], flipped?: boolean): Promise<void>;
+    private _addNeighborsToViewer;
     /**
      * Called when a navigation arrow is clicked
      */
-    _onNavArrowClick(evt: Event, info: any): void;
-    _customMod(a: number, b: number): number;
+    private _onNavArrowClick;
+    private _customMod;
     /**
      * Calculates neighbors based on provided imageID
      * Returns array of scene-like objects
      */
-    _getNeighbors(scene: any): any[] | null;
-    _initViewer(): void;
+    private _getNeighbors;
+    private _initViewer;
     /**
      * Fetches data and then initializes viewer
      * @private
      */
-    _fetchData(): Promise<any[]>;
+    private _fetchData;
     /**
      * Returns nearest hotspot from yaw angle
      * Returns nearest hotspot config
      */
-    _getNearestHotspot(yaw: number): any;
-    _onSceneChange(img: string): void;
+    private _getNearestHotspot;
+    private _onSceneChange;
     /**
      * Gets nearest image ID to specified coordinates
      * Returns null if not in cutoff, else returns image id
@@ -83,10 +83,10 @@ export declare class TrailViewer {
     /**
      * Creates info in viewer
      */
-    _createLocalInfo(infoJson: any): void;
+    private _createLocalInfo;
     /**
      * Called when info is clicked
      */
-    _onHotSpotClicked(evt: Event, info: any): void;
+    private _onHotSpotClicked;
     goToImageID(imageID: string, reset?: boolean): Promise<this>;
 }

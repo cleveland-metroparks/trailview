@@ -1,8 +1,5 @@
 import CheapRuler from 'cheap-ruler';
-import * as mitt from 'mitt';
 import mapboxgl from 'mapbox-gl';
-import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import type { Feature, FeatureCollection } from 'geojson';
 
 declare const pannellum: any;
@@ -12,6 +9,7 @@ export interface TrailViewerOptions {
 	panoramaTarget: string;
 	mapTarget: string;
 	baseUrl: string;
+	mapboxKey: string | undefined;
 	navArrowMinAngle: number;
 	navArrowMaxAngle: number;
 	imageFetchType: 'standard' | 'all';
@@ -21,6 +19,7 @@ export const defaultTrailViewerOptions: TrailViewerOptions = {
 	panoramaTarget: 'trailview_panorama',
 	mapTarget: 'trailview_map',
 	baseUrl: 'https://trailview.cmparks.net',
+	mapboxKey: undefined,
 	navArrowMinAngle: -25,
 	navArrowMaxAngle: -20,
 	imageFetchType: 'standard'
@@ -64,9 +63,9 @@ export class TrailViewer {
 	private neighborDistCutoff = 10;
 	private pruneAngle = 25;
 	private _firstScene: any = null;
-	private _emitter: mitt.Emitter<any>;
 	private _map: mapboxgl.Map | undefined;
 	private _mapMarker: mapboxgl.Marker | undefined;
+	private _markerRotationInterval: ReturnType<typeof setInterval> | undefined;
 
 	constructor(
 		options: TrailViewerOptions = defaultTrailViewerOptions,
@@ -75,7 +74,6 @@ export class TrailViewer {
 		lat = undefined,
 		lng = undefined
 	) {
-		this._emitter = mitt.default();
 		this._options = options;
 		this._currImg = initImageId;
 		if (data !== undefined) {
@@ -98,9 +96,9 @@ export class TrailViewer {
 		return this;
 	}
 
-	public on(event: string, listener: (...args: any[]) => void): void {
-		this._emitter.on(event, listener);
-	}
+	// public on(event: string, listener: (...args: any[]) => void): void {
+	// 	this._emitter.on(event, listener);
+	// }
 
 	private _createMapLayer(data: any) {
 		if (this._map === undefined) {
@@ -188,7 +186,11 @@ export class TrailViewer {
 
 	private _startMap(data: any) {
 		// Create map
-		mapboxgl.accessToken = PUBLIC_MAPBOX_KEY;
+		if (!this._options.mapboxKey) {
+			console.warn('No MapBox key specified');
+			return;
+		}
+		mapboxgl.accessToken = this._options.mapboxKey;
 		this._map = new mapboxgl.Map({
 			container: this._options.mapTarget,
 			style: 'mapbox://styles/cleveland-metroparks/cisvvmgwe00112xlk4jnmrehn?optimize=true',
@@ -243,6 +245,13 @@ export class TrailViewer {
 			.setLngLat([-81.682665, 41.4097766])
 			.addTo(this._map)
 			.setRotationAlignment('map');
+
+		this._markerRotationInterval = setInterval(() => {
+			if (this._panViewer !== undefined && this._mapMarker !== undefined) {
+				const angle = this.getBearing();
+				this._mapMarker.setRotation((angle + 225) % 360);
+			}
+		}, 20);
 
 		this._map.jumpTo({
 			center: this._mapMarker.getLngLat(),
@@ -530,7 +539,7 @@ export class TrailViewer {
 			this._panViewer.removeHotSpot(this._hotSpotList[i]);
 		}
 		this._addNeighborsToViewer(neighbors, this._currImg.flipped);
-		this._emitter.emit('on-init-done');
+		// this._emitter.emit('on-init-done');
 		this._startMap(this._dataArr);
 	}
 
@@ -546,7 +555,9 @@ export class TrailViewer {
 				resolve(data['imagesStandard']);
 			});
 		} else {
-			const res = await fetch(`${this._options.baseUrl}/api/images/all`, { method: 'GET' });
+			const res = await fetch(`${this._options.baseUrl}/api/images/all`, {
+				method: 'GET'
+			});
 			const data = await res.json();
 			this._dataArr = data['imagesAll'];
 			return new Promise((resolve) => {
@@ -596,7 +607,15 @@ export class TrailViewer {
 		this._geo['latitude'] = this._dataArr[this._dataIndex[img]]['latitude'];
 		this._geo['longitude'] = this._dataArr[this._dataIndex[img]]['longitude'];
 
-		// TODO: on-geo-change
+		// this._emitter.emit('on-geo-change', this._geo);
+
+		if (this._map !== undefined && this._mapMarker !== undefined) {
+			this._mapMarker.setLngLat([this._geo.longitude, this._geo.latitude]);
+			this._map.easeTo({
+				center: this._mapMarker.getLngLat(),
+				duration: 500
+			});
+		}
 
 		// Remove previous hotspots
 		for (let i = 0; i < this._hotSpotList.length; i++) {
@@ -665,6 +684,9 @@ export class TrailViewer {
 	destroy() {
 		if (this._panViewer !== null) {
 			this._panViewer.destroy();
+		}
+		if (this._markerRotationInterval !== undefined) {
+			clearInterval(this._markerRotationInterval);
 		}
 	}
 

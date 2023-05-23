@@ -1,9 +1,22 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { TrailViewer } from '$lib/trailviewer';
+	import { onDestroy, onMount } from 'svelte';
+	import { TrailViewer, defaultTrailViewerOptions } from '$lib/trailviewer';
+	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
+	// import 'trailviewer/dist/styles.css';
+	import 'mapbox-gl/dist/mapbox-gl.css';
+	import '$lib/trailviewer.css';
 
+	let trailviewer: TrailViewer | undefined;
 	onMount(async () => {
-		const trailviewer = new TrailViewer();
+		let trailviewerOptions = defaultTrailViewerOptions;
+		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
+		trailviewer = new TrailViewer();
+	});
+
+	onDestroy(() => {
+		if (trailviewer) {
+			trailviewer.destroy();
+		}
 	});
 </script>
 

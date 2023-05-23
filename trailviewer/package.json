@@ -11,8 +11,13 @@
         "@rollup/plugin-node-resolve": "^15.0.2",
         "@rollup/plugin-terser": "^0.4.3",
         "@rollup/plugin-typescript": "^11.1.1",
+        "@types/mapbox-gl": "^2.7.11",
+        "@types/node": "^20.2.3",
         "cheap-ruler": "^3.0.2",
+        "mapbox-gl": "^2.14.1",
+        "mitt": "^3.0.0",
         "rollup": "^3.23.0",
+        "rollup-plugin-import-css": "^3.2.1",
         "tslib": "^2.5.2",
         "typescript": "^5.0.4"
     },
