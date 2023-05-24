@@ -49,9 +49,9 @@ model Image {
 }
 
 model Sequence {
-  name     String  @unique
-  status   String? @db.Text
-  toDelete Boolean @default(false)
-  id       Int     @id @default(autoincrement())
+  name     String   @unique
+  status   String?  @db.Text
+  toDelete Boolean  @default(false)
+  id       Int      @id @default(autoincrement())
   images   Image[]
 }

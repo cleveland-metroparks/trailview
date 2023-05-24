@@ -7,6 +7,12 @@ const db = new PrismaClient();
 const app = express();
 const port = 3000;
 
+app.use(express.json());
+
+app.get('/', (req: Request, res: Response) => {
+    res.send('TrailView API');
+});
+
 app.get('/images/standard/:imageId?', async (req: Request, res: Response) => {
     if (req.params.imageId === undefined) {
         const images = await db.image.findMany({
@@ -50,16 +56,37 @@ app.get('/images/standard/:imageId?', async (req: Request, res: Response) => {
     }
 });
 
-app.get('/images/all/:imageId', async (req: Request, res: Response) => {
-    if (req.params.imageId === null) {
-        const images = await db.image.findMany();
-        res.json({
+app.get('/images/all/:imageId?', async (req: Request, res: Response) => {
+    if (req.params.imageId === undefined) {
+        const images = await db.image.findMany({
+            select: {
+                id: true,
+                sequenceId: true,
+                latitude: true,
+                longitude: true,
+                bearing: true,
+                flipped: true,
+                pitchCorrection: true,
+                visibility: true,
+            },
+        });
+        return res.json({
             status: 200,
             imagesAll: images,
         });
     } else {
         const image = await db.image.findUnique({
             where: { id: req.params.imageId },
+            select: {
+                id: true,
+                sequenceId: true,
+                latitude: true,
+                longitude: true,
+                bearing: true,
+                flipped: true,
+                pitchCorrection: true,
+                visibility: true,
+            },
         });
         if (!image) {
             return res.json({ status: 400 });
@@ -83,12 +110,11 @@ app.get('/preview/:imageId', async (req: Request, res: Response) => {
     }
 });
 
-// Middleware
-app.use(express.json());
-
-// Routes
-app.get('/', (req: Request, res: Response) => {
-    res.send('Hello, Express!');
+app.get('/sequences', async (req: Request, res: Response) => {
+    const sequences = await db.sequence.findMany({
+        select: { name: true, id: true },
+    });
+    return res.json({ success: true, data: sequences });
 });
 
 // Start the server

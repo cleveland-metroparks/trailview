@@ -53,6 +53,7 @@ export interface Image {
 	flipped: boolean;
 	pitchCorrection: number;
 	visibility: boolean;
+	shtHash: string | undefined;
 }
 
 export interface TrailViewer {
@@ -67,7 +68,7 @@ export class TrailViewer {
 	private _prevNorthOffset = 0;
 	private _prevYaw = 0;
 	private _currImg: Image | undefined;
-	private _dataArr: any[] | undefined;
+	private _dataArr: Image[] | undefined;
 	private _dataIndex: any = {};
 	private _sceneList: any[] = [];
 	private _hotSpotList: any[] = [];
@@ -83,6 +84,7 @@ export class TrailViewer {
 	private _mapMarker: mapboxgl.Marker | undefined;
 	private _markerRotationInterval: ReturnType<typeof setInterval> | undefined;
 	private _emitter: EventEmitter;
+	private _sequencesData: { name: string; id: number }[] | undefined;
 
 	constructor(
 		options: TrailViewerOptions = defaultTrailViewerOptions,
@@ -92,23 +94,24 @@ export class TrailViewer {
 	) {
 		this._emitter = new EventEmitter();
 		this._options = options;
-		if (data !== undefined) {
-			this._dataArr = data;
-		} else {
-			this._dataArr = undefined;
-			this._fetchData().then((dataArr: any[]) => {
-				this._dataArr = dataArr;
-				this._initViewer();
-				// Create index for quick lookup of data points
-				// Format: {'imageID': index, '27fjei9djc': 8, ...}
-				for (let i = 0; i < this._dataArr.length; i++) {
-					this._dataIndex[this._dataArr[i]['id']] = i;
-				}
-				if (this._currImg) {
-					this.goToImageID(this._currImg['id'], true);
-				}
-			});
-		}
+		fetch(`${this._options.baseUrl}/api/sequences`, { method: 'GET' }).then(async (res) => {
+			const data = await res.json();
+			if (!data.success) {
+				throw new Error('Failed to fetch sequence data');
+			}
+			this._sequencesData = data.data;
+			const dataArr: Image[] = await this._fetchData();
+			this._dataArr = dataArr;
+			this._initViewer();
+			// Create index for quick lookup of data points
+			// Format: {'imageID': index, '27fjei9djc': 8, ...}
+			for (let i = 0; i < this._dataArr.length; i++) {
+				this._dataIndex[this._dataArr[i]['id']] = i;
+			}
+			if (this._currImg) {
+				this.goToImageID(this._currImg['id'], true);
+			}
+		});
 		return this;
 	}
 
@@ -305,7 +308,7 @@ export class TrailViewer {
 		}
 	}
 
-	getData(): any {
+	getData() {
 		return this._dataArr;
 	}
 
@@ -346,7 +349,16 @@ export class TrailViewer {
 		return config;
 	}
 
-	private _addSceneToConfig(config: any, scene: any): any {
+	private _addSceneToConfig(config: any, scene: Image): any {
+		if (!this._sequencesData) {
+			return;
+		}
+		const sequence = this._sequencesData.find((sequence) => {
+			return sequence.id === scene.sequenceId;
+		});
+		if (!sequence) {
+			return;
+		}
 		config['scenes'][String(scene['id'])] = {
 			horizonPitch: scene['pitchCorrection'],
 			hfov: 120,
@@ -354,8 +366,7 @@ export class TrailViewer {
 			northOffset: scene['bearing'],
 			type: 'multires',
 			multiRes: {
-				basePath:
-					this._options.baseUrl + '/trails/' + scene['sequenceName'] + '/img/' + scene['id'],
+				basePath: this._options.baseUrl + '/trails/' + sequence.name + '/img/' + scene['id'],
 				path: '/%l/%s%y_%x',
 				extension: 'jpg',
 				tileResolution: 512,
@@ -366,7 +377,7 @@ export class TrailViewer {
 		return config;
 	}
 
-	private _addSceneToViewer(scene: any, shtHash: string | null = null) {
+	private _addSceneToViewer(scene: Image, shtHash: string | null = null) {
 		this._sceneList.push(scene['id']);
 		let horizonPitch = scene['pitchCorrection'];
 		let yaw = 180;
@@ -378,6 +389,17 @@ export class TrailViewer {
 		if (!scene['flipped']) {
 			bearing = customMod(bearing + 180, 360);
 		}
+		if (!this._sequencesData) {
+			console.warn('Cannot add scene to viewer as sequence data is undefiend');
+			return;
+		}
+		const sequence = this._sequencesData.find((sequence) => {
+			return sequence.id === scene.sequenceId;
+		});
+		if (!sequence) {
+			console.warn(`Cannot find sequence with id: ${scene.sequenceId}`);
+			return;
+		}
 		const config = {
 			horizonPitch: horizonPitch,
 			hfov: 120,
@@ -385,8 +407,7 @@ export class TrailViewer {
 			northOffset: bearing,
 			type: 'multires',
 			multiRes: {
-				basePath:
-					this._options.baseUrl + '/trails/' + scene['sequenceName'] + '/img/' + scene['id'],
+				basePath: this._options.baseUrl + '/trails/' + sequence.name + '/img/' + scene['id'],
 				path: '/%l/%s%y_%x',
 				fallbackPath: '/fallback/%s',
 				extension: 'jpg',
@@ -497,7 +518,7 @@ export class TrailViewer {
 				});
 				if (skip == false) {
 					neighbors.push({
-						sequenceName: this._dataArr[p].sequenceName,
+						sequenceId: this._dataArr[p].sequenceId,
 						id: this._dataArr[p].id,
 						bearing: this._dataArr[p].bearing,
 						neighborBearing: bearing,
@@ -579,7 +600,7 @@ export class TrailViewer {
 	 * Fetches data and then initializes viewer
 	 * @private
 	 */
-	private async _fetchData(): Promise<any[]> {
+	private async _fetchData(): Promise<Image[]> {
 		if (this._options.imageFetchType == 'standard') {
 			const res = await fetch(`${this._options.baseUrl}/api/images/standard`, { method: 'GET' });
 			const data = await res.json();

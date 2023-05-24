@@ -1,25 +1,62 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { TrailViewer, defaultTrailViewerOptions } from '$lib/trailviewer';
+	import { TrailViewer, defaultTrailViewerOptions, type Image } from '$lib/trailviewer';
 	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
 	// import 'trailviewer/dist/styles.css';
 	import 'mapbox-gl/dist/mapbox-gl.css';
 	import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
+	import type { PageData } from './$types';
+
+	export let data: PageData;
 
 	let trailviewer: TrailViewer | undefined;
 
-	let currentImageId: string;
 	let currentSequenceName: string;
 	let pitchCorrection = 0;
+	let flippedValue: boolean;
+	let currentImage: Image | undefined;
+	let isSequencePublic: boolean;
+
+	function onSequenceSelectChange(event: Event) {
+		if (trailviewer === undefined) {
+			return;
+		}
+		const trailviewData = trailviewer.getData();
+		if (!trailviewData) {
+			return;
+		}
+		const image = trailviewData.find((image) => {
+			const sequence = data.sequences.find((sequence) => {
+				return sequence.id === image.sequenceId;
+			});
+			if (!sequence) {
+				return;
+			}
+			return sequence.name === (event.target as HTMLSelectElement).value;
+		});
+		if (image) {
+			trailviewer.goToImageID(image.id);
+		}
+	}
 
 	onMount(async () => {
 		let trailviewerOptions = defaultTrailViewerOptions;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
+		trailviewerOptions.imageFetchType = 'all';
 		trailviewer = new TrailViewer();
 		trailviewer.on('image-change', (image) => {
-			currentImageId = image.id;
+			currentImage = image;
 			currentSequenceName = image.sequenceId.toString();
+			flippedValue = image.flipped;
+			pitchCorrection = image.pitchCorrection;
+			isSequencePublic = image.visibility;
+			const sequence = data.sequences.find((sequence) => {
+				return sequence.id === image.sequenceId;
+			});
+			if (sequence) {
+				currentSequenceName = sequence.name;
+			}
 		});
 	});
 
@@ -65,15 +102,36 @@
 		<div id="trailview_map" />
 	</div>
 	<div class="col-lg-4">
+		<h4 class="mt-3">Go To Sequence</h4>
+		<select on:change={onSequenceSelectChange} class="form-select">
+			{#each data.sequences as sequence}
+				<option class="sequence-option" id={`sequence_${sequence.id}`}>{sequence.name}</option>
+			{/each}
+		</select>
 		<h4 class="mt-3">Sequence Options</h4>
 		<label for="sequence_name">Sequence Name</label>
 		<input id="sequence_name" readonly class="form-control" bind:value={currentSequenceName} />
 		<div class="mt-2 form-check form-switch">
-			<input id="sequence_public_switch" class="form-check-input" type="checkbox" role="switch" />
+			<input
+				id="sequence_public_switch"
+				class="form-check-input"
+				type="checkbox"
+				role="switch"
+				checked={(() => {
+					return currentImage?.visibility ?? false;
+				})()}
+			/>
 			<label class="form-check-label" for="sequence_public_switch">Publicly Visible</label>
 		</div>
 		<div class="mt-2 form-check form-switch">
-			<input id="flip_switch" class="form-check-input" type="checkbox" role="switch" />
+			<input
+				bind:value={flippedValue}
+				id="flip_switch"
+				class="form-check-input"
+				type="checkbox"
+				role="switch"
+				bind:checked={flippedValue}
+			/>
 			<label class="form-check-label" for="flip_switch">Flip 180&deg;</label>
 		</div>
 		<label for="pitch_range" class="mt-2 form-label">Pitch Correction: {pitchCorrection}</label>
@@ -86,7 +144,15 @@
 			max="90"
 			step="1"
 		/>
-		<button type="button" class="btn btn-secondary">Reset</button>
+		<button
+			on:click={() => {
+				if (currentImage) {
+					pitchCorrection = currentImage.pitchCorrection;
+				}
+			}}
+			type="button"
+			class="btn btn-secondary">Reset</button
+		>
 		<button type="button" class="btn btn-secondary">View from Side</button>
 		<button type="button" class="btn btn-primary">Set Pitch</button>
 
@@ -94,9 +160,17 @@
 
 		<h4 class="mt-3">Image Options</h4>
 		<label for="image_id">Image Id</label>
-		<input id="image_id" readonly class="form-control" bind:value={currentImageId} />
+		<input id="image_id" readonly class="form-control" value={currentImage?.id ?? 'Undefined'} />
 		<div class="mt-2 form-check form-switch">
-			<input id="image_public_switch" class="form-check-input" type="checkbox" role="switch" />
+			<input
+				checked={(() => {
+					return currentImage?.visibility ?? false;
+				})()}
+				id="image_public_switch"
+				class="form-check-input"
+				type="checkbox"
+				role="switch"
+			/>
 			<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
 		</div>
 	</div>
