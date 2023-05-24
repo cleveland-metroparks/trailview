@@ -9,6 +9,7 @@ export const actions = {
 		const formPitch = data.get('pitch');
 		const formSequenceId = data.get('sequenceId');
 		const formIsPublic = data.get('isPublic');
+		const formFlip = data.get('flip');
 		if (!formPitch) {
 			return { success: false, message: 'pitch not specified' };
 		}
@@ -46,6 +47,22 @@ export const actions = {
 		const resDataPublic = await resPublic.json();
 		if (!resDataPublic.success) {
 			return { success: false, message: resDataPublic.message };
+		}
+
+		const resFlip = await fetch(
+			urlJoin(PUBLIC_API_URL, '/sequence', `/${formSequenceId.toString()}`, '/flip'),
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					apiKey: API_KEY,
+					flip: formFlip ? true : false
+				})
+			}
+		);
+		const resDataFlip = await resFlip.json();
+		if (!resDataFlip.success) {
+			return { success: false, message: resDataFlip.message };
 		}
 
 		return { success: true };

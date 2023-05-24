@@ -165,6 +165,7 @@
 				<input
 					bind:value={flippedValue}
 					id="flip_switch"
+					name="flip"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
