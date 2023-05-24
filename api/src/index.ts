@@ -1,11 +1,20 @@
 import { PrismaClient } from '@prisma/client';
 import express from 'express';
 import { Request, Response } from 'express';
+import * as dotenv from 'dotenv';
+import { z } from 'zod';
 
 const db = new PrismaClient();
 
 const app = express();
 const port = 3000;
+
+dotenv.config();
+
+const apiKey = process.env.API_KEY;
+if (apiKey === undefined) {
+    throw new Error('API_KEY not set in env');
+}
 
 app.use(express.json());
 
@@ -115,6 +124,30 @@ app.get('/sequences', async (req: Request, res: Response) => {
         select: { name: true, id: true },
     });
     return res.json({ success: true, data: sequences });
+});
+
+app.post('/pitch/:sequenceId', async (req: Request, res: Response) => {
+    const postBodyType = z.object({
+        apiKey: z.string(),
+        pitch: z.number(),
+    });
+    const postData = postBodyType.safeParse(req.body);
+    if (!postData.success) {
+        return res.sendStatus(400);
+    }
+    if (postData.data.apiKey !== apiKey) {
+        return res.sendStatus(401);
+    }
+    try {
+        await db.image.updateMany({
+            where: { sequenceId: parseInt(req.params.sequenceId) },
+            data: { pitchCorrection: postData.data.pitch },
+        });
+    } catch (e) {
+        console.error(e);
+        return res.sendStatus(500);
+    }
+    return res.json({ success: true });
 });
 
 // Start the server

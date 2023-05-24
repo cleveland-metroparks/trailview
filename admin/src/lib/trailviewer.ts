@@ -121,6 +121,7 @@ export class TrailViewer {
 
 	private _createMapLayer(data: any) {
 		if (this._map === undefined) {
+			console.warn('Cannot create map layer as map is undefined');
 			return;
 		}
 		if (this._map.getSource('dots')) {
@@ -287,12 +288,12 @@ export class TrailViewer {
 		});
 	}
 
-	setData(data: any[]) {
+	setData(data: Image[]) {
 		this._dataArr = data;
 		// Create index for quick lookup of data points
 		// Format: {'imageID': index, '27fjei9djc': 8, ...}
 		for (let i = 0; i < this._dataArr.length; i++) {
-			this._dataIndex[this._dataArr[i]['id']] = i;
+			this._dataIndex[this._dataArr[i].id] = i;
 		}
 		// Remove all hotspots
 		for (let i = 0; i < this._hotSpotList.length; i++) {
@@ -304,7 +305,7 @@ export class TrailViewer {
 		}
 		if (this._currImg) {
 			this._addSceneToViewer(this._dataArr[this._dataIndex[this._currImg.id]]);
-			this.goToImageID(this._currImg.id);
+			this.goToImageID(this._currImg.id, true);
 		}
 	}
 
@@ -334,6 +335,10 @@ export class TrailViewer {
 		}
 	}
 
+	getPanViewer(): PannellumViewer | undefined {
+		return this._panViewer;
+	}
+
 	private _createViewerConfig(firstScene: string): any {
 		const config = {
 			default: {
@@ -351,12 +356,14 @@ export class TrailViewer {
 
 	private _addSceneToConfig(config: any, scene: Image): any {
 		if (!this._sequencesData) {
+			console.warn('Cannot add scene to config as sequence data is undefined');
 			return;
 		}
 		const sequence = this._sequencesData.find((sequence) => {
 			return sequence.id === scene.sequenceId;
 		});
 		if (!sequence) {
+			console.warn(`Cannot add scene to config as sequence not found with id: ${scene.sequenceId}`);
 			return;
 		}
 		config['scenes'][String(scene['id'])] = {
@@ -378,19 +385,19 @@ export class TrailViewer {
 	}
 
 	private _addSceneToViewer(scene: Image, shtHash: string | null = null) {
-		this._sceneList.push(scene['id']);
-		let horizonPitch = scene['pitchCorrection'];
+		this._sceneList.push(scene.id);
+		let horizonPitch = scene.pitchCorrection;
 		let yaw = 180;
-		if (!scene['flipped']) {
+		if (!scene.flipped) {
 			horizonPitch *= -1;
 			yaw = 0;
 		}
-		let bearing = scene['bearing'];
-		if (!scene['flipped']) {
+		let bearing = scene.bearing;
+		if (!scene.flipped) {
 			bearing = customMod(bearing + 180, 360);
 		}
 		if (!this._sequencesData) {
-			console.warn('Cannot add scene to viewer as sequence data is undefiend');
+			console.warn('Cannot add scene to viewer as sequence data is undefined');
 			return;
 		}
 		const sequence = this._sequencesData.find((sequence) => {
@@ -420,7 +427,7 @@ export class TrailViewer {
 		if (shtHash != null) {
 			config.multiRes.shtHash = shtHash;
 		}
-		this._panViewer.addScene(scene['id'], config);
+		this._panViewer.addScene(scene.id, config);
 	}
 
 	/**
@@ -480,6 +487,7 @@ export class TrailViewer {
 		const ruler = new CheapRuler(41, 'meters');
 		let neighbors: any[] = [];
 		if (this._dataArr === undefined) {
+			console.warn('Cannot get neighbors as dataArr is undefined');
 			return null;
 		}
 		for (let p = 0; p < this._dataArr.length; p++) {
@@ -584,6 +592,7 @@ export class TrailViewer {
 
 		const neighbors = this._getNeighbors(this._currImg);
 		if (neighbors === null) {
+			console.warn('Cannot initialize as neighbors is null');
 			return;
 		}
 		for (let i = 0; i < this._hotSpotList.length; i++) {
@@ -714,6 +723,7 @@ export class TrailViewer {
 		let minDist = Number.MAX_SAFE_INTEGER;
 		let minId: string | null = null;
 		if (this._dataArr === undefined) {
+			console.warn('Cannot get nearest image id as dataArr is undefined');
 			return null;
 		}
 		for (let i = 0; i < this._dataArr.length; i++) {

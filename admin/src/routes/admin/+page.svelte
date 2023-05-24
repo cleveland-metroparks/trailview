@@ -6,17 +6,20 @@
 	import 'mapbox-gl/dist/mapbox-gl.css';
 	import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
-	import type { PageData } from './$types';
+	import type { Actions, PageData } from './$types';
+	import { enhance } from '$app/forms';
 
 	export let data: PageData;
+	export let form: Actions;
 
 	let trailviewer: TrailViewer | undefined;
 
-	let currentSequenceName: string;
+	let currentSequence: { name: string; id: number } | undefined;
 	let pitchCorrection = 0;
 	let flippedValue: boolean;
 	let currentImage: Image | undefined;
 	let isSequencePublic: boolean;
+	let originalPitchCorrections: Map<string, number> = new Map();
 
 	function onSequenceSelectChange(event: Event) {
 		if (trailviewer === undefined) {
@@ -40,6 +43,28 @@
 		}
 	}
 
+	function onPitchCorrectionChange() {
+		if (!trailviewer || !currentImage) {
+			return;
+		}
+		const trailviewerData = trailviewer.getData();
+		if (!trailviewerData) {
+			return;
+		}
+		trailviewerData.forEach((image) => {
+			if (!currentSequence) {
+				return;
+			}
+			if (!originalPitchCorrections.has(image.id)) {
+				originalPitchCorrections.set(image.id, image.pitchCorrection);
+			}
+			if (image.sequenceId === currentSequence.id) {
+				image.pitchCorrection = pitchCorrection;
+			}
+		});
+		trailviewer.setData(trailviewerData);
+	}
+
 	onMount(async () => {
 		let trailviewerOptions = defaultTrailViewerOptions;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
@@ -47,16 +72,13 @@
 		trailviewer = new TrailViewer();
 		trailviewer.on('image-change', (image) => {
 			currentImage = image;
-			currentSequenceName = image.sequenceId.toString();
 			flippedValue = image.flipped;
 			pitchCorrection = image.pitchCorrection;
 			isSequencePublic = image.visibility;
 			const sequence = data.sequences.find((sequence) => {
 				return sequence.id === image.sequenceId;
 			});
-			if (sequence) {
-				currentSequenceName = sequence.name;
-			}
+			currentSequence = sequence;
 		});
 	});
 
@@ -102,6 +124,11 @@
 		<div id="trailview_map" />
 	</div>
 	<div class="col-lg-4">
+		{#if form}
+			<div class={`alert alert-${form.success ? 'success' : 'danger'}`}>
+				{form.success ? 'Success' : form.message ?? 'Unknown error'}
+			</div>
+		{/if}
 		<h4 class="mt-3">Go To Sequence</h4>
 		<select on:change={onSequenceSelectChange} class="form-select">
 			{#each data.sequences as sequence}
@@ -110,7 +137,14 @@
 		</select>
 		<h4 class="mt-3">Sequence Options</h4>
 		<label for="sequence_name">Sequence Name</label>
-		<input id="sequence_name" readonly class="form-control" bind:value={currentSequenceName} />
+		<input
+			id="sequence_name"
+			readonly
+			class="form-control"
+			value={(() => {
+				return currentSequence?.name ?? 'Undefined';
+			})()}
+		/>
 		<div class="mt-2 form-check form-switch">
 			<input
 				id="sequence_public_switch"
@@ -134,28 +168,44 @@
 			/>
 			<label class="form-check-label" for="flip_switch">Flip 180&deg;</label>
 		</div>
-		<label for="pitch_range" class="mt-2 form-label">Pitch Correction: {pitchCorrection}</label>
-		<input
-			bind:value={pitchCorrection}
-			type="range"
-			class="form-range"
-			id="pitch_range"
-			min="-90"
-			max="90"
-			step="1"
-		/>
-		<button
-			on:click={() => {
-				if (currentImage) {
-					pitchCorrection = currentImage.pitchCorrection;
-				}
-			}}
-			type="button"
-			class="btn btn-secondary">Reset</button
-		>
-		<button type="button" class="btn btn-secondary">View from Side</button>
-		<button type="button" class="btn btn-primary">Set Pitch</button>
-
+		<form action="?/pitch" method="POST" use:enhance>
+			<input name="sequenceId" type="hidden" value={currentSequence?.id} />
+			<label for="pitch_range" class="mt-2 form-label">Pitch Correction: {pitchCorrection}</label>
+			<input
+				on:change={onPitchCorrectionChange}
+				bind:value={pitchCorrection}
+				name="pitch"
+				type="range"
+				class="form-range"
+				id="pitch_range"
+				min="-90"
+				max="90"
+				step="1"
+			/>
+			<button
+				on:click={() => {
+					if (currentImage) {
+						const original = originalPitchCorrections.get(currentImage.id);
+						if (original !== undefined) {
+							pitchCorrection = original;
+							onPitchCorrectionChange();
+						}
+					}
+				}}
+				type="button"
+				class="btn btn-secondary">Reset</button
+			>
+			<button
+				on:click={() => {
+					if (trailviewer) {
+						trailviewer.getPanViewer().lookAt(0, 90, 120, false);
+					}
+				}}
+				type="button"
+				class="btn btn-secondary">View from Side</button
+			>
+			<button type="submit" class="btn btn-primary">Set Pitch</button>
+		</form>
 		<hr />
 
 		<h4 class="mt-3">Image Options</h4>
