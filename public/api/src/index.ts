@@ -7,13 +7,17 @@ const db = new PrismaClient();
 const app = express();
 const port = 3000;
 
+(BigInt.prototype as any)['toJSON'] = function () {
+    return this.toString();
+};
+
 app.get('/images/standard/:imageId?', async (req: Request, res: Response) => {
     if (req.params.imageId === undefined) {
         const images = await db.image.findMany({
             where: { visibility: true, id: req.params.imageId },
             select: {
                 id: true,
-                sequenceName: true,
+                sequenceId: true,
                 latitude: true,
                 longitude: true,
                 bearing: true,
@@ -31,7 +35,7 @@ app.get('/images/standard/:imageId?', async (req: Request, res: Response) => {
             where: { id: req.params.imageId },
             select: {
                 id: true,
-                sequenceName: true,
+                sequenceId: true,
                 latitude: true,
                 longitude: true,
                 bearing: true,

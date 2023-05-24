@@ -5,11 +5,13 @@
 	// import 'trailviewer/dist/styles.css';
 	import 'mapbox-gl/dist/mapbox-gl.css';
 	import '$lib/trailviewer.css';
+	import { goto } from '$app/navigation';
 
 	let trailviewer: TrailViewer | undefined;
 
 	let currentImageId: string;
 	let currentSequenceName: string;
+	let pitchCorrection = 0;
 
 	onMount(async () => {
 		let trailviewerOptions = defaultTrailViewerOptions;
@@ -17,7 +19,7 @@
 		trailviewer = new TrailViewer();
 		trailviewer.on('image-change', (image) => {
 			currentImageId = image.id;
-			currentSequenceName = image.sequenceName;
+			currentSequenceName = image.sequenceId.toString();
 		});
 	});
 
@@ -38,9 +40,24 @@
 	/>
 </svelte:head>
 
-<h1 class="mt-3" style="text-align:center">TrailView Admin</h1>
+<div style="position:relative">
+	<h1 class="mt-3" style="text-align:center">TrailView Admin</h1>
+	<button
+		on:click={async () => {
+			const res = await fetch('/logout', { method: 'POST' });
+			const data = await res.json();
+			if (data.success === true) {
+				goto('/login');
+			}
+		}}
+		style="position:absolute; bottom:0; right: 0"
+		type="button"
+		class="btn btn-secondary">Logout</button
+	>
+</div>
+
 <hr />
-<div class="row">
+<div class="row mb-5">
 	<div class="col-lg-8">
 		<div id="viewer-container">
 			<div id="trailview_panorama" style="" />
@@ -48,10 +65,40 @@
 		<div id="trailview_map" />
 	</div>
 	<div class="col-lg-4">
-		<label for="image_id">Image Id</label>
-		<input id="image_id" readonly class="form-control" bind:value={currentImageId} />
+		<h4 class="mt-3">Sequence Options</h4>
 		<label for="sequence_name">Sequence Name</label>
 		<input id="sequence_name" readonly class="form-control" bind:value={currentSequenceName} />
+		<div class="mt-2 form-check form-switch">
+			<input id="sequence_public_switch" class="form-check-input" type="checkbox" role="switch" />
+			<label class="form-check-label" for="sequence_public_switch">Publicly Visible</label>
+		</div>
+		<div class="mt-2 form-check form-switch">
+			<input id="flip_switch" class="form-check-input" type="checkbox" role="switch" />
+			<label class="form-check-label" for="flip_switch">Flip 180&deg;</label>
+		</div>
+		<label for="pitch_range" class="mt-2 form-label">Pitch Correction: {pitchCorrection}</label>
+		<input
+			bind:value={pitchCorrection}
+			type="range"
+			class="form-range"
+			id="pitch_range"
+			min="-90"
+			max="90"
+			step="1"
+		/>
+		<button type="button" class="btn btn-secondary">Reset</button>
+		<button type="button" class="btn btn-secondary">View from Side</button>
+		<button type="button" class="btn btn-primary">Set Pitch</button>
+
+		<hr />
+
+		<h4 class="mt-3">Image Options</h4>
+		<label for="image_id">Image Id</label>
+		<input id="image_id" readonly class="form-control" bind:value={currentImageId} />
+		<div class="mt-2 form-check form-switch">
+			<input id="image_public_switch" class="form-check-input" type="checkbox" role="switch" />
+			<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
+		</div>
 	</div>
 </div>
 

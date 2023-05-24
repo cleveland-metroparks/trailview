@@ -46,7 +46,7 @@ function customMod(a: number, b: number): number {
 
 export interface Image {
 	id: string;
-	sequenceName: string;
+	sequenceId: number;
 	latitude: number;
 	longitude: number;
 	bearing: number;
@@ -323,9 +323,9 @@ export class TrailViewer {
 		}
 	}
 
-	getCurrentSequenceName(): string | undefined {
+	getCurrentSequenceId(): number | undefined {
 		if (this._currImg) {
-			return this._currImg.sequenceName;
+			return this._currImg.sequenceId;
 		} else {
 			return undefined;
 		}

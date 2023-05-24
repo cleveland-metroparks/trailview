@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import express from 'express';
+import { Request, Response } from 'express';
+
 const db = new PrismaClient();
+
 const app = express();
 const port = 3000;
-BigInt.prototype['toJSON'] = function () {
-    return this.toString();
-};
-app.get('/images/standard/:imageId?', async (req, res) => {
+
+app.get('/images/standard/:imageId?', async (req: Request, res: Response) => {
     if (req.params.imageId === undefined) {
         const images = await db.image.findMany({
             where: { visibility: true, id: req.params.imageId },
@@ -25,8 +26,7 @@ app.get('/images/standard/:imageId?', async (req, res) => {
             status: 200,
             imagesStandard: images,
         });
-    }
-    else {
+    } else {
         const image = await db.image.findUnique({
             where: { id: req.params.imageId },
             select: {
@@ -49,15 +49,15 @@ app.get('/images/standard/:imageId?', async (req, res) => {
         });
     }
 });
-app.get('/images/all/:imageId', async (req, res) => {
+
+app.get('/images/all/:imageId', async (req: Request, res: Response) => {
     if (req.params.imageId === null) {
         const images = await db.image.findMany();
         res.json({
             status: 200,
             imagesAll: images,
         });
-    }
-    else {
+    } else {
         const image = await db.image.findUnique({
             where: { id: req.params.imageId },
         });
@@ -70,24 +70,27 @@ app.get('/images/all/:imageId', async (req, res) => {
         });
     }
 });
-app.get('/preview/:imageId', async (req, res) => {
+
+app.get('/preview/:imageId', async (req: Request, res: Response) => {
     const image = await db.image.findUnique({
         where: { id: req.params.imageId },
         select: { shtHash: true },
     });
     if (!image) {
         return res.json({ success: false });
-    }
-    else {
+    } else {
         return res.json({ success: true, preview: image.shtHash });
     }
 });
+
 // Middleware
 app.use(express.json());
+
 // Routes
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
     res.send('Hello, Express!');
 });
+
 // Start the server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

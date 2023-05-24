@@ -35,8 +35,6 @@ model Session {
 
 model Image {
   id                String   @id @db.VarChar(50)
-  sequence          Sequence @relation(fields: [sequenceId], references: [id])
-  sequenceId        Int
   originalLatitude  Float
   originalLongitude Float
   latitude          Float
@@ -46,12 +44,14 @@ model Image {
   shtHash           String
   pitchCorrection   Float
   visibility        Boolean
+  sequenceId        Int
+  sequence          Sequence @relation(fields: [sequenceId], references: [id])
 }
 
 model Sequence {
   name     String  @unique
   status   String? @db.Text
   toDelete Boolean @default(false)
-  id       Int  @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   images   Image[]
 }
