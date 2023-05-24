@@ -213,20 +213,25 @@
 		<hr />
 
 		<h4 class="mt-3">Image Options</h4>
-		<label for="image_id">Image Id</label>
-		<input id="image_id" readonly class="form-control" value={currentImage?.id ?? 'Undefined'} />
-		<div class="mt-2 form-check form-switch">
-			<input
-				checked={(() => {
-					return currentImage?.visibility ?? false;
-				})()}
-				id="image_public_switch"
-				class="form-check-input"
-				type="checkbox"
-				role="switch"
-			/>
-			<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
-		</div>
+		<form action="?/image" method="POST">
+			<input name="imageId" type="hidden" value={currentImage?.id} />
+			<label for="image_id">Image Id</label>
+			<input id="image_id" readonly class="form-control" value={currentImage?.id ?? 'Undefined'} />
+			<div class="mt-2 form-check form-switch">
+				<input
+					checked={(() => {
+						return currentImage?.visibility ?? false;
+					})()}
+					name="public"
+					id="image_public_switch"
+					class="form-check-input"
+					type="checkbox"
+					role="switch"
+				/>
+				<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
+			</div>
+			<button type="submit" class="mt-2 btn btn-primary">Set</button>
+		</form>
 	</div>
 </div>
 

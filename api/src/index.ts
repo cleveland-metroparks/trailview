@@ -126,6 +126,30 @@ app.get('/sequences', async (req: Request, res: Response) => {
     return res.json({ success: true, data: sequences });
 });
 
+app.post('/image/:imageId/public', async (req: Request, res: Response) => {
+    const postBodyType = z.object({
+        apiKey: z.string(),
+        public: z.boolean(),
+    });
+    const postData = postBodyType.safeParse(req.body);
+    if (!postData.success) {
+        return res.sendStatus(400);
+    }
+    if (postData.data.apiKey !== apiKey) {
+        return res.sendStatus(401);
+    }
+    try {
+        await db.image.update({
+            where: { id: req.params.imageId },
+            data: { visibility: postData.data.public },
+        });
+    } catch (e) {
+        console.error(e);
+        return res.sendStatus(500);
+    }
+    return res.json({ success: true });
+});
+
 app.post('/sequence/:sequenceId/flip', async (req: Request, res: Response) => {
     const postBodyType = z.object({
         apiKey: z.string(),

@@ -4,6 +4,30 @@ import { PUBLIC_API_URL } from '$env/static/public';
 import urlJoin from 'url-join';
 
 export const actions = {
+	image: async ({ request, fetch }) => {
+		const data = await request.formData();
+		const formImageId = data.get('imageId');
+		const formPublic = data.get('public');
+		if (!formImageId) {
+			return { success: false, message: 'Image Id not specified' };
+		}
+		const res = await fetch(
+			urlJoin(PUBLIC_API_URL, '/image', `/${formImageId.toString()}`, '/public'),
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					apiKey: API_KEY,
+					public: formPublic ? true : false
+				})
+			}
+		);
+		const resData = await res.json();
+		if (!resData.success) {
+			return { success: false, message: resData.message };
+		}
+		return { success: true };
+	},
 	sequence: async ({ request, fetch }) => {
 		const data = await request.formData();
 		const formPitch = data.get('pitch');
