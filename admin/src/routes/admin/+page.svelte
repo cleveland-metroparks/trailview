@@ -125,8 +125,9 @@
 	</div>
 	<div class="col-lg-4">
 		{#if form}
-			<div class={`alert alert-${form.success ? 'success' : 'danger'}`}>
+			<div class={`alert alert-dismissible alert-${form.success ? 'success' : 'danger'}`}>
 				{form.success ? 'Success' : form.message ?? 'Unknown error'}
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" />
 			</div>
 		{/if}
 		<h4 class="mt-3">Go To Sequence</h4>
@@ -136,40 +137,41 @@
 			{/each}
 		</select>
 		<h4 class="mt-3">Sequence Options</h4>
-		<label for="sequence_name">Sequence Name</label>
-		<input
-			id="sequence_name"
-			readonly
-			class="form-control"
-			value={(() => {
-				return currentSequence?.name ?? 'Undefined';
-			})()}
-		/>
-		<div class="mt-2 form-check form-switch">
+		<form action="?/sequence" method="POST">
+			<input name="sequenceId" type="hidden" value={currentSequence?.id} />
+			<label for="sequence_name">Sequence Name</label>
 			<input
-				id="sequence_public_switch"
-				class="form-check-input"
-				type="checkbox"
-				role="switch"
-				checked={(() => {
-					return currentImage?.visibility ?? false;
+				id="sequence_name"
+				readonly
+				class="form-control"
+				value={(() => {
+					return currentSequence?.name ?? 'Undefined';
 				})()}
 			/>
-			<label class="form-check-label" for="sequence_public_switch">Publicly Visible</label>
-		</div>
-		<div class="mt-2 form-check form-switch">
-			<input
-				bind:value={flippedValue}
-				id="flip_switch"
-				class="form-check-input"
-				type="checkbox"
-				role="switch"
-				bind:checked={flippedValue}
-			/>
-			<label class="form-check-label" for="flip_switch">Flip 180&deg;</label>
-		</div>
-		<form action="?/pitch" method="POST" use:enhance>
-			<input name="sequenceId" type="hidden" value={currentSequence?.id} />
+			<div class="mt-2 form-check form-switch">
+				<input
+					id="sequence_public_switch"
+					class="form-check-input"
+					type="checkbox"
+					role="switch"
+					name="isPublic"
+					checked={(() => {
+						return currentImage?.visibility ?? false;
+					})()}
+				/>
+				<label class="form-check-label" for="sequence_public_switch">Publicly Visible</label>
+			</div>
+			<div class="mt-2 form-check form-switch">
+				<input
+					bind:value={flippedValue}
+					id="flip_switch"
+					class="form-check-input"
+					type="checkbox"
+					role="switch"
+					bind:checked={flippedValue}
+				/>
+				<label class="form-check-label" for="flip_switch">Flip 180&deg;</label>
+			</div>
 			<label for="pitch_range" class="mt-2 form-label">Pitch Correction: {pitchCorrection}</label>
 			<input
 				on:change={onPitchCorrectionChange}
@@ -204,7 +206,8 @@
 				type="button"
 				class="btn btn-secondary">View from Side</button
 			>
-			<button type="submit" class="btn btn-primary">Set Pitch</button>
+			<br />
+			<button type="submit" class="mt-2 btn btn-primary">Set</button>
 		</form>
 		<hr />
 
