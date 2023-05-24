@@ -3,6 +3,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import * as dotenv from 'dotenv';
 import { z } from 'zod';
+import compression from 'compression';
 
 const db = new PrismaClient();
 
@@ -17,6 +18,7 @@ if (apiKey === undefined) {
 }
 
 app.use(express.json());
+app.use(compression());
 
 app.get('/', (req: Request, res: Response) => {
     res.send('TrailView API');

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
-	goto('/login');
+	if (browser) {
+		goto('/login');
+	}
 </script>

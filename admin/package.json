@@ -13,6 +13,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.1.0",
+		"@sveltejs/adapter-node": "^1.2.4",
 		"@sveltejs/kit": "^1.18.0",
 		"@types/bootstrap": "^5.2.6",
 		"@types/geojson": "^7946.0.10",
