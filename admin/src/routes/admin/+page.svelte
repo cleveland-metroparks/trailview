@@ -201,7 +201,7 @@
 			<button
 				on:click={() => {
 					if (trailviewer) {
-						trailviewer.getPanViewer().lookAt(0, 90, 120, false);
+						trailviewer.getPanViewer()?.lookAt(0, 90, 120, false);
 					}
 				}}
 				type="button"

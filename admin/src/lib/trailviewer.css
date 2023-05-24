@@ -1,5 +1,3 @@
-
-
 #nav_arrows_container {
 	position: absolute;
 	margin: 0;
@@ -92,4 +90,25 @@
 	margin: 0;
 	padding: 0;
 	z-index: 10;
+}
+
+#trailview-nav-container {
+	width: 400px;
+	height: 200px;
+	/* background-color: rgba(0, 0, 0, 0.37); */
+	position: absolute;
+	bottom: 40px;
+	left: 50%;
+	transform: translate(-50%, 0) perspective(300px) rotateX(30deg);
+	pointer-events: none;
+}
+
+.trailview-nav-arrow {
+	position: absolute;
+	width: 100px;
+	left: 50%;
+	top: 50%;
+	pointer-events: all;
+    cursor: pointer;
+    user-select: none;
 }
