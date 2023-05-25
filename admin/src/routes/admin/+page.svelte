@@ -66,7 +66,7 @@
 
 	onMount(async () => {
 		const trailview = await import('trailviewer');
-		let trailviewerOptions = trailview.defaultTrailViewerOptions;
+		let trailviewerOptions = trailview.defaultOptions;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
 		trailviewer = new trailview.TrailViewer();
