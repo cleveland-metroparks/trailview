@@ -55,3 +55,7 @@
 	cursor: pointer;
 	user-select: none;
 }
+
+.pnlm-about-msg {
+	visibility: hidden;
+}
