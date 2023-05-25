@@ -1,6 +1,6 @@
 {
     "name": "trailviewer",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "main": "./dist/index.js",
     "scripts": {
         "build": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs",
