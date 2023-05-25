@@ -1,4 +1,0 @@
-[submodule "public/dist/pannellum-metroparks"]
-	path = public/dist/pannellum-metroparks
-	url = https://github.com/orosmatthew/pannellum-metroparks
-	branch = trailview
