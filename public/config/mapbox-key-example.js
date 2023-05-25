@@ -1,1 +1,0 @@
-var mapboxKey = "pk.keyhere"
