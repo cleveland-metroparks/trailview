@@ -13,6 +13,6 @@ npm run build
 
 ## Scripts
 
- - `npm run build` - Builds package
- - `npm run format` - Formats all files
- - `npm run check` - Perform eslint static analysis on all files
+-   `npm run build` - Builds package
+-   `npm run format` - Formats all files
+-   `npm run check` - Perform eslint static analysis on all files

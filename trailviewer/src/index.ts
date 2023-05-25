@@ -86,9 +86,9 @@ interface PannellumConfig {
 
 export interface TrailViewerOptions {
     panoramaTarget: string;
-    mapTarget: string;
+    mapTarget?: string;
     baseUrl: string;
-    mapboxKey: string | undefined;
+    mapboxKey?: string;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
@@ -302,8 +302,8 @@ export class TrailViewer {
     }
 
     private _startMap(data: Image[]) {
-        if (!this._options.mapboxKey) {
-            throw new Error('No MapBox key specified');
+        if (!this._options.mapboxKey || !this._options.mapTarget) {
+            return;
         }
         mapboxgl.accessToken = this._options.mapboxKey;
         this._map = new mapboxgl.Map({

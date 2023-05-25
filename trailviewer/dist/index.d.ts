@@ -20,9 +20,9 @@ declare class PannellumViewer {
 }
 export interface TrailViewerOptions {
     panoramaTarget: string;
-    mapTarget: string;
+    mapTarget?: string;
     baseUrl: string;
-    mapboxKey: string | undefined;
+    mapboxKey?: string;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
