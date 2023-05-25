@@ -6,6 +6,7 @@ import { EventEmitter } from 'events';
 declare class PannellumViewer {
 	viewer(container: HTMLElement | string, initialConfig: object): PannellumViewer;
 	getYaw(): number;
+	getPitch(): number;
 	removeHotSpot(hotSpotId: string, sceneId?: string): boolean;
 	removeScene(sceneId: string): boolean;
 	addScene(sceneId: string, config: object): PannellumViewer;
@@ -63,6 +64,7 @@ export const defaultTrailViewerOptions: TrailViewerOptions = {
 
 interface HTMLNavArrowElement extends HTMLImageElement {
 	yaw: number;
+	imageId: string;
 }
 
 export function angle180to360(angle: number): number {
@@ -125,10 +127,10 @@ export class TrailViewer {
 	private _firstScene: any = null;
 	private _map: mapboxgl.Map | undefined;
 	private _mapMarker: mapboxgl.Marker | undefined;
-	private _markerRotationInterval: ReturnType<typeof setInterval> | undefined;
 	private _emitter: EventEmitter;
 	private _sequencesData: { name: string; id: number }[] | undefined;
 	private _neighbors: Neighbor[] = [];
+	private _mouseOnDot = false;
 
 	constructor(options: TrailViewerOptions = defaultTrailViewerOptions) {
 		this._emitter = new EventEmitter();
@@ -291,37 +293,41 @@ export class TrailViewer {
 		});
 
 		// // Update visual cursor
-		// map.on('mouseenter', 'dots', () => {
-		// 	mouseOnDot = true;
-		// 	map.getCanvas().style.cursor = 'pointer';
-		// });
+		this._map.on('mouseenter', 'dots', () => {
+			this._mouseOnDot = true;
+			if (this._map) {
+				this._map.getCanvas().style.cursor = 'pointer';
+			}
+		});
 
-		// map.on('mouseleave', 'dots', () => {
-		// 	mouseOnDot = false;
-		// 	map.getCanvas().style.cursor = 'grab';
-		// });
+		this._map.on('mouseleave', 'dots', () => {
+			this._mouseOnDot = false;
+			if (this._map) {
+				this._map.getCanvas().style.cursor = 'grab';
+			}
+		});
 
-		// map.on('mousedown', () => {
-		// 	if (!mouseOnDot) {
-		// 		map.getCanvas().style.cursor = 'grabbing';
-		// 	}
-		// });
+		this._map.on('mousedown', () => {
+			if (this._map && !this._mouseOnDot) {
+				this._map.getCanvas().style.cursor = 'grabbing';
+			}
+		});
 
-		// map.on('mouseup', () => {
-		// 	if (mouseOnDot) {
-		// 		map.getCanvas().style.cursor = 'pointer';
-		// 	} else {
-		// 		map.getCanvas().style.cursor = 'grab';
-		// 	}
-		// });
+		this._map.on('mouseup', () => {
+			if (this._map && this._mouseOnDot) {
+				this._map.getCanvas().style.cursor = 'pointer';
+			} else if (this._map) {
+				this._map.getCanvas().style.cursor = 'grab';
+			}
+		});
 
 		// // Create currentMarker icon
 		const currentMarker_wrap = document.createElement('div');
-		currentMarker_wrap.classList.add('marker_current_wrapper');
+		currentMarker_wrap.classList.add('trailview-current-marker-wrapper');
 		const currentMarker_div = document.createElement('div');
-		currentMarker_div.classList.add('marker_current');
+		currentMarker_div.classList.add('trailview-current-marker');
 		const currentMarker_view_div = document.createElement('div');
-		currentMarker_view_div.classList.add('marker_viewer');
+		currentMarker_view_div.classList.add('trailview-marker-viewer');
 		currentMarker_wrap.appendChild(currentMarker_div);
 		currentMarker_wrap.appendChild(currentMarker_view_div);
 		this._mapMarker = new mapboxgl.Marker(currentMarker_wrap)
@@ -329,29 +335,7 @@ export class TrailViewer {
 			.addTo(this._map)
 			.setRotationAlignment('map');
 
-		this._markerRotationInterval = setInterval(() => {
-			if (this._panViewer !== undefined && this._mapMarker !== undefined) {
-				const angle = this.getBearing();
-				if (angle !== undefined) {
-					this._mapMarker.setRotation((angle + 225) % 360);
-				}
-			}
-			const arrows = document.getElementsByClassName('trailview-nav-arrow');
-
-			if (this._panViewer !== undefined) {
-				for (const arrow of arrows) {
-					// $(element).css('transform', 'rotateZ(' + yaw + 'deg) translateY(-100px)');
-
-					const yaw = customMod(
-						360 - angle180to360(this._panViewer.getYaw()) + (arrow as HTMLNavArrowElement).yaw,
-						360
-					);
-					(
-						arrow as HTMLNavArrowElement
-					).style.transform = `translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
-				}
-			}
-		}, 20);
+		this._updateMapMarkerRotation();
 
 		this._map.jumpTo({
 			center: this._mapMarker.getLngLat(),
@@ -368,10 +352,44 @@ export class TrailViewer {
 		});
 	}
 
-	// private _onNavArrowClick(evt, info) {
-	// 	info['this']._prevNavClickedYaw = info.yaw;
-	// 	info['this']._panViewer.loadScene(info.id, 'same', 'same', 'same');
-	// }
+	private _updateMapMarkerRotation() {
+		if (this._panViewer !== undefined && this._mapMarker !== undefined) {
+			const angle = this.getBearing();
+			if (angle !== undefined) {
+				this._mapMarker.setRotation((angle + 225) % 360);
+			}
+		}
+		requestAnimationFrame(this._updateMapMarkerRotation.bind(this));
+	}
+
+	private _updateNavArrows(once = false) {
+		const arrows = document.getElementsByClassName('trailview-nav-arrow');
+
+		if (this._panViewer !== undefined) {
+			for (const arrow of arrows) {
+				const yaw = customMod(
+					360 - angle180to360(this._panViewer.getYaw()) + (arrow as HTMLNavArrowElement).yaw,
+					360
+				);
+				(
+					arrow as HTMLNavArrowElement
+				).style.transform = `scale(80%) translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
+			}
+			// Container rotation
+			let rot = (this._panViewer.getPitch() + 90) / 2.5;
+			if (rot > 80) {
+				rot = 80;
+			} else if (rot < 0) {
+				rot = 0;
+			}
+			(
+				document.getElementById('trailview-nav-container') as HTMLDivElement
+			).style.transform = `translate(-50%, 0) perspective(300px) rotateX(${rot}deg)`;
+		}
+		if (!once) {
+			requestAnimationFrame(this._updateNavArrows.bind(this, false));
+		}
+	}
 
 	setData(data: Image[]) {
 		this._dataArr = data;
@@ -537,6 +555,11 @@ export class TrailViewer {
 			arrow.classList.add('trailview-nav-arrow');
 			arrow.src = '/img/arrow.png';
 			arrow.yaw = neighbor.yaw;
+			arrow.imageId = neighbor.id;
+			arrow.draggable = false;
+			arrow.addEventListener('click', (event: MouseEvent) => {
+				this.goToImageID((event.target as HTMLNavArrowElement).imageId);
+			});
 			navDiv.appendChild(arrow);
 		});
 	}
@@ -553,7 +576,7 @@ export class TrailViewer {
 			const data = await req.json();
 
 			this._addSceneToViewer(neighbors[i], data['preview']);
-			this._hotSpotList.push(neighbors[i]['id']);
+			// this._hotSpotList.push(neighbors[i]['id']);
 			const min = this._options.navArrowMinAngle;
 			const max = this._options.navArrowMaxAngle;
 			const pitch = -(max - min - (neighbors[i]['distance'] * (max - min)) / 9.0) + max;
@@ -566,22 +589,6 @@ export class TrailViewer {
 				pitch: pitch,
 				yaw: yaw
 			});
-			if (this._panViewer !== undefined) {
-				this._panViewer.addHotSpot({
-					id: neighbors[i]['id'],
-					pitch: pitch, //-25
-					yaw: yaw,
-					cssClass: 'custom-hotspot',
-					type: 'scene',
-					clickHandlerFunc: this._onNavArrowClick,
-					clickHandlerArgs: {
-						this: this,
-						id: neighbors[i]['id'],
-						yaw: neighbors[i]['neighborBearing'],
-						pitch: pitch
-					}
-				});
-			}
 		}
 		this._populateArrows();
 		// TODO: on-arrow-add
@@ -731,6 +738,7 @@ export class TrailViewer {
 		const navDiv = document.createElement('div');
 		navDiv.id = 'trailview-nav-container';
 		document.getElementById(this._options.panoramaTarget)?.appendChild(navDiv);
+		this._updateNavArrows();
 	}
 
 	/**
@@ -881,9 +889,6 @@ export class TrailViewer {
 	destroy() {
 		if (this._panViewer !== undefined) {
 			this._panViewer.destroy();
-		}
-		if (this._markerRotationInterval !== undefined) {
-			clearInterval(this._markerRotationInterval);
 		}
 	}
 
