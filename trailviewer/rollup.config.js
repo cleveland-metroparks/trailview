@@ -9,7 +9,7 @@ export default {
     output: {
         name: 'TrailViewer',
         dir: './dist',
-        format: 'es',
+        format: 'iife',
     },
     plugins: [
         resolve({ preferBuiltins: false }),
