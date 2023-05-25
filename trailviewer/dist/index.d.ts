@@ -1,5 +1,23 @@
+import 'pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import 'pannellum/build/pannellum.css';
 import './styles/index.css';
+declare class PannellumViewer {
+    viewer(container: HTMLElement | string, initialConfig: object): PannellumViewer;
+    getYaw(): number;
+    getPitch(): number;
+    removeHotSpot(hotSpotId: string, sceneId?: string): boolean;
+    removeScene(sceneId: string): boolean;
+    addScene(sceneId: string, config: object): PannellumViewer;
+    addHotSpot(hs: object, sceneId?: string): PannellumViewer;
+    on(type: string, listener: Function): PannellumViewer;
+    getScene(): string;
+    setYaw(yaw: number, animated: boolean | number, callback?: Function, callbackArgs?: object): PannellumViewer;
+    getNorthOffset(): number;
+    destroy(): void;
+    loadScene(sceneId: string, pitch?: number | 'same', yaw?: number | 'same', hfov?: number | 'same'): void;
+    lookAt(pitch?: number, yaw?: number, hfov?: number, animated?: boolean | number, callback?: Function, callbackArgs?: object): PannellumViewer;
+}
 export interface TrailViewerOptions {
     panoramaTarget: string;
     mapTarget: string;
@@ -10,10 +28,24 @@ export interface TrailViewerOptions {
     imageFetchType: 'standard' | 'all';
 }
 export declare const defaultTrailViewerOptions: TrailViewerOptions;
+export interface Image {
+    id: string;
+    sequenceId: number;
+    latitude: number;
+    longitude: number;
+    bearing: number;
+    flipped: boolean;
+    pitchCorrection: number;
+    visibility: boolean;
+    shtHash: string | undefined;
+}
+export interface TrailViewer {
+    on(event: 'image-change', listener: (image: Image) => void): void;
+    on(event: 'init-done', listener: () => void): void;
+}
 export declare class TrailViewer {
     private _options;
     private _panViewer;
-    private _infoJson;
     private _geo;
     private _prevNorthOffset;
     private _prevYaw;
@@ -23,7 +55,6 @@ export declare class TrailViewer {
     private _sceneList;
     private _hotSpotList;
     private _prevImg;
-    private _prevNavClickedYaw;
     private _initLat;
     private _initLng;
     private optimalDist;
@@ -32,61 +63,41 @@ export declare class TrailViewer {
     private _firstScene;
     private _map;
     private _mapMarker;
-    constructor(options?: TrailViewerOptions, initImageId?: string | undefined, data?: undefined, lat?: undefined, lng?: undefined);
+    private _emitter;
+    private _sequencesData;
+    private _navArrowInfos;
+    private _mouseOnDot;
+    constructor(options?: TrailViewerOptions);
     private _createMapLayer;
     private _startMap;
-    setData(data: any[]): void;
-    getData(): any;
+    private _createMapMarker;
+    private _updateMapMarkerRotation;
+    private _updateNavArrows;
+    setData(data: Image[]): void;
+    getData(): Image[] | undefined;
     getCurrentImageID(): string | undefined;
-    getFlipped(): boolean;
-    getCurrentSequenceName(): string;
+    getFlipped(): boolean | undefined;
+    getCurrentSequenceId(): number | undefined;
+    getPanViewer(): PannellumViewer | undefined;
     private _createViewerConfig;
     private _addSceneToConfig;
-    private _addSceneToViewer;
-    /**
-     * Adds navigation arrows to viewer from neighbors array
-     * */
+    private _addImageToViewer;
+    private _createNavArrows;
     private _addNeighborsToViewer;
-    /**
-     * Called when a navigation arrow is clicked
-     */
-    private _onNavArrowClick;
     private _customMod;
-    /**
-     * Calculates neighbors based on provided imageID
-     * Returns array of scene-like objects
-     */
     private _getNeighbors;
     private _initViewer;
-    /**
-     * Fetches data and then initializes viewer
-     * @private
-     */
+    private _createNavContainer;
     private _fetchData;
-    /**
-     * Returns nearest hotspot from yaw angle
-     * Returns nearest hotspot config
-     */
-    private _getNearestHotspot;
-    private _onSceneChange;
-    /**
-     * Gets nearest image ID to specified coordinates
-     * Returns null if not in cutoff, else returns image id
-     */
-    getNearestImageId(lat: number, lng: number, distCutoff?: number): string | null;
+    private _onImageChange;
+    getNearestImageId(lat: number, lng: number, distCutoff?: number): string | undefined;
     getImageGeo(): {
         latitude: number;
         longitude: number;
     };
     destroy(): void;
-    getBearing(): number;
-    /**
-     * Creates info in viewer
-     */
-    private _createLocalInfo;
-    /**
-     * Called when info is clicked
-     */
+    getBearing(): number | undefined;
     private _onHotSpotClicked;
-    goToImageID(imageID: string, reset?: boolean): Promise<this>;
+    goToImageID(imageID: string, reset?: boolean): Promise<this | undefined>;
 }
+export {};

@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { TrailViewer, defaultTrailViewerOptions, type Image } from '$lib/trailviewer';
 	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
-	// import 'trailviewer/dist/styles.css';
-	import 'mapbox-gl/dist/mapbox-gl.css';
-	import '$lib/trailviewer.css';
+	import 'trailviewer/dist/styles.css';
+	// import 'mapbox-gl/dist/mapbox-gl.css';
+	// import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
 	import type { Actions, PageData } from './$types';
-	import { enhance } from '$app/forms';
+	import type { TrailViewer, Image } from 'trailviewer';
 
 	export let data: PageData;
 	export let form: Actions;
@@ -66,11 +65,12 @@
 	}
 
 	onMount(async () => {
-		let trailviewerOptions = defaultTrailViewerOptions;
+		const trailview = await import('trailviewer');
+		let trailviewerOptions = trailview.defaultTrailViewerOptions;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
-		trailviewer = new TrailViewer();
-		trailviewer.on('image-change', (image) => {
+		trailviewer = new trailview.TrailViewer();
+		trailviewer.on('image-change', (image: Image) => {
 			currentImage = image;
 			flippedValue = image.flipped;
 			pitchCorrection = image.pitchCorrection;
@@ -88,16 +88,6 @@
 		}
 	});
 </script>
-
-<svelte:head>
-	<script
-		src="https://cdn.jsdelivr.net/gh/orosmatthew/pannellum-metroparks@trailview/build/pannellum.js"
-	></script>
-	<link
-		rel="stylesheet"
-		href="https://cdn.jsdelivr.net/gh/orosmatthew/pannellum-metroparks@trailview/build/pannellum.css"
-	/>
-</svelte:head>
 
 <div style="position:relative">
 	<h1 class="mt-3" style="text-align:center">TrailView Admin</h1>

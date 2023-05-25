@@ -3,7 +3,9 @@
     "version": "0.0.1",
     "main": "./dist/index.js",
     "scripts": {
-        "build": "rollup -c rollup.config.js --bundleConfigAsCjs"
+        "build": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs",
+        "format": "prettier --write .",
+        "check": "prettier --check . && eslint ."
     },
     "type": "module",
     "devDependencies": {
@@ -11,15 +13,23 @@
         "@rollup/plugin-node-resolve": "^15.0.2",
         "@rollup/plugin-terser": "^0.4.3",
         "@rollup/plugin-typescript": "^11.1.1",
+        "@types/events": "^3.0.0",
         "@types/mapbox-gl": "^2.7.11",
         "@types/node": "^20.2.3",
+        "@typescript-eslint/eslint-plugin": "^5.59.7",
+        "@typescript-eslint/parser": "^5.59.7",
         "cheap-ruler": "^3.0.2",
+        "eslint": "^8.41.0",
+        "events": "^3.3.0",
         "mapbox-gl": "^2.14.1",
-        "mitt": "^3.0.0",
+        "pannellum": "github:orosmatthew/pannellum-metroparks#trailview",
+        "prettier": "^2.8.8",
+        "rimraf": "^5.0.1",
         "rollup": "^3.23.0",
         "rollup-plugin-import-css": "^3.2.1",
         "tslib": "^2.5.2",
-        "typescript": "^5.0.4"
+        "typescript": "^5.0.4",
+        "url-join": "^5.0.0"
     },
     "files": [
         "./dist/*"

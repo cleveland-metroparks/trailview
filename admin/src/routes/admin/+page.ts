@@ -21,5 +21,5 @@ export const load = (async ({ fetch }) => {
 	if (!sequences.success) {
 		throw error(500, 'Invalid data format');
 	}
-    return {sequences: sequences.data};
+	return { sequences: sequences.data };
 }) satisfies PageLoad;

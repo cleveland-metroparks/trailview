@@ -566,7 +566,7 @@ export class TrailViewer {
 		this._navArrowInfos.forEach((info) => {
 			const arrow = document.createElement('img') as HTMLNavArrowElement;
 			arrow.classList.add('trailview-nav-arrow');
-			arrow.src = '/img/arrow.png';
+			arrow.src = `${this._options.baseUrl}/assets/img/arrow.png`;
 			arrow.yaw = info.yaw;
 			arrow.imageId = info.id;
 			arrow.draggable = false;
