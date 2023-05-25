@@ -27,7 +27,7 @@ export interface TrailViewerOptions {
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
 }
-export declare const defaultTrailViewerOptions: TrailViewerOptions;
+export declare const defaultOptions: TrailViewerOptions;
 export interface Image {
     id: string;
     sequenceId: number;

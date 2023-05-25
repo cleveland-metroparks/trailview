@@ -94,7 +94,7 @@ export interface TrailViewerOptions {
     imageFetchType: 'standard' | 'all';
 }
 
-export const defaultTrailViewerOptions: TrailViewerOptions = {
+export const defaultOptions: TrailViewerOptions = {
     panoramaTarget: 'trailview_panorama',
     mapTarget: 'trailview_map',
     baseUrl: 'https://trailview.cmparks.net',
@@ -157,7 +157,7 @@ export interface TrailViewer {
 }
 
 export class TrailViewer {
-    private _options: TrailViewerOptions = defaultTrailViewerOptions;
+    private _options: TrailViewerOptions = defaultOptions;
     private _panViewer: PannellumViewer | undefined;
     private _geo = { latitude: 0, longitude: 0 };
     private _prevNorthOffset = 0;
@@ -181,9 +181,7 @@ export class TrailViewer {
     private _navArrowInfos: NavArrowInfo[] = [];
     private _mouseOnDot = false;
 
-    public constructor(
-        options: TrailViewerOptions = defaultTrailViewerOptions
-    ) {
+    public constructor(options: TrailViewerOptions = defaultOptions) {
         this._emitter = new EventEmitter();
         this._options = options;
         fetch(urlJoin(this._options.baseUrl, '/api/sequences'), {
