@@ -63,7 +63,7 @@
 	}
 
 	onMount(async () => {
-		const trailview = await import('@cmparks/trailviewer').then((module) => module.default || module);
+		const trailview = await import('@cmparks/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';

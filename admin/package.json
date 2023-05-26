@@ -36,7 +36,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@cmparks/trailviewer": "^0.3.1",
+		"@cmparks/trailviewer": "file:../trailviewer",
 		"@prisma/client": "^4.14.1",
 		"bootstrap": "^5.3.0-alpha3",
 		"events": "^3.3.0",

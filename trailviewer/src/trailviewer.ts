@@ -199,7 +199,7 @@ export class TrailViewer {
             for (let i = 0; i < this._dataArr.length; i++) {
                 this._dataIndex.set(this._dataArr[i].id, i);
             }
-            this._initViewer();
+            this._initViewer(this._options.initialImageId);
             if (this._currImg) {
                 this.goToImageID(this._currImg['id'], true);
             }
