@@ -3,9 +3,9 @@ import mapboxgl from 'mapbox-gl';
 import type { Feature, FeatureCollection } from 'geojson';
 import { EventEmitter } from 'events';
 import urlJoin from 'url-join';
-import 'pannellum/build/pannellum.js';
+import '@cmparks/pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import 'pannellum/build/pannellum.css';
+import '@cmparks/pannellum/build/pannellum.css';
 import './styles/trailviewer.css';
 
 declare const pannellum: PannellumViewer;

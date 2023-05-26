@@ -1,6 +1,6 @@
 {
     "name": "@cmparks/trailviewer",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
@@ -25,6 +25,7 @@
         "check": "prettier --check . && eslint ."
     },
     "devDependencies": {
+        "@cmparks/pannellum": "^2.6.0",
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-node-resolve": "^15.0.2",
         "@rollup/plugin-terser": "^0.4.3",
@@ -46,7 +47,6 @@
         "cheap-ruler": "^3.0.2",
         "events": "^3.3.0",
         "mapbox-gl": "^2.15.0",
-        "pannellum": "github:orosmatthew/pannellum-metroparks#trailview",
         "url-join": "^5.0.0"
     }
 }

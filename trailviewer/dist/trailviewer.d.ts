@@ -1,6 +1,6 @@
-import 'pannellum/build/pannellum.js';
+import '@cmparks/pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import 'pannellum/build/pannellum.css';
+import '@cmparks/pannellum/build/pannellum.css';
 import './styles/trailviewer.css';
 declare class PannellumViewer {
     viewer(container: HTMLElement | string, initialConfig: object): PannellumViewer;
