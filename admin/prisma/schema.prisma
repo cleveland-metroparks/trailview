@@ -7,35 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model AdminAccount {
-  Id       Int       @id @default(autoincrement())
-  Username String    @unique
-  Password String
-  Sessions Session[]
-}
-
-model Session {
-  Id             String       @id @default(uuid())
-  AdminAccountId Int
-  createdAt      DateTime     @default(now())
-  Account        AdminAccount @relation(fields: [AdminAccountId], references: [Id])
-}
-
-model Images {
-  Id                String   @id(map: "PK_Images") @db.VarChar(50)
-  SequenceName      String?  @db.VarChar(50)
-  OriginalLatitude  Float?
-  OriginalLongitude Float?
-  Latitude          Float?
-  Longitude         Float?
-  Bearing           Float?
-  Flipped           Boolean?
-  ShtHash           String?  @db.Text
-  OriginalName      String?  @db.Text
-  PitchCorrection   Float?   @default(0.0, map: "DF_Images_PitchCorrection")
-  Visibility        Boolean  @default(false, map: "DF_Images_Visibility")
-}
-
 model TrailInfo {
   ID          Int     @id(map: "PK_TrailInfo") @default(autoincrement())
   ImageID     String? @db.VarChar(50)
@@ -48,8 +19,40 @@ model TrailInfo {
   CSSClass    String? @db.Text
 }
 
-model Trails {
-  Name     String  @id(map: "PK_TrailsNewNewNew") @db.VarChar(50)
-  Status   String? @db.Text
-  ToDelete Boolean @default(false, map: "DF_TrailsNewNewNew_ToDelete")
+model AdminAccount {
+  Id       Int       @id @default(autoincrement())
+  Username String    @unique
+  Password String
+  Session  Session[]
+}
+
+model Session {
+  Id             String       @id @default(uuid())
+  AdminAccountId Int
+  createdAt      DateTime     @default(now())
+  AdminAccount   AdminAccount @relation(fields: [AdminAccountId], references: [Id])
+}
+
+model Image {
+  id                String   @id @db.VarChar(50)
+  originalLatitude  Float
+  originalLongitude Float
+  latitude          Float
+  longitude         Float
+  bearing           Float
+  flipped           Boolean
+  shtHash           String
+  pitchCorrection   Float
+  visibility        Boolean
+  sequenceId        Int
+  sequence          Sequence @relation(fields: [sequenceId], references: [id])
+}
+
+model Sequence {
+  name     String   @unique
+  status   String?  @db.Text
+  toDelete Boolean  @default(false)
+  id       Int      @id @default(autoincrement())
+  isPublic Boolean? @default(true)
+  images   Image[]
 }

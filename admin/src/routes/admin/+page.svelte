@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
-	import '@cmparks/trailviewer/dist/trailviewer.css';
+	import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
 	import type { Actions, PageData } from './$types';
-	import type { TrailViewer, Image } from '@cmparks/trailviewer';
+	import type { TrailViewer, Image } from '$lib/trailviewer';
 
 	export let data: PageData;
 	export let form: Actions;
@@ -63,7 +63,7 @@
 	}
 
 	onMount(async () => {
-		const trailview = await import('@cmparks/trailviewer');
+		const trailview = await import('$lib/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
