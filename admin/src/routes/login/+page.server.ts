@@ -1,6 +1,13 @@
 import { db } from '$lib/server/prisma';
 import { redirect } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+import { isSessionValid } from '$lib/server/auth';
+
+export const load = (async ({ cookies }) => {
+	if (await isSessionValid(cookies.get('session'))) {
+		throw redirect(301, '/admin');
+	}
+}) satisfies PageServerLoad;
 
 export const actions = {
 	login: async ({ request, cookies }) => {
@@ -17,7 +24,10 @@ export const actions = {
 		if (user.Password === password.toString()) {
 			const session = await db.session.create({ data: { AdminAccountId: user.Id } });
 			cookies.set('session', session.Id, {
-				secure: process.env.NODE_ENV === 'development' ? false : true
+				secure: process.env.NODE_ENV === 'development' ? false : true,
+				httpOnly: true,
+				sameSite: 'strict',
+				maxAge: 60 * 60 * 24 // A day
 			});
 			throw redirect(302, '/admin');
 		}

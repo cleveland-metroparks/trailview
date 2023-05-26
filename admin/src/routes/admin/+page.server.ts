@@ -1,7 +1,12 @@
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { API_KEY } from '$env/static/private';
 import { PUBLIC_API_URL } from '$env/static/public';
 import urlJoin from 'url-join';
+import { redirectIfSessionInvalid } from '$lib/server/auth';
+
+export const load = (async ({ cookies }) => {
+	await redirectIfSessionInvalid('/login', cookies.get('session'));
+}) satisfies PageServerLoad;
 
 export const actions = {
 	image: async ({ request, fetch }) => {
