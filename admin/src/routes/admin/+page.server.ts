@@ -5,7 +5,7 @@ import urlJoin from 'url-join';
 import { redirectIfSessionInvalid } from '$lib/server/auth';
 
 export const load = (async ({ cookies }) => {
-	await redirectIfSessionInvalid('/login', cookies.get('session'));
+	await redirectIfSessionInvalid('/login', cookies);
 }) satisfies PageServerLoad;
 
 export const actions = {
