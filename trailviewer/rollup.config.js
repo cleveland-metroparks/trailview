@@ -9,10 +9,10 @@ export default {
     output: [{
         name: 'trailviewer',
         file: './dist/trailviewer.umd.js',
-        format: 'iife',
+        format: 'umd',
     },
     {
-        file: './dist/trailviewer.es.mjs',
+        file: './dist/trailviewer.mjs',
         format: 'es'
     }],
     plugins: [
