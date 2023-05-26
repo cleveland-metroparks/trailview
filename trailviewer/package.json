@@ -1,13 +1,24 @@
 {
     "name": "trailviewer",
     "version": "0.1.0",
-    "main": "./dist/index.js",
+    "main": "./dist/trailviewer.umd.js",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/trailviewer.es.mjs",
+            "require": "./dist/trailviewer.umd.js"
+        },
+        "./dist/trailviewer.css": {
+            "import": "./dist/trailviewer.css",
+            "require": "./dist/trailviewer.css"
+        }
+    },
+    "types": "./dist/trailviewer.d.ts",
     "scripts": {
         "build": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs",
         "format": "prettier --write .",
         "check": "prettier --check . && eslint ."
     },
-    "type": "module",
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-node-resolve": "^15.0.2",

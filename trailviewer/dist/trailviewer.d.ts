@@ -1,7 +1,7 @@
 import 'pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import 'pannellum/build/pannellum.css';
-import './styles/index.css';
+import './styles/trailviewer.css';
 declare class PannellumViewer {
     viewer(container: HTMLElement | string, initialConfig: object): PannellumViewer;
     getYaw(): number;
@@ -20,9 +20,10 @@ declare class PannellumViewer {
 }
 export interface TrailViewerOptions {
     panoramaTarget: string;
-    mapTarget?: string;
+    mapTarget: string | undefined;
+    initialImageId: string | undefined;
     baseUrl: string;
-    mapboxKey?: string;
+    mapboxKey: string | undefined;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
@@ -60,7 +61,6 @@ export declare class TrailViewer {
     private optimalDist;
     private neighborDistCutoff;
     private pruneAngle;
-    private _firstScene;
     private _map;
     private _mapMarker;
     private _emitter;

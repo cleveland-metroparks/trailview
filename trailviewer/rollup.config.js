@@ -5,17 +5,21 @@ import terser from '@rollup/plugin-terser';
 import css from 'rollup-plugin-import-css';
 
 export default {
-    input: './src/index.ts',
-    output: {
-        name: 'TrailViewer',
-        dir: './dist',
-        format: 'umd',
+    input: './src/trailviewer.ts',
+    output: [{
+        name: 'trailviewer',
+        file: './dist/trailviewer.umd.js',
+        format: 'iife',
     },
+    {
+        file: './dist/trailviewer.es.mjs',
+        format: 'es'
+    }],
     plugins: [
         resolve({ preferBuiltins: false }),
         commonjs(),
         typescript(),
         terser(),
-        css({ minify: true, output: './dist/styles.css' }),
+        css({ minify: true, output: './dist/trailviewer.css' }),
     ],
 };

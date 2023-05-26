@@ -6,7 +6,7 @@ import urlJoin from 'url-join';
 import 'pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import 'pannellum/build/pannellum.css';
-import './styles/index.css';
+import './styles/trailviewer.css';
 
 declare const pannellum: PannellumViewer;
 
@@ -86,9 +86,10 @@ interface PannellumConfig {
 
 export interface TrailViewerOptions {
     panoramaTarget: string;
-    mapTarget?: string;
+    mapTarget: string | undefined;
+    initialImageId: string | undefined;
     baseUrl: string;
-    mapboxKey?: string;
+    mapboxKey: string | undefined;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
@@ -97,6 +98,7 @@ export interface TrailViewerOptions {
 export const defaultOptions: TrailViewerOptions = {
     panoramaTarget: 'trailview_panorama',
     mapTarget: 'trailview_map',
+    initialImageId: undefined,
     baseUrl: 'https://trailview.cmparks.net',
     mapboxKey: undefined,
     navArrowMinAngle: -25,
@@ -173,7 +175,6 @@ export class TrailViewer {
     private optimalDist = 4;
     private neighborDistCutoff = 10;
     private pruneAngle = 25;
-    private _firstScene: string | undefined;
     private _map: mapboxgl.Map | undefined;
     private _mapMarker: mapboxgl.Marker | undefined;
     private _emitter: EventEmitter;
@@ -735,7 +736,7 @@ export class TrailViewer {
         return filteredNeighbors;
     }
 
-    private _initViewer() {
+    private _initViewer(initImageId?: string) {
         if (this._dataArr === undefined) {
             console.error(
                 'Cannot initialize viewer because dataArr is undefined'
@@ -746,31 +747,27 @@ export class TrailViewer {
             this._dataIndex.set(this._dataArr[i].id, i);
         }
 
-        if (this._currImg === undefined) {
+        if (initImageId === undefined) {
             if (this._initLat && this._initLng) {
-                this._firstScene = this.getNearestImageId(
+                initImageId = this.getNearestImageId(
                     this._initLat,
                     this._initLng,
                     Number.MAX_SAFE_INTEGER
                 );
             } else {
-                this._firstScene = this._dataArr[0]['id'];
+                initImageId = this._dataArr[0].id;
             }
-        } else {
-            this._firstScene = this._currImg.id;
         }
-        if (!this._firstScene) {
-            console.warn('First image not specified');
-            return;
+
+        if (initImageId === undefined) {
+            throw new Error('First image not specified');
         }
-        let config = this._createViewerConfig(this._firstScene);
-        const index = this._dataIndex.get(this._firstScene);
+        let config = this._createViewerConfig(initImageId);
+        const index = this._dataIndex.get(initImageId);
 
         if (index !== undefined) {
             this._currImg = this._dataArr[index];
         } else {
-            console.log(this._firstScene);
-            console.log(this._dataIndex);
             console.warn('Cannot find image id in index');
         }
         if (this._currImg) {
