@@ -1,6 +1,5 @@
 import CheapRuler from 'cheap-ruler';
 import mapboxgl from 'mapbox-gl';
-import type { Feature, FeatureCollection } from 'geojson';
 import { EventEmitter } from 'events';
 import urlJoin from 'url-join';
 import '@cmparks/pannellum/build/pannellum.js';
@@ -212,7 +211,7 @@ export class TrailViewer {
         this._emitter.on(event, listener);
     }
 
-    private _createMapLayer(data: Image[]) {
+    private _createMapLayer() {
         if (this._map === undefined) {
             throw new Error('Cannot create map layer as map is undefined');
         }
@@ -220,40 +219,19 @@ export class TrailViewer {
             this._map.removeLayer('dots');
             this._map.removeSource('dots');
         }
-        const features: FeatureCollection = {
-            type: 'FeatureCollection',
-            features: [],
-        };
-        for (let i = 0; i < data.length; i++) {
-            const feature: Feature = {
-                type: 'Feature',
-                properties: {
-                    sequenceId: data[i].sequenceId,
-                    imageID: data[i].id,
-                    visible: data[i].visibility,
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [data[i].longitude, data[i].latitude],
-                },
-            };
-            features.features.push(feature);
-        }
-
         const layerData: mapboxgl.AnySourceData = {
-            type: 'geojson',
-            data: {
-                type: 'FeatureCollection',
-                features: features.features,
-            },
+            type: 'vector',
+            format: 'pbf',
+            tiles: [urlJoin(this._options.baseUrl, '/api/tiles/{z}/{x}/{y}')],
         };
 
         this._map.addSource('dots', layerData);
 
         this._map.addLayer({
             id: 'dots',
-            type: 'circle',
+            'source-layer': 'geojsonLayer',
             source: 'dots',
+            type: 'circle',
             paint: {
                 'circle-radius': 10,
                 'circle-color': [
@@ -300,7 +278,7 @@ export class TrailViewer {
         ]);
     }
 
-    private _startMap(data: Image[]) {
+    private _startMap() {
         if (!this._options.mapboxKey || !this._options.mapTarget) {
             return;
         }
@@ -317,7 +295,7 @@ export class TrailViewer {
         });
 
         this._map.on('load', () => {
-            this._createMapLayer(data);
+            this._createMapLayer();
         });
 
         this._map.on('mouseenter', 'dots', () => {
@@ -528,9 +506,7 @@ export class TrailViewer {
             multiRes: {
                 basePath: urlJoin(
                     this._options.baseUrl,
-                    '/trails',
-                    `/${sequence.name}`,
-                    '/img',
+                    '/api/panImage',
                     `/${scene.id}`
                 ),
                 path: '/%l/%s%y_%x',
@@ -577,9 +553,7 @@ export class TrailViewer {
             multiRes: {
                 basePath: urlJoin(
                     this._options.baseUrl,
-                    '/trails',
-                    `/${sequence.name}`,
-                    '/img',
+                    '/api/panImage',
                     `/${image.id}`
                 ),
                 path: '/%l/%s%y_%x',
@@ -806,7 +780,7 @@ export class TrailViewer {
         if (this._currImg !== undefined && neighbors !== undefined) {
             this._addNeighborsToViewer(neighbors, this._currImg.flipped);
         }
-        this._startMap(this._dataArr);
+        this._startMap();
         this._createNavContainer();
         this._emitter.emit('init-done');
     }
@@ -824,12 +798,16 @@ export class TrailViewer {
         if (this._options.imageFetchType == 'standard') {
             const res = await fetch(
                 urlJoin(this._options.baseUrl, '/api/images/standard'),
-                { method: 'GET' }
+                {
+                    method: 'GET',
+                }
             );
             const data = await res.json();
-            return new Promise((resolve) => {
-                resolve(data['imagesStandard']);
-            });
+            if (data.success === true) {
+                return data.data;
+            } else {
+                throw new Error('Fetching image data unsuccessful');
+            }
         } else {
             const res = await fetch(
                 urlJoin(this._options.baseUrl, '/api/images/all'),
@@ -838,10 +816,11 @@ export class TrailViewer {
                 }
             );
             const data = await res.json();
-            this._dataArr = data['imagesAll'];
-            return new Promise((resolve) => {
-                resolve(data['imagesAll']);
-            });
+            if (data.success === true) {
+                return data.data;
+            } else {
+                throw new Error('Fetching image data unsuccessful');
+            }
         }
     }
 
@@ -1049,7 +1028,9 @@ export class TrailViewer {
             }
             const res = await fetch(
                 urlJoin(this._options.baseUrl, '/api/preview', `/${imageID}`),
-                { method: 'GET' }
+                {
+                    method: 'GET',
+                }
             );
             const data = await res.json();
 

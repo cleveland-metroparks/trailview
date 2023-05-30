@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import type { Actions, PageData } from './$types';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
+	import { page } from '$app/stores';
 
 	export let data: PageData;
 	export let form: Actions;
@@ -65,6 +66,8 @@
 	onMount(async () => {
 		const trailview = await import('$lib/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
+
+		trailviewerOptions.baseUrl = $page.url.origin;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
 		trailviewer = new trailview.TrailViewer();

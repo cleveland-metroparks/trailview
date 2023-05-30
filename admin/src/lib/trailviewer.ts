@@ -218,8 +218,8 @@ export class TrailViewer {
 		}
 		const layerData: mapboxgl.AnySourceData = {
 			type: 'vector',
-            format: 'pbf',
-			tiles: ['https://trailview-admin.cmparks.net/api/tiles/{z}/{x}/{y}']
+			format: 'pbf',
+			tiles: [urlJoin(this._options.baseUrl, '/api/tiles/{z}/{x}/{y}')]
 		};
 
 		this._map.addSource('dots', layerData);
@@ -227,7 +227,7 @@ export class TrailViewer {
 		this._map.addLayer({
 			id: 'dots',
 			'source-layer': 'geojsonLayer',
-            source: 'dots',
+			source: 'dots',
 			type: 'circle',
 			paint: {
 				'circle-radius': 10,
@@ -481,13 +481,7 @@ export class TrailViewer {
 			northOffset: scene['bearing'],
 			type: 'multires',
 			multiRes: {
-				basePath: urlJoin(
-					this._options.baseUrl,
-					'/trails',
-					`/${sequence.name}`,
-					'/img',
-					`/${scene.id}`
-				),
+				basePath: urlJoin(this._options.baseUrl, '/api/panImage', `/${scene.id}`),
 				path: '/%l/%s%y_%x',
 				extension: 'jpg',
 				tileResolution: 512,
@@ -528,13 +522,7 @@ export class TrailViewer {
 			northOffset: bearing,
 			type: 'multires',
 			multiRes: {
-				basePath: urlJoin(
-					this._options.baseUrl,
-					'/trails',
-					`/${sequence.name}`,
-					'/img',
-					`/${image.id}`
-				),
+				basePath: urlJoin(this._options.baseUrl, '/api/panImage', `/${image.id}`),
 				path: '/%l/%s%y_%x',
 				fallbackPath: '/fallback/%s',
 				extension: 'jpg',
@@ -746,18 +734,21 @@ export class TrailViewer {
 				method: 'GET'
 			});
 			const data = await res.json();
-			return new Promise((resolve) => {
-				resolve(data['imagesStandard']);
-			});
+			if (data.success === true) {
+				return data.data;
+			} else {
+				throw new Error('Fetching image data unsuccessful');
+			}
 		} else {
 			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images/all'), {
 				method: 'GET'
 			});
 			const data = await res.json();
-			this._dataArr = data['imagesAll'];
-			return new Promise((resolve) => {
-				resolve(data['imagesAll']);
-			});
+			if (data.success === true) {
+				return data.data;
+			} else {
+				throw new Error('Fetching image data unsuccessful');
+			}
 		}
 	}
 

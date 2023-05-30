@@ -3,6 +3,7 @@ import { API_KEY } from '$env/static/private';
 import { PUBLIC_API_URL } from '$env/static/public';
 import urlJoin from 'url-join';
 import { redirectIfSessionInvalid } from '$lib/server/auth';
+import { db } from '$lib/server/prisma';
 
 export const load = (async ({ cookies }) => {
 	await redirectIfSessionInvalid('/login', cookies);
@@ -16,24 +17,13 @@ export const actions = {
 		if (!formImageId) {
 			return { success: false, message: 'Image Id not specified' };
 		}
-		const res = await fetch(
-			urlJoin(PUBLIC_API_URL, '/image', `/${formImageId.toString()}`, '/public'),
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: API_KEY,
-					public: formPublic ? true : false
-				})
-			}
-		);
-		const resData = await res.json();
-		if (!resData.success) {
-			return { success: false, message: resData.message };
-		}
+		await db.image.update({
+			where: { id: formImageId.toString() },
+			data: { visibility: formPublic ? true : false }
+		});
 		return { success: true };
 	},
-	sequence: async ({ request, fetch }) => {
+	sequence: async ({ request }) => {
 		const data = await request.formData();
 		const formPitch = data.get('pitch');
 		const formSequenceId = data.get('sequenceId');
@@ -45,55 +35,19 @@ export const actions = {
 		if (!formSequenceId) {
 			return { success: false, message: 'Sequence Id not specified' };
 		}
+		const sequenceId = parseInt(formSequenceId.toString());
+		if (isNaN(sequenceId)) {
+			return { success: false, message: 'Sequence id is not a number' };
+		}
 		const pitch = parseFloat(formPitch.toString());
-		const resPitch = await fetch(
-			urlJoin(PUBLIC_API_URL, '/pitch', `/${formSequenceId.toString()}`),
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: API_KEY,
-					pitch: pitch
-				})
+		await db.image.updateMany({
+			where: { sequenceId: sequenceId },
+			data: {
+				flipped: formFlip ? true : false,
+				pitchCorrection: pitch,
+				visibility: formIsPublic ? true : false
 			}
-		);
-		const resDataPitch = await resPitch.json();
-		if (!resDataPitch.success) {
-			return { success: false, message: resDataPitch.message };
-		}
-
-		const resPublic = await fetch(
-			urlJoin(PUBLIC_API_URL, '/sequence', `/${formSequenceId.toString()}`, '/public'),
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: API_KEY,
-					public: formIsPublic ? true : false
-				})
-			}
-		);
-		const resDataPublic = await resPublic.json();
-		if (!resDataPublic.success) {
-			return { success: false, message: resDataPublic.message };
-		}
-
-		const resFlip = await fetch(
-			urlJoin(PUBLIC_API_URL, '/sequence', `/${formSequenceId.toString()}`, '/flip'),
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: API_KEY,
-					flip: formFlip ? true : false
-				})
-			}
-		);
-		const resDataFlip = await resFlip.json();
-		if (!resDataFlip.success) {
-			return { success: false, message: resDataFlip.message };
-		}
-
+		});
 		return { success: true };
 	}
 } satisfies Actions;
