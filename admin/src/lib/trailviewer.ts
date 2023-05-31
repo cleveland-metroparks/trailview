@@ -176,6 +176,7 @@ export class TrailViewer {
 	private _sequencesData: { name: string; id: number }[] | undefined;
 	private _navArrowInfos: NavArrowInfo[] = [];
 	private _mouseOnDot = false;
+	private _destroyed = false;
 
 	public constructor(options: TrailViewerOptions = defaultOptions) {
 		this._emitter = new EventEmitter();
@@ -361,7 +362,9 @@ export class TrailViewer {
 				this._mapMarker.setRotation((angle + 225) % 360);
 			}
 		}
-		requestAnimationFrame(this._updateMapMarkerRotation.bind(this));
+		if (this._destroyed === false) {
+			requestAnimationFrame(this._updateMapMarkerRotation.bind(this));
+		}
 	}
 
 	private _updateNavArrows(once = false) {
@@ -387,7 +390,7 @@ export class TrailViewer {
 				document.getElementById('trailview-nav-container') as HTMLDivElement
 			).style.transform = `translate(-50%, 0) perspective(300px) rotateX(${rot}deg)`;
 		}
-		if (!once) {
+		if (!once && this._destroyed === false) {
 			requestAnimationFrame(this._updateNavArrows.bind(this, false));
 		}
 	}
@@ -555,6 +558,7 @@ export class TrailViewer {
 			arrow.yaw = info.yaw;
 			arrow.imageId = info.id;
 			arrow.draggable = false;
+			arrow.alt = 'Navigation arrow';
 			arrow.addEventListener('click', (event: MouseEvent) => {
 				this.goToImageID((event.target as HTMLNavArrowElement).imageId);
 			});
@@ -871,6 +875,7 @@ export class TrailViewer {
 	}
 
 	public destroy() {
+		this._destroyed = true;
 		if (this._panViewer !== undefined) {
 			this._panViewer.destroy();
 		}

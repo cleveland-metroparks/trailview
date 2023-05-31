@@ -6,7 +6,15 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		adapter: adapter()
+		adapter: adapter(),
+		csp: {
+			directives: {
+				'object-src': ['none'],
+				'script-src': ['strict-dynamic'],
+				'style-src': ['self', 'unsafe-inline'],
+				'base-uri': ['none']
+			}
+		}
 	}
 };
 
