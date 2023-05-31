@@ -9,7 +9,7 @@ public/downloads/*.zip
 tools/run_clean_downloads.bat
 
 # contains sensitive local information
-config/local.json
+tools/local.config
 
 # From IIS
 public/web.config

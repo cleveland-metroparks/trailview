@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "rootDir": "./src",
+        "outDir": "./build",
+        "strict": true,
+        "esModuleInterop": true,
+        "moduleResolution": "nodenext"
+    }
+}
