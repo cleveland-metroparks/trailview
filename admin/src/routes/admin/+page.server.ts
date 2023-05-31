@@ -1,7 +1,4 @@
 import type { Actions, PageServerLoad } from './$types';
-import { API_KEY } from '$env/static/private';
-import { PUBLIC_API_URL } from '$env/static/public';
-import urlJoin from 'url-join';
 import { redirectIfSessionInvalid } from '$lib/server/auth';
 import { db } from '$lib/server/prisma';
 
@@ -10,7 +7,7 @@ export const load = (async ({ cookies }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	image: async ({ request, fetch }) => {
+	image: async ({ request }) => {
 		const data = await request.formData();
 		const formImageId = data.get('imageId');
 		const formPublic = data.get('public');

@@ -4,5 +4,5 @@ declare module 'vt-pbf' {
 		public version: number;
 		constructor(features: geojsonvt.Features);
 	}
-	function fromVectorTileJs({layers: { geojsonLayer: GeoJSONWrapper }}): object;
+	function fromVectorTileJs({ layers: { geojsonLayer: GeoJSONWrapper } }): object;
 }

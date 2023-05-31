@@ -1,6 +1,5 @@
 import CheapRuler from 'cheap-ruler';
 import mapboxgl from 'mapbox-gl';
-import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 import { EventEmitter } from 'events';
 import urlJoin from 'url-join';
 import '@cmparks/pannellum/build/pannellum.js';
@@ -138,7 +137,7 @@ export interface Image {
 	shtHash: string | undefined;
 }
 
-interface Neighbor extends Image {
+export interface Neighbor extends Image {
 	distance: number;
 	neighborBearing: number;
 }
@@ -270,7 +269,7 @@ export class TrailViewer {
 		]);
 	}
 
-	private _startMap(data: Image[]) {
+	private _startMap() {
 		if (!this._options.mapboxKey || !this._options.mapTarget) {
 			return;
 		}
@@ -716,7 +715,7 @@ export class TrailViewer {
 		if (this._currImg !== undefined && neighbors !== undefined) {
 			this._addNeighborsToViewer(neighbors, this._currImg.flipped);
 		}
-		this._startMap(this._dataArr);
+		this._startMap();
 		this._createNavContainer();
 		this._emitter.emit('init-done');
 	}

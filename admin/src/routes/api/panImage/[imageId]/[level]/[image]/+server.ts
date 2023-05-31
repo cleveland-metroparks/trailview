@@ -3,8 +3,7 @@ import { db } from '$lib/server/prisma';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { join } from 'path';
-import fs from 'fs';
-import { Readable } from 'stream';
+import { promises as fs } from 'fs';
 
 const imageFileRegex = new RegExp(/^[a-z][0-9]_[0-9]\.jpg$/);
 
@@ -31,24 +30,8 @@ export const GET = (async ({ params }) => {
 		level.toString(),
 		params.image
 	);
-	const fileStream = fs.createReadStream(filePath);
-	const readable = Readable.from(fileStream, { objectMode: true });
-	const stream = new ReadableStream({
-		start(controller) {
-			readable.on('data', (chunk) => {
-				controller.enqueue(chunk);
-			});
-
-			readable.on('end', () => {
-				controller.close();
-			});
-
-			readable.on('error', (error) => {
-				controller.error(error);
-			});
-		}
-	});
-	return new Response(stream, {
+	const file = await fs.readFile(filePath);
+	return new Response(file, {
 		headers: {
 			'Content-Type': 'image/jpeg',
 			'Content-Disposition': `inline; filename=${params.image}`

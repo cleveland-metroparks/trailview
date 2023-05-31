@@ -15,5 +15,5 @@ export const GET = (async () => {
 			visibility: true
 		}
 	});
-    return json({success: true, data: images});
+	return json({ success: true, data: images });
 }) satisfies RequestHandler;

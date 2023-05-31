@@ -16,7 +16,6 @@
 	let pitchCorrection = 0;
 	let flippedValue: boolean;
 	let currentImage: Image | undefined;
-	let isSequencePublic: boolean;
 	let originalPitchCorrections: Map<string, number> = new Map();
 
 	function onSequenceSelectChange(event: Event) {
@@ -75,7 +74,6 @@
 			currentImage = image;
 			flippedValue = image.flipped;
 			pitchCorrection = image.pitchCorrection;
-			isSequencePublic = image.visibility;
 			const sequence = data.sequences.find((sequence) => {
 				return sequence.id === image.sequenceId;
 			});
