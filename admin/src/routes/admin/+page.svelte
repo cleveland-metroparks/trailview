@@ -17,26 +17,36 @@
 	let flippedValue: boolean;
 	let currentImage: Image | undefined;
 	let originalPitchCorrections: Map<string, number> = new Map();
+	let allImageData:
+		| {
+				id: string;
+				pitchCorrection: number;
+				bearing: number;
+				longitude: number;
+				latitude: number;
+				flipped: boolean;
+				visibility: boolean;
+				sequenceId: number;
+		  }[]
+		| undefined;
 
 	function onSequenceSelectChange(event: Event) {
 		if (trailviewer === undefined) {
 			return;
 		}
-		const trailviewData = trailviewer.getData();
-		if (!trailviewData) {
-			return;
-		}
-		const image = trailviewData.find((image) => {
-			const sequence = data.sequences.find((sequence) => {
-				return sequence.id === image.sequenceId;
+		if (allImageData !== undefined) {
+			const image = allImageData.find((image) => {
+				const sequence = data.sequences.find((sequence) => {
+					return sequence.id === image.sequenceId;
+				});
+				if (!sequence) {
+					return;
+				}
+				return sequence.name === (event.target as HTMLSelectElement).value;
 			});
-			if (!sequence) {
-				return;
+			if (image) {
+				trailviewer.goToImageID(image.id);
 			}
-			return sequence.name === (event.target as HTMLSelectElement).value;
-		});
-		if (image) {
-			trailviewer.goToImageID(image.id);
 		}
 	}
 
@@ -44,22 +54,9 @@
 		if (!trailviewer || !currentImage) {
 			return;
 		}
-		const trailviewerData = trailviewer.getData();
-		if (!trailviewerData) {
-			return;
+		if (allImageData !== undefined) {
+			trailviewer.overridePitchCorrection(pitchCorrection);
 		}
-		trailviewerData.forEach((image) => {
-			if (!currentSequence) {
-				return;
-			}
-			if (!originalPitchCorrections.has(image.id)) {
-				originalPitchCorrections.set(image.id, image.pitchCorrection);
-			}
-			if (image.sequenceId === currentSequence.id) {
-				image.pitchCorrection = pitchCorrection;
-			}
-		});
-		trailviewer.setData(trailviewerData);
 	}
 
 	onMount(async () => {
@@ -69,6 +66,7 @@
 		trailviewerOptions.baseUrl = $page.url.origin;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
+		trailviewerOptions.initialImageId = 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
 		trailviewer = new trailview.TrailViewer();
 		trailviewer.on('image-change', (image: Image) => {
 			currentImage = image;
@@ -79,6 +77,13 @@
 			});
 			currentSequence = sequence;
 		});
+
+		const res = await fetch('/api/images/all', { method: 'GET' });
+		const imagesData = await res.json();
+		if (imagesData.success !== true) {
+			throw new Error('Unable to fetch all image data');
+		}
+		allImageData = imagesData.data;
 	});
 
 	onDestroy(() => {

@@ -22,7 +22,14 @@ export let allImageData: {
 	sequenceId: number;
 }[];
 
-async function refreshImageData() {
+export let imagePreviews: Map<string, string>;
+
+export async function refreshImageData(once: boolean) {
+	const previews = await db.image.findMany({ select: { id: true, shtHash: true } });
+	imagePreviews = new Map();
+	previews.forEach((preview) => {
+		imagePreviews.set(preview.id, preview.shtHash);
+	});
 	allImageData = await db.image.findMany({
 		select: {
 			id: true,
@@ -48,14 +55,18 @@ async function refreshImageData() {
 			visibility: true
 		}
 	});
-	return new Promise<void>((resolve) => {
-		setTimeout(resolve, 1000 * 60 * 15); // 15 minutes
-	});
+	if (once) {
+		return;
+	} else {
+		return new Promise<void>((resolve) => {
+			setTimeout(resolve, 1000 * 60 * 15); // 15 minutes
+		});
+	}
 }
 
 (async () => {
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
-		await refreshImageData();
+		await refreshImageData(false);
 	}
 })();

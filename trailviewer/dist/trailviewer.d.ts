@@ -21,7 +21,7 @@ declare class PannellumViewer {
 export interface TrailViewerOptions {
     panoramaTarget: string;
     mapTarget: string | undefined;
-    initialImageId: string | undefined;
+    initialImageId: string;
     baseUrl: string;
     mapboxKey: string | undefined;
     navArrowMinAngle: number;
@@ -40,6 +40,10 @@ export interface Image {
     visibility: boolean;
     shtHash: string | undefined;
 }
+export interface Neighbor extends Image {
+    distance: number;
+    neighborBearing: number;
+}
 export interface TrailViewer {
     on(event: 'image-change', listener: (image: Image) => void): void;
     on(event: 'init-done', listener: () => void): void;
@@ -51,30 +55,25 @@ export declare class TrailViewer {
     private _prevNorthOffset;
     private _prevYaw;
     private _currImg;
-    private _dataArr;
-    private _dataIndex;
     private _sceneList;
     private _hotSpotList;
     private _prevImg;
-    private _initLat;
-    private _initLng;
-    private optimalDist;
-    private neighborDistCutoff;
-    private pruneAngle;
     private _map;
     private _mapMarker;
     private _emitter;
     private _sequencesData;
     private _navArrowInfos;
     private _mouseOnDot;
+    private _destroyed;
+    private _neighbors;
+    private _pitchCorrectionOverride;
     constructor(options?: TrailViewerOptions);
+    overridePitchCorrection(pitch?: number): void;
     private _createMapLayer;
     private _startMap;
     private _createMapMarker;
     private _updateMapMarkerRotation;
     private _updateNavArrows;
-    setData(data: Image[]): void;
-    getData(): Image[] | undefined;
     getCurrentImageID(): string | undefined;
     getFlipped(): boolean | undefined;
     getCurrentSequenceId(): number | undefined;
@@ -90,14 +89,12 @@ export declare class TrailViewer {
     private _createNavContainer;
     private _fetchData;
     private _onImageChange;
-    getNearestImageId(lat: number, lng: number, distCutoff?: number): string | undefined;
     getImageGeo(): {
         latitude: number;
         longitude: number;
     };
     destroy(): void;
     getBearing(): number | undefined;
-    private _onHotSpotClicked;
-    goToImageID(imageID: string, reset?: boolean): Promise<this | undefined>;
+    goToImageID(imageId: string, reset?: boolean): Promise<this | undefined>;
 }
 export {};

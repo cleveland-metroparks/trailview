@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { standardImageData } from '$lib/server/dbcache';
+import { imagePreviews, standardImageData } from '$lib/server/dbcache';
 
 export const GET = (async ({ params }) => {
 	const image = standardImageData.find((image) => {
@@ -9,5 +9,5 @@ export const GET = (async ({ params }) => {
 	if (image === undefined) {
 		return json({ success: false, message: 'Image cannot be found' }, { status: 400 });
 	}
-	return json({ success: true, data: image });
+	return json({ success: true, data: image, preview: imagePreviews.get(image.id) });
 }) satisfies RequestHandler;

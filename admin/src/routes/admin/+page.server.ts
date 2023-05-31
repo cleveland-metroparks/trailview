@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { redirectIfSessionInvalid } from '$lib/server/auth';
 import { db } from '$lib/server/prisma';
+import { refreshImageData } from '$lib/server/dbcache';
 
 export const load = (async ({ cookies }) => {
 	await redirectIfSessionInvalid('/login', cookies);
@@ -18,6 +19,7 @@ export const actions = {
 			where: { id: formImageId.toString() },
 			data: { visibility: formPublic ? true : false }
 		});
+		await refreshImageData(true);
 		return { success: true };
 	},
 	sequence: async ({ request }) => {
@@ -45,6 +47,7 @@ export const actions = {
 				visibility: formIsPublic ? true : false
 			}
 		});
+		await refreshImageData(true);
 		return { success: true };
 	}
 } satisfies Actions;
