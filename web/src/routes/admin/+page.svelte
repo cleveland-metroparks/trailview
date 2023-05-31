@@ -2,13 +2,15 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
 	import '$lib/trailviewer.css';
-	import { goto } from '$app/navigation';
 	import type { Actions, PageData } from './$types';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import { page } from '$app/stores';
+	import { mainHeading } from './stores';
 
 	export let data: PageData;
 	export let form: Actions;
+
+	$mainHeading = 'TrailView Admin';
 
 	let trailviewer: TrailViewer | undefined;
 
@@ -93,23 +95,6 @@
 	});
 </script>
 
-<div style="position:relative">
-	<h1 class="mt-3" style="text-align:center">TrailView Admin</h1>
-	<button
-		on:click={async () => {
-			const res = await fetch('/logout', { method: 'POST' });
-			const data = await res.json();
-			if (data.success === true) {
-				goto('/login');
-			}
-		}}
-		style="position:absolute; bottom:0; right: 0"
-		type="button"
-		class="btn btn-secondary">Logout</button
-	>
-</div>
-
-<hr />
 <div class="row mb-5">
 	<div class="col-lg-8">
 		<div id="viewer-container">
@@ -124,6 +109,7 @@
 				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" />
 			</div>
 		{/if}
+		<a href="/admin/import" class="btn btn-outline-success">Import</a>
 		<h4 class="mt-3">Go To Sequence</h4>
 		<select on:change={onSequenceSelectChange} class="form-select">
 			{#each data.sequences as sequence}
