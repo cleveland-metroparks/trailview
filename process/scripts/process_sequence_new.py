@@ -7,6 +7,9 @@ from cmath import rect, phase       # for angle calculations
 from math import radians, degrees   # for angle calculations
 
 '''
+Author: Matthew Oros
+Email: mjo1@clevelandmetroparks.com
+
 This script creates a sequence.json which contains some image metadata that
 eventually gets combined into a master data.json file
 '''

@@ -63,7 +63,7 @@ export async function refreshImageData(once: boolean) {
 		return;
 	} else {
 		return new Promise<void>((resolve) => {
-			setTimeout(resolve, 1000 * 60 * 15); // 15 minutes
+			setTimeout(resolve, 1000 * 60); // 1 minute
 		});
 	}
 }

@@ -3,6 +3,7 @@ import { spawn } from 'child_process';
 import dotEnv from 'dotenv';
 import fs from 'fs-extra';
 import { join } from 'path';
+import type { Image } from '@prisma/client';
 
 dotEnv.config();
 
@@ -12,15 +13,6 @@ if (process.env.IMAGES_PATH === undefined) {
     throw new Error('IMAGES_PATH not specified in env');
 }
 const IMAGES_PATH = process.env.IMAGES_PATH;
-
-function runPython(args: string[]) {
-    return new Promise<void>((resolve) => {
-        const python = spawn('python', args);
-        python.on('close', () => {
-            resolve();
-        });
-    });
-}
 
 async function countJpgs(dir: string) {
     const files = await fs.readdir(dir);
@@ -33,12 +25,142 @@ async function countJpgs(dir: string) {
     return jpgs.length;
 }
 
-function processSequence(sequence: Sequence) {
-    // TODO
+async function countJsons(dir: string) {
+    const files = await fs.readdir(dir);
+    const jsons = files.filter((file) => {
+        return file.toLowerCase().endsWith('.json');
+    });
+    return jsons.length;
+}
+
+async function processSequence(sequence: Sequence) {
+    const sequencePath = join(IMAGES_PATH, sequence.name);
+    await new Promise<void>((resolve) => {
+        console.log('=== Start Sequencing Process ===');
+        const python = spawn('python', [
+            'scripts/process_sequence_new.py',
+            sequencePath,
+            '--no-flip',
+        ]);
+        python.stdout.on('data', (data) => {
+            console.log(`${data}`);
+        });
+        python.stderr.on('data', (data) => {
+            console.log(`${data}`);
+        });
+        python.on('close', () => {
+            resolve();
+        });
+    });
+    console.log('=== End Sequencing Process ===');
+    await new Promise<void>((resolve) => {
+        console.log('=== Start Data Process ===');
+        const python = spawn('python', [
+            'scripts/process_data.py',
+            IMAGES_PATH,
+        ]);
+        python.stdout.on('data', (data) => {
+            console.log(`${data}`);
+        });
+        python.stderr.on('data', (data) => {
+            console.log(`${data}`);
+        });
+        python.on('close', () => {
+            resolve();
+        });
+    });
+    console.log('=== End Data Process ===');
+    console.log('=== Start Updating DB ===');
+
+    const masterData = JSON.parse(
+        (await fs.readFile(join(IMAGES_PATH, 'data.json'))).toString()
+    ) as {
+        data: {
+            id: string;
+            sequence: string;
+            latitude: number;
+            longitude: number;
+            bearing: number;
+            flipped: boolean;
+            shtHash: string;
+        }[];
+    };
+
+    const sequences = await db.sequence.findMany();
+    const currentImages = await db.image.findMany();
+    const currentImagesIndex = new Map<string, Image>();
+    currentImages.forEach((image) => {
+        currentImagesIndex.set(image.id, image);
+    });
+    for (const image of masterData.data) {
+        if (currentImagesIndex.has(image.id) === true) {
+            continue;
+        }
+        const sequence = sequences.find((sequence) => {
+            return sequence.name === image.sequence;
+        });
+        if (sequence === undefined) {
+            console.error(`Failed to find sequence: ${image.sequence}`);
+            continue;
+        }
+        await db.image.create({
+            data: {
+                id: image.id,
+                originalLatitude: image.latitude,
+                originalLongitude: image.longitude,
+                latitude: image.latitude,
+                longitude: image.longitude,
+                bearing: image.bearing,
+                flipped: image.flipped,
+                shtHash: image.shtHash,
+                pitchCorrection: 0,
+                visibility: false,
+                sequenceId: sequence.id,
+            },
+        });
+    }
+    console.log('=== End Updating DB ===');
+    await db.sequence.update({
+        where: { id: sequence.id },
+        data: { status: 'Done' },
+    });
+}
+
+async function processTile(sequence: Sequence) {
+    const sequencePath = join(IMAGES_PATH, sequence.name);
+    if (fs.existsSync(join(sequencePath, 'img'))) {
+        const originalCount = await countJpgs(join(sequencePath, 'img_blur'));
+        const processedCount = await countJsons(join(sequencePath, 'img'));
+        if (originalCount === processedCount) {
+            await db.sequence.update({
+                where: { id: sequence.id },
+                data: { status: 'Sequence' },
+            });
+            return;
+        }
+    }
+    await new Promise<void>((resolve) => {
+        console.log('=== Start Tiling Process ===');
+        const python = spawn('python', [
+            'scripts/process_imgs_new.py',
+            join(sequencePath),
+            '--useblurred',
+            'True',
+        ]);
+        python.stdout.on('data', (data) => {
+            console.log(`${data}`);
+        });
+        python.stderr.on('data', (data) => {
+            console.log(`${data}`);
+        });
+        python.on('close', () => {
+            resolve();
+        });
+    });
+    console.log('=== End Tiling Process ===');
 }
 
 async function processBlur(sequence: Sequence) {
-    console.log('processBlur called');
     const sequencePath = join(IMAGES_PATH, sequence.name);
     if (!fs.existsSync(join(sequencePath, 'img_blur'))) {
         await fs.mkdir(join(sequencePath, 'img_blur'));
@@ -56,7 +178,7 @@ async function processBlur(sequence: Sequence) {
         }
     }
     await new Promise<void>((resolve) => {
-        console.log('Starting process');
+        console.log('=== Start Blurring Process ===');
         const blurProcess = spawn(
             'scripts/blur360/build/src/equirect-blur-image.exe',
             [
@@ -66,26 +188,45 @@ async function processBlur(sequence: Sequence) {
                 join(sequencePath, 'img_original'),
             ]
         );
+        blurProcess.stdout.on('data', (data) => {
+            console.log(`${data}`);
+        });
+        blurProcess.stderr.on('data', (data) => {
+            console.log(`${data}`);
+        });
         blurProcess.on('close', () => {
             resolve();
         });
     });
-    console.log('blur process finished');
+    console.log('=== End Blurring Process ===');
+}
+
+async function processDelete(sequence: Sequence) {
+    const sequencePath = join(IMAGES_PATH, sequence.name);
+    console.log('=== Start Deleting ===');
+
+    await fs.remove(sequencePath);
+    await db.image.deleteMany({ where: { sequenceId: sequence.id } });
+    await db.sequence.delete({ where: { id: sequence.id } });
+
+    console.log('=== End Deleting ===');
 }
 
 async function loop() {
-    const sequences = await db.sequence.findMany({
-        where: { status: { not: 'Done' } },
-    });
+    const sequences = await db.sequence.findMany();
     for (const sequence of sequences) {
-        if (sequence.status === 'Sequences') {
-            processSequence(sequence);
+        if (sequence.status === 'Sequence') {
+            await processSequence(sequence);
             return;
         } else if (sequence.status === 'Tile') {
-            console.log('TILE!');
+            await processTile(sequence);
             return;
         } else if (sequence.status === 'Blur') {
             await processBlur(sequence);
+            return;
+        }
+        if (sequence.toDelete === true) {
+            await processDelete(sequence);
             return;
         }
     }
@@ -96,7 +237,7 @@ async function loop() {
     while (true) {
         await loop();
         await new Promise<void>((resolve) => {
-            setTimeout(resolve, 1000 * 10);
+            setTimeout(resolve, 1000 * 30);
         });
     }
 })();

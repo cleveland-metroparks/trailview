@@ -214,7 +214,9 @@ export class TrailViewer {
 		const layerData: mapboxgl.AnySourceData = {
 			type: 'vector',
 			format: 'pbf',
-			tiles: [urlJoin(this._options.baseUrl, '/api/tiles/{z}/{x}/{y}')]
+			tiles: [
+				urlJoin(this._options.baseUrl, `/api/tiles/{z}/{x}/{y}/${this._options.imageFetchType}`)
+			]
 		};
 
 		this._map.addSource('dots', layerData);

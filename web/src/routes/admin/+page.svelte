@@ -61,6 +61,34 @@
 		}
 	}
 
+	async function onDeleteSequence() {
+		if (!trailviewer) {
+			return;
+		}
+		const sequenceId = trailviewer.getCurrentSequenceId();
+		if (sequenceId === undefined) {
+			return;
+		}
+		const sequence = data.sequences.find((sequence) => {
+			return sequence.id === sequenceId;
+		});
+		if (sequence === undefined) {
+			return;
+		}
+		const response = prompt(
+			`Are you sure you want to delete ${sequence.name}? Type 'I understand' to confirm deletion.`
+		);
+		if (response !== null && response === 'I understand') {
+			const res = await fetch(`/admin/delete/${sequence.id}`, {method: "DELETE"});
+			const resData = await res.json();
+			if (resData.success !== true) {
+				alert(resData.message ?? 'Unknown error while deleting');
+			} else {
+				alert('Marked for deletion');
+			}
+		}
+	}
+
 	onMount(async () => {
 		const trailview = await import('$lib/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
@@ -117,6 +145,9 @@
 			{/each}
 		</select>
 		<h4 class="mt-3">Sequence Options</h4>
+		<form on:submit|preventDefault={onDeleteSequence} action="?deleteSequence" method="POST">
+			<button type="submit" class="btn btn-danger btn-sm">Delete Sequence</button>
+		</form>
 		<form action="?/sequence" method="POST">
 			<input name="sequenceId" type="hidden" value={currentSequence?.id} />
 			<label for="sequence_name">Sequence Name</label>

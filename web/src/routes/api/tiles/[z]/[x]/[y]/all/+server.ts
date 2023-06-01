@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { tileIndex } from '$lib/server/geojson';
+import { refreshGeoJsonData, allTileIndex } from '$lib/server/geojson';
 import * as vtpbf from 'vt-pbf';
 
 export const GET = (async ({ params }) => {
@@ -10,7 +10,13 @@ export const GET = (async ({ params }) => {
 	if (isNaN(z) || isNaN(x) || isNaN(y)) {
 		return json({ success: false, message: 'Invalid parameters' }, { status: 400 });
 	}
-	const tile = tileIndex.getTile(z, x, y);
+	if (allTileIndex === undefined) {
+		await refreshGeoJsonData(true);
+	}
+	if (allTileIndex === undefined) {
+		return json({ success: false, message: 'Server error' }, { status: 500 });
+	}
+	const tile = allTileIndex.getTile(z, x, y);
 
 	if (tile) {
 		const layer = new vtpbf.GeoJSONWrapper(tile.features);
