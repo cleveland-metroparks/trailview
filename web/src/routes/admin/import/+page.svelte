@@ -7,9 +7,12 @@
 	$mainHeading = 'Import Sequence';
 
 	let progressBar: HTMLDivElement;
+	let progressFileName: string | undefined;
 	let uploading = false;
 	let files: FileList;
+	let sequenceName: string;
 	let error = false;
+	let errorMessage: string | undefined;
 	let complete = false;
 
 	$: if (browser) {
@@ -27,18 +30,46 @@
 		complete = false;
 		uploading = true;
 		let total = files.length;
+		const initRes = await fetch('/admin/import/init', {
+			method: 'POST',
+			body: JSON.stringify({ sequenceName: sequenceName }),
+			headers: { 'Content-Type': 'application/json' }
+		});
+		const dataRes = await initRes.json();
+		if (dataRes.success !== true) {
+			error = true;
+			errorMessage = dataRes.message;
+			throw new Error('Failed to upload');
+		}
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
 			const formData = new FormData();
 			formData.append('file', file);
 			formData.append('fileName', file.name);
+			formData.append('sequenceName', sequenceName);
+			progressFileName = file.name;
 			const res = await fetch('/admin/import', { method: 'POST', body: formData });
 			const data = await res.json();
 			if (data.success !== true) {
 				error = true;
+				if (data.message !== undefined) {
+					errorMessage = data.message;
+				}
+				uploading = false;
 				throw new Error('Failed to upload');
 			}
 			updateProgress((i + 1) / total);
+		}
+		const resFinish = await fetch('/admin/import/finish', {
+			method: 'POST',
+			body: JSON.stringify({ sequenceName: sequenceName }),
+			headers: { 'Content-Type': 'application/json' }
+		});
+		const dataFinish = await resFinish.json();
+		if (dataFinish.success !== true) {
+			error = true;
+			errorMessage = dataFinish.message;
+			throw new Error('Failed to finalize upload');
 		}
 		complete = true;
 		uploading = false;
@@ -65,7 +96,7 @@
 		class={`mt-3 alert alert-${error ? 'danger' : complete ? 'success' : 'secondary'}`}
 	>
 		{error
-			? 'An error has occured, uploading cancelled'
+			? errorMessage ?? 'An error has occured, uploading cancelled'
 			: complete
 			? 'Upload complete!'
 			: 'Undefined'}
@@ -73,7 +104,10 @@
 {/if}
 
 <form class="mt-3" on:submit|preventDefault={handleSubmit}>
-	<label for="fileInput">Upload images</label>
+	<label for="sequenceName">Sequence Name (Use PascalCase)</label>
+	<input bind:value={sequenceName} id="sequenceName" type="text" class="form-control" required />
+
+	<label class="mt-2" for="fileInput">Upload images</label>
 	<div class="mt-2 input-group">
 		<input
 			bind:files
@@ -90,7 +124,12 @@
 </form>
 
 {#if uploading}
-	<div transition:slide class="mt-3 progress" role="progressbar">
-		<div bind:this={progressBar} class="progress-bar" />
+	<div class="mt-3">
+		{#if progressFileName !== undefined}
+			<label for="progressBar">{progressFileName}</label>
+		{/if}
+		<div transition:slide id="progressBar" class="progress" role="progressbar">
+			<div bind:this={progressBar} class="progress-bar" />
+		</div>
 	</div>
 {/if}

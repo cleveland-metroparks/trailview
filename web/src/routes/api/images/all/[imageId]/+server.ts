@@ -1,8 +1,14 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { allImageData, imagePreviews } from '$lib/server/dbcache';
+import { allImageData, imagePreviews, refreshImageData } from '$lib/server/dbcache';
 
 export const GET = (async ({ params }) => {
+	if (allImageData === undefined) {
+		await refreshImageData(true);
+	}
+	if (allImageData === undefined) {
+		return json({ success: false, message: 'Server error' }, { status: 500 });
+	}
 	const image = allImageData.find((image) => {
 		return image.id === params.imageId;
 	});

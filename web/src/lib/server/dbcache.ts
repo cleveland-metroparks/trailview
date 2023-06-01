@@ -1,26 +1,30 @@
 import { db } from './prisma';
 
-export let standardImageData: {
-	id: string;
-	sequenceId: number;
-	latitude: number;
-	longitude: number;
-	bearing: number;
-	flipped: boolean;
-	pitchCorrection: number;
-	visibility: boolean;
-}[];
+export let standardImageData:
+	| {
+			id: string;
+			sequenceId: number;
+			latitude: number;
+			longitude: number;
+			bearing: number;
+			flipped: boolean;
+			pitchCorrection: number;
+			visibility: boolean;
+	  }[]
+	| undefined;
 
-export let allImageData: {
-	id: string;
-	pitchCorrection: number;
-	bearing: number;
-	longitude: number;
-	latitude: number;
-	flipped: boolean;
-	visibility: boolean;
-	sequenceId: number;
-}[];
+export let allImageData:
+	| {
+			id: string;
+			pitchCorrection: number;
+			bearing: number;
+			longitude: number;
+			latitude: number;
+			flipped: boolean;
+			visibility: boolean;
+			sequenceId: number;
+	  }[]
+	| undefined;
 
 export let imagePreviews: Map<string, string>;
 
