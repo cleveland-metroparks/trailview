@@ -3,12 +3,13 @@
 	import { mainHeading } from '../stores';
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
+	import type { Sequence } from '@prisma/client';
 
 	export let data: PageData;
 
 	$mainHeading = 'Processing Status';
 
-	let showDone = false;
+	let showDone = true;
 	let tableData = data.sequences;
 
 	function statusColor(status: string) {
@@ -38,6 +39,22 @@
 
 	let fetchInterval: ReturnType<typeof setInterval> | undefined;
 
+	async function onDelete(sequence: Sequence) {
+		const response = prompt(
+			`Are you sure you want to delete ${sequence.name}? Type 'I understand' to confirm deletion.`
+		);
+		if (response !== null && response === 'I understand') {
+			const res = await fetch(`/admin/delete/${sequence.id}`, { method: 'DELETE' });
+			const resData = await res.json();
+			if (resData.success !== true) {
+				alert(resData.message ?? 'Unknown error while deleting');
+			} else {
+				alert('Marked for deletion');
+				await invalidateAll();
+			}
+		}
+	}
+
 	onMount(() => {
 		fetchInterval = setInterval(async () => {
 			await invalidateAll();
@@ -64,6 +81,7 @@
 			<th>Id</th>
 			<th>Name</th>
 			<th>Status</th>
+			<th>Actions</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -78,6 +96,18 @@
 				{:else}
 					<td class="status-text"><span class="badge bg-danger">Delete</span></td>
 				{/if}
+				<td>
+					{#if sequence.toDelete === false}
+						<form
+							on:submit|preventDefault={() => {
+								onDelete(sequence);
+							}}
+							method="POST"
+						>
+							<button type="submit" class="btn btn-sm btn-danger">Delete</button>
+						</form>
+					{/if}
+				</td>
 			</tr>
 		{/each}
 	</tbody>

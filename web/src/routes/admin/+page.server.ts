@@ -1,14 +1,18 @@
 import type { Actions, PageServerLoad } from './$types';
-import { redirectIfSessionInvalid } from '$lib/server/auth';
+import { isSessionValid, redirectIfSessionInvalid } from '$lib/server/auth';
 import { db } from '$lib/server/prisma';
 import { refreshImageData } from '$lib/server/dbcache';
+import { refreshGeoJsonData } from '$lib/server/geojson';
 
 export const load = (async ({ cookies }) => {
 	await redirectIfSessionInvalid('/login', cookies);
 }) satisfies PageServerLoad;
 
 export const actions = {
-	image: async ({ request }) => {
+	image: async ({ request, cookies }) => {
+		if (!isSessionValid(cookies)) {
+			return { success: false, message: 'Invalid session' };
+		}
 		const data = await request.formData();
 		const formImageId = data.get('imageId');
 		const formPublic = data.get('public');
@@ -22,7 +26,10 @@ export const actions = {
 		await refreshImageData(true);
 		return { success: true };
 	},
-	sequence: async ({ request }) => {
+	sequence: async ({ request, cookies }) => {
+		if (!isSessionValid(cookies)) {
+			return { success: false, message: 'Invalid session' };
+		}
 		const data = await request.formData();
 		const formPitch = data.get('pitch');
 		const formSequenceId = data.get('sequenceId');
@@ -48,6 +55,14 @@ export const actions = {
 			}
 		});
 		await refreshImageData(true);
+		return { success: true };
+	},
+	refresh: async ({ cookies }) => {
+		if (!isSessionValid(cookies)) {
+			return { success: false, message: 'Invalid session' };
+		}
+		refreshImageData(true);
+		refreshGeoJsonData(true);
 		return { success: true };
 	}
 } satisfies Actions;

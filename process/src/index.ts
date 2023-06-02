@@ -215,6 +215,10 @@ async function processDelete(sequence: Sequence) {
 async function loop() {
     const sequences = await db.sequence.findMany();
     for (const sequence of sequences) {
+        if (sequence.toDelete === true) {
+            await processDelete(sequence);
+            return;
+        }
         if (sequence.status === 'Sequence') {
             await processSequence(sequence);
             return;
@@ -223,10 +227,6 @@ async function loop() {
             return;
         } else if (sequence.status === 'Blur') {
             await processBlur(sequence);
-            return;
-        }
-        if (sequence.toDelete === true) {
-            await processDelete(sequence);
             return;
         }
     }
