@@ -138,6 +138,7 @@
 			</div>
 		{/if}
 		<a href="/admin/import" class="btn btn-outline-success">Import</a>
+		<a href="/admin/status" class="btn btn-outline-warning">Processing Status</a>
 		<h4 class="mt-3">Go To Sequence</h4>
 		<select on:change={onSequenceSelectChange} class="form-select">
 			{#each data.sequences as sequence}

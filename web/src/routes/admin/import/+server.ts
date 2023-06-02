@@ -38,24 +38,6 @@ export const POST = (async ({ request, cookies }) => {
 			await fs.promises.mkdir(join(IMAGES_PATH, sequenceName, 'img_original'));
 		}
 	}
-
-	const writer = fs.createWriteStream(join(IMAGES_PATH, sequenceName, 'img_original', file.name));
-	const reader = file.stream().getReader();
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done === true) {
-			break;
-		}
-		await new Promise<void>((resolve, reject) => {
-			writer.write(value, (error) => {
-				if (error) {
-					reject(error);
-				} else {
-					resolve();
-				}
-			});
-		});
-	}
+	fs.appendFileSync(join(IMAGES_PATH, sequenceName, 'img_original', file.name), Buffer.from(await file.arrayBuffer()));
 	return json({ success: true });
 }) satisfies RequestHandler;
