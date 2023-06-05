@@ -6,9 +6,24 @@
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import { page } from '$app/stores';
 	import { mainHeading } from './stores';
+	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import FormAlert from '$lib/FormAlert.svelte';
 
 	export let data: PageData;
 	export let form: Actions;
+
+	$: if (form) {
+		refreshEverything();
+	}
+
+	function refreshEverything() {
+		if (trailviewer !== undefined) {
+			trailviewer.destroy();
+			createTrailViewer();
+		}
+		fetchAllImageData();
+	}
 
 	$mainHeading = 'TrailView Admin';
 
@@ -61,16 +76,22 @@
 		}
 	}
 
-	onMount(async () => {
+	async function createTrailViewer() {
 		const trailview = await import('$lib/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
 		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
-		trailviewerOptions.initialImageId = 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
+		trailviewerOptions.initialImageId =
+			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
 		trailviewer = new trailview.TrailViewer();
 		trailviewer.on('image-change', (image: Image) => {
+			if ($page.url.searchParams.get('i') !== image.id) {
+				const newUrl = $page.url;
+				newUrl.searchParams.set('i', image.id);
+				goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
+			}
 			currentImage = image;
 			flippedValue = image.flipped;
 			pitchCorrection = image.pitchCorrection;
@@ -79,13 +100,20 @@
 			});
 			currentSequence = sequence;
 		});
+	}
 
+	async function fetchAllImageData() {
 		const res = await fetch('/api/images/all', { method: 'GET' });
 		const imagesData = await res.json();
 		if (imagesData.success !== true) {
 			throw new Error('Unable to fetch all image data');
 		}
 		allImageData = imagesData.data;
+	}
+
+	onMount(async () => {
+		await createTrailViewer();
+		await fetchAllImageData();
 	});
 
 	onDestroy(() => {
@@ -93,6 +121,10 @@
 			trailviewer.destroy();
 		}
 	});
+
+	let showCacheSpinner = false;
+	let showSequenceSpinner = false;
+	let showImageSpinner = false;
 </script>
 
 <div class="row mb-5">
@@ -103,16 +135,25 @@
 		<div id="trailview_map" />
 	</div>
 	<div class="col-lg-4">
-		{#if form}
-			<div class={`alert alert-dismissible alert-${form.success ? 'success' : 'danger'}`}>
-				{form.success ? 'Success' : form.message ?? 'Unknown error'}
-				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" />
-			</div>
-		{/if}
+		<FormAlert />
 		<a href="/admin/import" class="btn btn-outline-success">Import</a>
 		<a href="/admin/status" class="btn btn-outline-warning">Sequence List</a>
-		<form class="mt-2" action="?/refresh" method="POST">
-			<button class="btn btn-info">Refresh DB cache</button>
+		<form
+			class="mt-2"
+			action="?/refresh"
+			method="POST"
+			use:enhance={() => {
+				showCacheSpinner = true;
+				return async ({ update }) => {
+					await update({ reset: false });
+					showCacheSpinner = false;
+				};
+			}}
+		>
+			<button class="btn btn-info"
+				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if}Refresh DB
+				cache</button
+			>
 		</form>
 		<h4 class="mt-3">Go To Sequence</h4>
 		<select on:change={onSequenceSelectChange} class="form-select">
@@ -121,7 +162,17 @@
 			{/each}
 		</select>
 		<h4 class="mt-3">Sequence Options</h4>
-		<form action="?/sequence" method="POST">
+		<form
+			action="?/sequence"
+			method="POST"
+			use:enhance={() => {
+				showSequenceSpinner = true;
+				return async ({ update }) => {
+					await update({ reset: false });
+					showSequenceSpinner = false;
+				};
+			}}
+		>
 			<input name="sequenceId" type="hidden" value={currentSequence?.id} />
 			<label for="sequence_name">Sequence Name</label>
 			<input
@@ -192,12 +243,28 @@
 				class="btn btn-secondary">View from Side</button
 			>
 			<br />
-			<button type="submit" class="mt-2 btn btn-primary">Set</button>
+			<div class="row">
+				<div class="col">
+					<button type="submit" class="mt-2 btn btn-primary"
+						>{#if showSequenceSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set</button
+					>
+				</div>
+			</div>
 		</form>
 		<hr />
 
 		<h4 class="mt-3">Image Options</h4>
-		<form action="?/image" method="POST">
+		<form
+			action="?/image"
+			method="POST"
+			use:enhance={() => {
+				showImageSpinner = true;
+				return async ({ update }) => {
+					await update({ reset: false });
+					showImageSpinner = false;
+				};
+			}}
+		>
 			<input name="imageId" type="hidden" value={currentImage?.id} />
 			<label for="image_id">Image Id</label>
 			<input id="image_id" readonly class="form-control" value={currentImage?.id ?? 'Undefined'} />
@@ -214,7 +281,9 @@
 				/>
 				<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
 			</div>
-			<button type="submit" class="mt-2 btn btn-primary">Set</button>
+			<button type="submit" class="mt-2 btn btn-primary"
+				>{#if showImageSpinner}<span class="spinner-border spinner-border-sm" />{/if}Set</button
+			>
 		</form>
 	</div>
 </div>

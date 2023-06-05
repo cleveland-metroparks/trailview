@@ -24,6 +24,7 @@ export const actions = {
 			data: { visibility: formPublic ? true : false }
 		});
 		await refreshImageData(true);
+		await refreshGeoJsonData(true);
 		return { success: true };
 	},
 	sequence: async ({ request, cookies }) => {
@@ -55,6 +56,7 @@ export const actions = {
 			}
 		});
 		await refreshImageData(true);
+		await refreshGeoJsonData(true);
 		return { success: true };
 	},
 	refresh: async ({ cookies }) => {

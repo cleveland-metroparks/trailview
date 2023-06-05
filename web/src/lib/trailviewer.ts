@@ -768,6 +768,10 @@ export class TrailViewer {
 		if (this._panViewer !== undefined) {
 			this._panViewer.destroy();
 		}
+		if (this._map !== undefined) {
+			this._map.remove();
+			this._map = undefined;
+		}
 	}
 
 	public getBearing(): number | undefined {
