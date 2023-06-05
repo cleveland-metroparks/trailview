@@ -92,7 +92,7 @@
 
 {#if error || complete}
 	<div
-		transition:slide
+		transition:slide|local
 		class={`mt-3 alert alert-${error ? 'danger' : complete ? 'success' : 'secondary'}`}
 	>
 		{error
@@ -128,7 +128,7 @@
 		{#if progressFileName !== undefined}
 			<label for="progressBar">{progressFileName}</label>
 		{/if}
-		<div transition:slide id="progressBar" class="progress" role="progressbar">
+		<div transition:slide|local id="progressBar" class="progress" role="progressbar">
 			<div bind:this={progressBar} class="progress-bar" />
 		</div>
 	</div>

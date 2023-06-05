@@ -38,6 +38,9 @@ export const POST = (async ({ request, cookies }) => {
 			await fs.promises.mkdir(join(IMAGES_PATH, sequenceName, 'img_original'));
 		}
 	}
-	fs.appendFileSync(join(IMAGES_PATH, sequenceName, 'img_original', file.name), Buffer.from(await file.arrayBuffer()));
+	fs.appendFileSync(
+		join(IMAGES_PATH, sequenceName, 'img_original', file.name),
+		Buffer.from(await file.arrayBuffer())
+	);
 	return json({ success: true });
 }) satisfies RequestHandler;

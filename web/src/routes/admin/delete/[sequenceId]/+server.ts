@@ -17,5 +17,5 @@ export const DELETE = (async ({ params, cookies }) => {
 		console.error(error);
 		return json({ success: false }, { status: 500 });
 	}
-    return json({success: true});
+	return json({ success: true });
 }) satisfies RequestHandler;
