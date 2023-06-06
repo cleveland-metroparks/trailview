@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="../../dist/trailviewer.css" />
+        <script src="../../dist/trailviewer.umd.js"></script>
+        <script src="../env.js"></script>
+
+        <style>
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+            }
+            #viewer {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="viewer"></div>
+    </body>
+
+    <script>
+        const options = trailviewer.defaultOptions;
+        options.target = 'viewer';
+        options.mapboxKey = mapboxKey;
+        const viewer = new trailviewer.TrailViewer(options);
+    </script>
+</html>

@@ -1,0 +1,60 @@
+.trailview-current-marker {
+    position: absolute;
+    pointer-events: none;
+    height: 14px;
+    width: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgb(4, 118, 194);
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    display: inline-block;
+}
+
+.trailview-marker-viewer {
+    pointer-events: none;
+    z-index: -1;
+    position: absolute;
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    left: 50%;
+    top: 50%;
+    background: rgba(67, 177, 250, 0.5);
+    border-radius: 0 0 100px 0;
+    -webkit-border-radius: 0 0 100px 0;
+}
+
+.trailview-current-marker-wrapper {
+    pointer-events: none;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    z-index: 10;
+}
+
+#trailview-nav-container {
+    width: 400px;
+    height: 200px;
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translate(-50%, 0) perspective(300px) rotateX(30deg);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.trailview-nav-arrow {
+    position: absolute;
+    width: 100px;
+    left: 50%;
+    top: 50%;
+    pointer-events: all;
+    cursor: pointer;
+    user-select: none;
+}
+
+.pnlm-about-msg {
+    visibility: hidden;
+}
