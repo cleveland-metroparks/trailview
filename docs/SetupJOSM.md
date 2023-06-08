@@ -1,3 +1,5 @@
+# Setup JOSM
+
 1. Download `OpenWebStart` from [here](https://openwebstart.com/)
 
 2. Download `JOSM` from [here](https://josm.openstreetmap.de/) and download the `.jnlp` file, not the `.jar`

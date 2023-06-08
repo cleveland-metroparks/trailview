@@ -1,3 +1,5 @@
+# Build Blur360 from Source
+
 NOTE: Some paths might have to be changed according to where you're building from
 
 1. Install MSYS2 https://www.msys2.org/
