@@ -174,15 +174,19 @@
 			}}
 		>
 			<input name="sequenceId" type="hidden" value={currentSequence?.id} />
-			<label for="sequence_name">Sequence Name</label>
-			<input
-				id="sequence_name"
-				readonly
-				class="form-control"
-				value={(() => {
-					return currentSequence?.name ?? 'Undefined';
-				})()}
-			/>
+			<label for="sequence_name">Sequence Id and Name</label>
+			<div class="input-group">
+				<span class="input-group-text">{currentSequence?.id}</span>
+				<input
+					id="sequence_name"
+					readonly
+					class="form-control"
+					value={(() => {
+						return currentSequence?.name ?? 'Undefined';
+					})()}
+				/>
+			</div>
+
 			<div class="mt-2 form-check form-switch">
 				<input
 					id="sequence_public_switch"
