@@ -8,7 +8,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    transition: width 0.2s, height 0.2s;
+    transition: width 0.5s cubic-bezier(0.76, 0, 0.24, 1), height 0.5s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 .trailview-viewer-container-desktop {
@@ -22,7 +22,7 @@
 .trailview-map-container {
     position: absolute;
     background-color: rgb(233, 234, 210);
-    transition: width 0.2s, height 0.2s;
+    transition: width 0.5s cubic-bezier(0.76, 0, 0.24, 1), height 0.5s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 .trailview-map-container-desktop {
@@ -36,9 +36,18 @@
     outline-color: rgba(0, 0, 0, 0.5);
 }
 
+.trailview-map-container-desktop .mapboxgl-control-container {
+    transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+    opacity: 0;
+}
+
 .trailview-map-container-desktop:hover {
     width: 400px;
     height: 300px;
+}
+
+.trailview-map-container-desktop:hover .mapboxgl-control-container {
+    opacity: 1;
 }
 
 .trailview-map-container-mobile {
