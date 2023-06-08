@@ -1,4 +1,4 @@
-NOTE: It is best to use a Markdown editor/viewer for this file, I like MarkText
+# Trail Directory Layout
 
 * For each trail in the current trails directory on the web server `E:\trails`
 

@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Not currently used
 model TrailInfo {
   ID          Int     @id(map: "PK_TrailInfo") @default(autoincrement())
   ImageID     String? @db.VarChar(50)
@@ -50,6 +51,7 @@ model Image {
 
 model Sequence {
   name     String   @unique
+  // Upload -> Blur -> Sequence -> Done
   status   String
   toDelete Boolean  @default(false)
   id       Int      @id @default(autoincrement())
