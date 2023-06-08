@@ -27,7 +27,11 @@ function customMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
 
-export function getNeighbors(data: Image[], imageId: string): undefined | Neighbor[] {
+export function getNeighbors(
+	data: Image[],
+	imageId: string,
+	sequencesFilter: number[] | undefined = undefined
+): undefined | Neighbor[] {
 	const image = data.find((image) => {
 		return image.id === imageId;
 	});
@@ -38,6 +42,11 @@ export function getNeighbors(data: Image[], imageId: string): undefined | Neighb
 	for (let p = 0; p < data.length; p++) {
 		if (data[p].id == image.id) {
 			continue;
+		}
+		if (sequencesFilter !== undefined) {
+			if (!sequencesFilter.includes(data[p].sequenceId)) {
+				continue;
+			}
 		}
 		const distance = ruler.distance(
 			[image.longitude, image.latitude],
