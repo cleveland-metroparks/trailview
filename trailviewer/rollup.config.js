@@ -11,12 +11,12 @@ export default [
         output: {
             file: './dist/trailviewer-base.mjs',
             format: 'es',
-            sourcemap: true
+            sourcemap: true,
         },
         plugins: [
             resolve({ preferBuiltins: false }),
             commonjs(),
-            typescript({sourceMap: true}),
+            typescript({ sourceMap: true }),
             terser(),
             css({ minify: true, output: './dist/trailviewer-base.css' }),
         ],
@@ -27,12 +27,12 @@ export default [
         output: {
             file: './dist/trailviewer.mjs',
             format: 'es',
-            sourcemap: true
+            sourcemap: true,
         },
         plugins: [
             resolve({ preferBuiltins: false }),
             commonjs(),
-            typescript({sourceMap: true}),
+            typescript({ sourceMap: true }),
             terser(),
             css({ minify: true, output: './dist/trailviewer.css' }),
         ],
@@ -43,12 +43,12 @@ export default [
             name: 'trailviewer',
             file: './dist/trailviewer-base.umd.js',
             format: 'umd',
-            sourcemap: true
+            sourcemap: true,
         },
         plugins: [
             resolve({ preferBuiltins: false }),
             commonjs(),
-            typescript({sourceMap: true}),
+            typescript({ sourceMap: true }),
             terser(),
             // I am aware that the css is built twice, but working
             // around that would be more complicated than it's worth
@@ -61,12 +61,12 @@ export default [
             name: 'trailviewer',
             file: './dist/trailviewer.umd.js',
             format: 'umd',
-            sourcemap: true
+            sourcemap: true,
         },
         plugins: [
             resolve({ preferBuiltins: false }),
             commonjs(),
-            typescript({sourceMap: true}),
+            typescript({ sourceMap: true }),
             terser(),
             // I am aware that the css is built twice, but working
             // around that would be more complicated than it's worth

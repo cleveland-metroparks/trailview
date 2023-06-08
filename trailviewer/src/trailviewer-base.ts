@@ -221,11 +221,12 @@ export class TrailViewerBase {
             } else if (rot < 0) {
                 rot = 0;
             }
-            (
-                document.getElementById(
-                    'trailview-nav-container'
-                ) as HTMLDivElement
-            ).style.transform = `translate(-50%, 0) perspective(300px) rotateX(${rot}deg)`;
+            const navContainer = document.getElementById(
+                'trailview-nav-container'
+            ) as HTMLDivElement | null;
+            if (navContainer !== null) {
+                navContainer.style.transform = `translate(-50%, 0) perspective(300px) rotateX(${rot}deg)`;
+            }
         }
         if (!once && this._destroyed === false) {
             requestAnimationFrame(this._updateNavArrows.bind(this, false));
