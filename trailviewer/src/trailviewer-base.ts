@@ -83,7 +83,7 @@ interface PannellumConfig {
 
 export interface TrailViewerBaseOptions {
     target: string;
-    initialImageId: string;
+    initial: string | { latitude: number; longitude: number };
     baseUrl: string;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
@@ -92,7 +92,7 @@ export interface TrailViewerBaseOptions {
 
 export const defaultBaseOptions: TrailViewerBaseOptions = {
     target: 'trailview_panorama',
-    initialImageId: 'c96ba6029cad464e9a4b7f9a6b8ac0d5',
+    initial: 'c96ba6029cad464e9a4b7f9a6b8ac0d5',
     baseUrl: 'https://trailview.cmparks.net',
     navArrowMinAngle: -25,
     navArrowMaxAngle: -20,
@@ -180,7 +180,7 @@ export class TrailViewerBase {
                 throw new Error('Failed to fetch sequence data');
             }
             this._sequencesData = data.data;
-            await this._initViewer(this._options.initialImageId);
+            await this._initViewer(this._options.initial);
             if (this._currImg) {
                 this.goToImageID(this._currImg.id, true);
             }
@@ -445,7 +445,28 @@ export class TrailViewerBase {
         return data.data;
     }
 
-    private async _initViewer(initImageId: string) {
+    private async _initViewer(
+        initial: string | { latitude: number; longitude: number }
+    ) {
+        let initImageId: string;
+        if (typeof initial === 'string') {
+            initImageId = initial;
+        } else {
+            const nearRes = await fetch(
+                urlJoin(
+                    this._options.baseUrl,
+                    'api/near/',
+                    initial.latitude.toString(),
+                    initial.longitude.toString(),
+                    this._options.imageFetchType
+                )
+            );
+            const resData = await nearRes.json();
+            if (resData.success !== true) {
+                throw new Error('Failed to fetch nearest image');
+            }
+            initImageId = resData.data.id as string;
+        }
         let config = this._createViewerConfig(initImageId);
         const res = await fetch(
             urlJoin(

@@ -20,7 +20,10 @@ declare class PannellumViewer {
 }
 export interface TrailViewerBaseOptions {
     target: string;
-    initialImageId: string;
+    initial: string | {
+        latitude: number;
+        longitude: number;
+    };
     baseUrl: string;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
