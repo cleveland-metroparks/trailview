@@ -238,7 +238,7 @@ export class TrailViewer {
 
         this._map.addSource('dots', layerData);
 
-        this._map.addLayer({
+        const layer: mapboxgl.AnyLayer = {
             id: 'dots',
             'source-layer': 'geojsonLayer',
             source: 'dots',
@@ -252,7 +252,15 @@ export class TrailViewer {
                     '#db8904',
                 ],
             },
-        });
+        };
+        if (this._options.filterSequences !== undefined) {
+            layer.filter = [
+                'in',
+                'sequenceId',
+                ...this._options.filterSequences,
+            ];
+        }
+        this._map.addLayer(layer);
         this._map.setPaintProperty('dots', 'circle-radius', [
             'interpolate',
 

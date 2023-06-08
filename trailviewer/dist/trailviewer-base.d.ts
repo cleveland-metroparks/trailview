@@ -28,6 +28,7 @@ export interface TrailViewerBaseOptions {
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
+    filterSequences: number[] | undefined;
 }
 export declare const defaultBaseOptions: TrailViewerBaseOptions;
 export interface Image {

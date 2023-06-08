@@ -88,6 +88,7 @@ export interface TrailViewerBaseOptions {
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
+    filterSequences: number[] | undefined;
 }
 
 export const defaultBaseOptions: TrailViewerBaseOptions = {
@@ -97,6 +98,7 @@ export const defaultBaseOptions: TrailViewerBaseOptions = {
     navArrowMinAngle: -25,
     navArrowMaxAngle: -20,
     imageFetchType: 'standard',
+    filterSequences: undefined,
 };
 
 interface HTMLNavArrowElement extends HTMLImageElement {
@@ -430,14 +432,22 @@ export class TrailViewerBase {
     }
 
     private async _getNeighbors(image: Image): Promise<Neighbor[]> {
-        const res = await fetch(
-            urlJoin(
-                this._options.baseUrl,
-                '/api/neighbors',
-                this._options.imageFetchType,
-                image.id
-            )
+        let neighborsUrl = urlJoin(
+            this._options.baseUrl,
+            '/api/neighbors',
+            this._options.imageFetchType,
+            image.id
         );
+        if (this._options.filterSequences !== undefined) {
+            neighborsUrl += '?s=';
+            for (let i = 0; i < this._options.filterSequences.length; i++) {
+                neighborsUrl += this._options.filterSequences[i];
+                if (i !== this._options.filterSequences.length - 1) {
+                    neighborsUrl += ',';
+                }
+            }
+        }
+        const res = await fetch(neighborsUrl);
         const data = await res.json();
         if (data.success !== true) {
             throw new Error('Failed to retrieve neighbors');
