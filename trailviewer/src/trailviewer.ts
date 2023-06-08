@@ -20,20 +20,19 @@ export const defaultOptions: TrailViewerOptions = {
     forceLayout: undefined,
 };
 
-export class TrailViewer {
-    private _options: TrailViewerOptions;
-    private _base: TrailViewerBase;
+export class TrailViewer extends TrailViewerBase {
+    private _extended_options: TrailViewerOptions;
     private _target: HTMLDivElement;
     private _mapTarget: HTMLDivElement;
     private _viewerTarget: HTMLDivElement;
     private _map: mapboxgl.Map | undefined;
     private _mouseOnDot = false;
     private _mapMarker: mapboxgl.Marker | undefined;
-    private _destroyed = false;
     private _layout: 'desktop' | 'mobile' = 'desktop';
 
     constructor(options: TrailViewerOptions = defaultOptions) {
-        this._options = options;
+        super({ ...options, target: 'trailviewerPanorama' });
+        this._extended_options = options;
         const target = document.getElementById(
             options.target
         ) as HTMLDivElement | null;
@@ -45,7 +44,7 @@ export class TrailViewer {
         this._viewerTarget = document.createElement('div');
         this._viewerTarget.id = 'trailviewerPanorama';
         this._viewerTarget.classList.add('trailview-viewer-container');
-        if (this._options.forceLayout === 'mobile') {
+        if (this._extended_options.forceLayout === 'mobile') {
             this._viewerTarget.classList.add(
                 'trailview-viewer-container-mobile'
             );
@@ -55,11 +54,7 @@ export class TrailViewer {
             );
         }
         this._target.appendChild(this._viewerTarget);
-        this._base = new TrailViewerBase({
-            ...options,
-            target: 'trailviewerPanorama',
-        });
-        this._base.on('image-change', (image: Image) => {
+        this.on('image-change', (image: Image) => {
             if (this._map !== undefined && this._mapMarker !== undefined) {
                 this._mapMarker.setLngLat([image.longitude, image.latitude]);
                 this._map.easeTo({
@@ -72,7 +67,7 @@ export class TrailViewer {
         const mapContainer = document.createElement('div');
         mapContainer.id = 'trailviewerMap';
         mapContainer.classList.add('trailview-map-container');
-        if (this._options.forceLayout === 'mobile') {
+        if (this._extended_options.forceLayout === 'mobile') {
             mapContainer.classList.add('trailview-map-container-mobile');
         } else {
             mapContainer.classList.add('trailview-map-container-desktop');
@@ -93,13 +88,13 @@ export class TrailViewer {
         let lastViewerResize: Date = new Date();
         new ResizeObserver(() => {
             if (new Date().valueOf() - lastViewerResize.valueOf() > 80) {
-                this._base?.resize();
+                this.resize();
                 lastViewerResize = new Date();
             }
         }).observe(this._viewerTarget);
 
         this._viewerTarget.addEventListener('transitionend', () => {
-            this._base?.resize();
+            this.resize();
         });
 
         this._mapTarget.addEventListener('transitionend', () => {
@@ -114,7 +109,7 @@ export class TrailViewer {
     }
 
     private _changeLayout(layout: typeof this._layout) {
-        if (this._options.forceLayout !== undefined) {
+        if (this._extended_options.forceLayout !== undefined) {
             return;
         }
         if (this._layout === 'desktop' && layout === 'mobile') {
@@ -151,10 +146,10 @@ export class TrailViewer {
     }
 
     private _initMap() {
-        if (this._options.mapboxKey === undefined) {
+        if (this._extended_options.mapboxKey === undefined) {
             throw new Error('No mapbox key specified');
         }
-        mapboxgl.accessToken = this._options.mapboxKey;
+        mapboxgl.accessToken = this._extended_options.mapboxKey;
         this._map = new mapboxgl.Map({
             container: this._mapTarget,
             style: 'mapbox://styles/cleveland-metroparks/cisvvmgwe00112xlk4jnmrehn?optimize=true',
@@ -213,7 +208,7 @@ export class TrailViewer {
                 console.warn('Features is undefiend or properties are null');
                 return;
             }
-            this._base.goToImageID(event.features[0].properties.imageID);
+            this.goToImageID(event.features[0].properties.imageID);
         });
     }
 
@@ -230,8 +225,8 @@ export class TrailViewer {
             format: 'pbf',
             tiles: [
                 urlJoin(
-                    this._options.baseUrl,
-                    `/api/tiles/{z}/{x}/{y}/${this._options.imageFetchType}`
+                    this._extended_options.baseUrl,
+                    `/api/tiles/{z}/{x}/{y}/${this._extended_options.imageFetchType}`
                 ),
             ],
         };
@@ -253,11 +248,11 @@ export class TrailViewer {
                 ],
             },
         };
-        if (this._options.filterSequences !== undefined) {
+        if (this._extended_options.filterSequences !== undefined) {
             layer.filter = [
                 'in',
                 'sequenceId',
-                ...this._options.filterSequences,
+                ...this._extended_options.filterSequences,
             ];
         }
         this._map.addLayer(layer);
@@ -325,7 +320,7 @@ export class TrailViewer {
 
     private _updateMapMarkerRotation() {
         if (this._mapMarker !== undefined) {
-            const angle = this._base.getBearing();
+            const angle = this.getBearing();
             if (angle !== undefined) {
                 this._mapMarker.setRotation((angle + 225) % 360);
             }
@@ -336,7 +331,7 @@ export class TrailViewer {
     }
 
     public destroy() {
-        this._base.destroy();
+        super.destroy();
         if (this._map !== undefined) {
             this._map.remove();
         }

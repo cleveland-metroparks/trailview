@@ -154,7 +154,7 @@ export interface TrailViewerBase {
 }
 
 export class TrailViewerBase {
-    private _options: TrailViewerBaseOptions = defaultBaseOptions;
+    protected _options: TrailViewerBaseOptions = defaultBaseOptions;
     private _panViewer: PannellumViewer | undefined;
     private _geo = { latitude: 0, longitude: 0 };
     private _prevNorthOffset = 0;
@@ -166,8 +166,7 @@ export class TrailViewerBase {
     private _emitter: EventEmitter;
     private _sequencesData: { name: string; id: number }[] | undefined;
     private _navArrowInfos: NavArrowInfo[] = [];
-    private _mouseOnDot = false;
-    private _destroyed = false;
+    protected _destroyed = false;
     private _neighbors: Neighbor[] = [];
     private _pitchCorrectionOverride: number | undefined;
 

@@ -51,7 +51,7 @@ export interface TrailViewerBase {
     on(event: 'init-done', listener: () => void): void;
 }
 export declare class TrailViewerBase {
-    private _options;
+    protected _options: TrailViewerBaseOptions;
     private _panViewer;
     private _geo;
     private _prevNorthOffset;
@@ -63,8 +63,7 @@ export declare class TrailViewerBase {
     private _emitter;
     private _sequencesData;
     private _navArrowInfos;
-    private _mouseOnDot;
-    private _destroyed;
+    protected _destroyed: boolean;
     private _neighbors;
     private _pitchCorrectionOverride;
     constructor(options?: TrailViewerBaseOptions);
