@@ -4,7 +4,6 @@ function appendSecurityHeaders(res: Response) {
 	// Security-related headers
 	// CSP related headers are set in svelte.config.js
 	res.headers.append('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-	res.headers.append('X-Frame-Options', 'SAMEORIGIN');
 	res.headers.append('X-Content-Type-Options', 'nosniff');
 	res.headers.append('Referrer-Policy', 'same-origin');
 	res.headers.append('X-XSS-Protection', '1; mode=block');
