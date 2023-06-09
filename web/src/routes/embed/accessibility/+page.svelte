@@ -5,14 +5,19 @@
 	import { scale } from 'svelte/transition';
 	import type { PageData } from './$types';
 	import type { TrailViewer } from '@cmparks/trailviewer';
+	import InfoModal, { type InfoModalOptions } from './InfoModal.svelte';
 
 	export let data: PageData;
 
 	let trailviewer: TrailViewer | undefined;
 	onMount(async () => {
+		if (data.accessibleTrails.length === 0) {
+			throw new Error('No trails specified');
+		}
+
 		const trailviewerLib = await import('@cmparks/trailviewer');
 		const options = trailviewerLib.defaultOptions;
-		options.initial = 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
+		options.initial = data.accessibleTrails[0].initImgId;
 		options.mapboxKey = PUBLIC_MAPBOX_KEY;
 		options.target = 'viewer';
 		trailviewer = new trailviewerLib.TrailViewer(options);
@@ -47,10 +52,20 @@
 		showNextButton =
 			carouselContent.scrollLeft + carouselContent.offsetWidth + 1 < carouselContent.scrollWidth;
 	}
+
+	let infoModal: InfoModal;
+	let infoModalOptions: InfoModalOptions = { title: data.accessibleTrails[0].displayName };
+	let infoModalHtml: string = data.accessibleTrails[0].infoHtml;
 </script>
 
 <div class="container">
-	<div class="viewer" id="viewer" />
+	<div class="viewer-container">
+		<InfoModal bind:this={infoModal} bind:options={infoModalOptions}>
+			<!-- eslint-disable -->
+			{@html infoModalHtml}
+		</InfoModal>
+		<div class="viewer" id="viewer" />
+	</div>
 	<div class="carousel">
 		{#if showPrevButton}
 			<button
@@ -76,6 +91,9 @@
 					on:click={() => {
 						if (trailviewer !== undefined) {
 							trailviewer.goToImageID(trail.initImgId);
+							infoModalOptions.title = trail.displayName;
+							infoModalHtml = trail.infoHtml;
+							infoModal.show();
 						}
 					}}
 					class="carousel-item"
@@ -90,14 +108,6 @@
 </div>
 
 <style lang="scss">
-	@font-face {
-		font-family: 'Myriad Pro Condensed';
-		src: url('/fonts/myriad-pro-condensed-700bold.woff2') format('woff2');
-		font-weight: 700;
-		font-style: bold;
-		font-display: swap;
-	}
-
 	:global(body, html) {
 		margin: 0;
 		width: 100%;
@@ -180,7 +190,9 @@
 		}
 	}
 
+	.viewer-container,
 	.viewer {
+		position: relative;
 		width: 100%;
 		height: 100%;
 	}

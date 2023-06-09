@@ -1,0 +1,113 @@
+<script context="module" lang="ts">
+	export interface InfoModalOptions {
+		title: string;
+	}
+</script>
+
+<script lang="ts">
+	import { fly, scale } from 'svelte/transition';
+
+	export let options: InfoModalOptions = { title: '' };
+
+	let visible = false;
+	export function show() {
+		visible = true;
+	}
+
+	export function hide() {
+		visible = false;
+	}
+</script>
+
+{#if visible}
+	<div transition:fly|local={{ x: 100, duration: 500 }} class="modal">
+		<button on:click={hide} type="button" class="green-button close-button"
+			><img src="/icons/close.svg" alt="close icon" /></button
+		>
+		<h2 class="title">{options.title}</h2>
+		<hr />
+		<div class="body">
+			<slot />
+		</div>
+	</div>
+{:else}
+	<button
+		on:click={show}
+		in:scale|local={{ delay: 200 }}
+		out:scale|local
+		class="green-button info-button"><img src="/icons/info.svg" alt="open info icon" /></button
+	>
+{/if}
+
+<style lang="scss">
+	hr {
+		border: 1px solid rgb(149, 154, 156);
+	}
+
+	.body {
+		font-family: 'Myriad Pro';
+	}
+
+	.modal {
+		position: absolute;
+		right: 8px;
+		top: 8px;
+		bottom: 8px;
+		width: 380px;
+		z-index: 11;
+		background-color: rgba(214, 214, 214, 0.97);
+		border-radius: 10px;
+		outline: 3px solid rgba(0, 0, 0, 0.3);
+		padding-left: 20px;
+		padding-right: 10px;
+	}
+
+	.title {
+		font-family: 'Myriad Pro Condensed';
+		font-size: 32px;
+		margin-bottom: 14px;
+		margin-top: 16px;
+	}
+
+	.green-button {
+		position: absolute;
+		border: none;
+		border-radius: 50%;
+		width: 40px;
+		height: 40px;
+		background-color: rgb(106, 176, 62);
+		box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+
+		transition: background-color 0.2s;
+		&:hover {
+			background-color: rgb(29, 92, 30);
+			cursor: pointer;
+		}
+
+		img {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 44px;
+			height: 44px;
+			transform: translate(-50%, -50%);
+		}
+	}
+
+	.close-button {
+		top: 14px;
+		right: 10px;
+	}
+
+	.info-button {
+		top: 14px;
+		right: 10px;
+		z-index: 12;
+		box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+
+		img {
+			width: 40px;
+			height: 40px;
+		}
+	}
+</style>
