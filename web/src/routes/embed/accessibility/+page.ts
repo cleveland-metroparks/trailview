@@ -47,7 +47,9 @@ export const load = (async ({ fetch }) => {
 			displayName: 'West Creek APT Loop Trail',
 			sequenceId: 104, // TODO: plus another
 			initImgId: '645cb133cdd941f69b974ba72946ad72',
-			infoHtml: await (await fetch('/embed/accessibility/info/placeholder.html')).text()
+			infoHtml: await (
+				await fetch('/embed/accessibility/info/west-creek-apt-loop-trail.html')
+			).text()
 		}
 	];
 	return { accessibleTrails };
