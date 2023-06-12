@@ -46,6 +46,22 @@
 
 	.body {
 		font-family: 'Myriad Pro';
+		padding-bottom: 30px;
+
+		:global(img) {
+			display: block;
+			text-align: center;
+			margin-left: auto;
+			margin-right: auto;
+			width: 80%;
+			outline: 4px solid rgb(29, 92, 30);
+			transform: scale(1);
+
+			transition: transform 0.5s;
+			&:hover {
+				transform: scale(1.02);
+			}
+		}
 	}
 
 	.modal {
@@ -60,6 +76,12 @@
 		outline: 3px solid rgba(0, 0, 0, 0.3);
 		padding-left: 20px;
 		padding-right: 10px;
+		overflow: auto;
+
+		@media screen and (max-width: 600px) {
+			width: auto;
+			left: 8px;
+		}
 	}
 
 	.title {

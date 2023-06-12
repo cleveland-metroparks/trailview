@@ -100,7 +100,7 @@
 				>
 					<span class="carousel-item-text">{trail.displayName}</span>
 					<div class="carousel-outline" />
-					<img src="/woodpecker_way.jpg" class="placeholder-image" alt="Woodpecker Way" />
+					<img src={trail.thumbnail} class="placeholder-image" alt="Woodpecker Way" />
 				</button>
 			{/each}
 		</div>
@@ -203,9 +203,16 @@
 		left: 10px;
 		font-family: 'Myriad Pro Condensed';
 		z-index: 1;
-		text-shadow: 3px 3px 3px rgba(35, 34, 34, 0.5);
+		text-shadow: 3px 3px 3px rgba(35, 34, 34, 0.8);
 		color: rgb(255, 255, 255);
 		font-size: 24px;
+		border-radius: 3px;
+		// padding-left: 2px;
+		// padding-right: 2px;
+		// padding-top: 1px;
+		// padding-bottom: 1px;
+		// background-color: transparent;
+		// transition: background-color 0.5s;
 	}
 
 	.carousel-outline {
@@ -243,6 +250,9 @@
 			img {
 				transform: scale(1.1);
 			}
+			// .carousel-item-text {
+			// 	background-color: rgb(106, 176, 62);
+			// }
 		}
 	}
 </style>
