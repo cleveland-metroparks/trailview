@@ -32,11 +32,11 @@
     left: 10px;
     width: 200px;
     height: 145px;
+    outline: none;
+    transform: translateZ(0);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.5);
     border-radius: 10px;
     -webkit-border-radius: 10px;
-    outline-style: solid;
-    outline-width: 3px;
-    outline-color: rgba(0, 0, 0, 0.5);
 }
 
 .trailview-map-container-desktop .mapboxgl-control-container {

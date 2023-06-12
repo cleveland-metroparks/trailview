@@ -73,7 +73,7 @@
 		z-index: 11;
 		background-color: rgba(214, 214, 214, 0.97);
 		border-radius: 10px;
-		outline: 3px solid rgba(0, 0, 0, 0.3);
+		box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.3);
 		padding-left: 20px;
 		padding-right: 10px;
 		overflow: auto;
