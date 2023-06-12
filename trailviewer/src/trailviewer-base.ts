@@ -226,7 +226,7 @@ export class TrailViewerBase {
                 'trailview-nav-container'
             ) as HTMLDivElement | null;
             if (navContainer !== null) {
-                navContainer.style.transform = `translate(-50%, 0) perspective(300px) rotateX(${rot}deg)`;
+                navContainer.style.transform = `translate(-50%, 0) translateZ(100px) perspective(300px) rotateX(${rot}deg)`;
             }
         }
         if (!once && this._destroyed === false) {
