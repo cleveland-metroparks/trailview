@@ -89,6 +89,7 @@
 		font-size: 32px;
 		margin-bottom: 14px;
 		margin-top: 16px;
+		margin-right: 50px;
 	}
 
 	.green-button {
