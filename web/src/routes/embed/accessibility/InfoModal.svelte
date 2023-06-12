@@ -8,6 +8,7 @@
 	import { fly, scale } from 'svelte/transition';
 
 	export let options: InfoModalOptions = { title: '' };
+	export let infoHtml = '';
 
 	let visible = false;
 	export function show() {
@@ -24,11 +25,16 @@
 		<button on:click={hide} type="button" class="green-button close-button"
 			><img src="/icons/close.svg" alt="close icon" /></button
 		>
-		<h2 class="title">{options.title}</h2>
-		<hr />
-		<div class="body">
-			<slot />
-		</div>
+		{#key infoHtml}
+			<div in:fly={{ x: 100, duration: 500 }}>
+				<h2 class="title">{options.title}</h2>
+				<hr />
+				<div class="body">
+					<!-- eslint-disable -->
+					{@html infoHtml}
+				</div>
+			</div>
+		{/key}
 	</div>
 {:else}
 	<button

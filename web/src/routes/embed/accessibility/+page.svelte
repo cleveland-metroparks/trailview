@@ -60,10 +60,11 @@
 
 <div class="container">
 	<div class="viewer-container">
-		<InfoModal bind:this={infoModal} bind:options={infoModalOptions}>
-			<!-- eslint-disable -->
-			{@html infoModalHtml}
-		</InfoModal>
+		<InfoModal
+			bind:this={infoModal}
+			bind:options={infoModalOptions}
+			bind:infoHtml={infoModalHtml}
+		/>
 		<div class="viewer" id="viewer" />
 	</div>
 	<div class="carousel">
