@@ -82,7 +82,8 @@
 		box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.3);
 		padding-left: 20px;
 		padding-right: 10px;
-		overflow: auto;
+		overflow-y: auto;
+		overflow-x: hidden;
 
 		@media screen and (max-width: 600px) {
 			width: auto;
