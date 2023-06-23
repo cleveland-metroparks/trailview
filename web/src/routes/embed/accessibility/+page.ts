@@ -28,9 +28,13 @@ export const load = (async ({ fetch }) => {
 			infoHtml: await (await fetch('/embed/accessibility/info/bunns-lake-loop.html')).text(),
 			thumbnail: '/embed/accessibility/thumbnails/bradley-woods.jpg'
 		},
-		// {
-		// 	displayName: 'Huntington Walkway Loop'
-		// },
+		{
+			displayName: 'Huntington Walkway Loop',
+			sequenceId: 221,
+			initImgId: '36c151e656584816a95ecbef5458c224',
+			infoHtml: await (await fetch('/embed/accessibility/info/huntington-walkway.html')).text(),
+			thumbnail: '/embed/accessibility/thumbnails/huntington.jpg'
+		},
 		{
 			displayName: 'Lower Edgewater APT Loop',
 			sequenceId: 2,
@@ -47,9 +51,13 @@ export const load = (async ({ fetch }) => {
 			infoHtml: await (await fetch('/embed/accessibility/info/bonnie-park-loop.html')).text(),
 			thumbnail: '/embed/accessibility/thumbnails/bonnie-park.jpg'
 		},
-		// {
-		// 	displayName: 'Scenic Park APT Loop'
-		// },
+		{
+			displayName: 'Scenic Park APT Loop',
+			sequenceId: 220,
+			initImgId: 'c04275fa686446288e92869e6f2df884',
+			infoHtml: await (await fetch('/embed/accessibility/info/scenic-park-apt-loop.html')).text(),
+			thumbnail: '/embed/accessibility/thumbnails/scenic-park.jpg'
+		},
 		{
 			displayName: 'West Creek APT Loop Trail',
 			sequenceId: 104, // TODO: plus another
