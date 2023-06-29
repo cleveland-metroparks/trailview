@@ -1,6 +1,6 @@
 {
     "name": "@cmparks/trailviewer",
-    "version": "0.8.4",
+    "version": "0.8.5",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
@@ -20,6 +20,10 @@
         "./dist/trailviewer-base": {
             "import": "./dist/trailviewer-base.mjs",
             "require": "./dist/trailviewer-base.umd.js"
+        },
+        "./dist/trailviewer-base.css": {
+            "import": "./dist/trailviewer-base.css",
+            "require": "./dist/trailviewer-base.css"
         }
     },
     "types": "./dist/trailviewer.d.ts",
