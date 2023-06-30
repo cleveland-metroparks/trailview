@@ -4,7 +4,8 @@
 		TrailViewerBaseOptions
 	} from '@cmparks/trailviewer/dist/trailviewer-base';
 	import '@cmparks/trailviewer/dist/trailviewer-base.css';
-	import { onMount } from 'svelte';
+	import { sequence } from '@sveltejs/kit/hooks';
+	import { onDestroy, onMount } from 'svelte';
 	import { z } from 'zod';
 
 	const flutterTrailViewerBaseOptionsType = z.object({
@@ -17,8 +18,6 @@
 			.optional()
 			.nullable(),
 		baseUrl: z.string(),
-		navArrowMinAngle: z.number(),
-		navArrowMaxAngle: z.number(),
 		imageFetchType: z.enum(['standard', 'all']),
 		filterSequences: z.array(z.number()).optional().nullable()
 	});
@@ -50,28 +49,95 @@
 					return;
 				}
 				options.baseUrl = o.baseUrl;
-				options.navArrowMinAngle = o.navArrowMinAngle;
-				options.navArrowMaxAngle = o.navArrowMaxAngle;
+				options.navArrowMinAngle = -25;
+				options.navArrowMaxAngle = -20;
 				options.imageFetchType = o.imageFetchType;
 				if (o.filterSequences !== undefined && o.filterSequences !== null) {
 					options.filterSequences = o.filterSequences;
 				}
 				options.target = 'trailviewer';
 				trailviewerOptions = options;
-				messageHandler?.postMessage('optionsSet');
+				messageHandler?.postMessage(JSON.stringify({ type: 'optionsSet' }));
 			} else if (
 				messageData.type === 'start' &&
 				trailviewerOptions !== undefined &&
 				trailviewer === undefined
 			) {
 				trailviewer = new trailview.TrailViewerBase(trailviewerOptions);
-				
+				trailviewer.on('image-change', (image) => {
+					messageHandler?.postMessage(
+						JSON.stringify({
+							type: 'onImageChange',
+							data: {
+								id: image.id,
+								sequenceId: image.sequenceId,
+								latitude: image.latitude,
+								longitude: image.longitude,
+								bearing: image.bearing,
+								flipped: image.flipped,
+								pitchCorrection: image.pitchCorrection,
+								visibility: image.visibility,
+								shtHash: image.shtHash ?? null
+							}
+						})
+					);
+				});
 				messageHandler?.postMessage('started');
+			} else if (messageData.type === 'destroy' && trailviewer !== undefined) {
+				trailviewer.destroy();
+				trailviewer = undefined;
+			} else if (messageData.type === 'goToImageId' && trailviewer !== undefined) {
+				trailviewer.goToImageID(messageData.data as string);
+			} else if (messageData.type === 'getBearing') {
+				if (trailviewer === undefined) {
+					messageHandler?.postMessage(JSON.stringify({ type: 'bearingGet', data: null }));
+					return;
+				}
+				const bearing = trailviewer.getBearing();
+				messageHandler?.postMessage(JSON.stringify({ type: 'bearingGet', data: bearing ?? null }));
+			} else if (messageData.type === 'getCurrentImageId') {
+				if (trailviewer === undefined) {
+					messageHandler?.postMessage(JSON.stringify({ type: 'currentImageIdGet', data: null }));
+					return;
+				}
+				const currentImageId = trailviewer.getCurrentImageID();
+				messageHandler?.postMessage(
+					JSON.stringify({ type: 'currentImageIdGet', data: currentImageId ?? null })
+				);
+			} else if (messageData.type === 'getCurrentSequenceId') {
+				if (trailviewer === undefined) {
+					messageHandler?.postMessage(JSON.stringify({ type: 'currentSequenceIdGet', data: null }));
+					return;
+				}
+				const currentSequenceId = trailviewer.getCurrentSequenceId();
+				messageHandler?.postMessage(
+					JSON.stringify({ type: 'currentSequenceIdGet', data: currentSequenceId ?? null })
+				);
+			} else if (messageData.type === 'getFlipped') {
+				if (trailviewer === undefined) {
+					messageHandler?.postMessage(JSON.stringify({ type: 'flippedGet', data: null }));
+					return;
+				}
+				const flipped = trailviewer.getFlipped();
+				messageHandler?.postMessage(JSON.stringify({ type: 'flippedGet', data: flipped ?? null }));
+			} else if (messageData.type === 'getImageGeo') {
+				if (trailviewer === undefined) {
+					messageHandler?.postMessage(JSON.stringify({ type: 'imageGeoGet', data: null }));
+					return;
+				}
+				const imageGeo = trailviewer.getImageGeo();
+				messageHandler?.postMessage(
+					JSON.stringify({ type: 'imageGeoGet', data: imageGeo ?? null })
+				);
 			}
 		});
 		if (messageHandler !== undefined) {
-			messageHandler.postMessage('init');
+			messageHandler.postMessage(JSON.stringify({ type: 'init' }));
 		}
+	});
+
+	onDestroy(() => {
+		trailviewer?.destroy();
 	});
 </script>
 
