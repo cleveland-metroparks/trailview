@@ -1177,3 +1177,12 @@ div.pnlm-tooltip:hover span:after {
 .pnlm-about-msg {
 	visibility: hidden;
 }
+
+.trailview-draggable {
+	width: 18px;
+	height: 18px;
+	background: radial-gradient(blue, transparent);
+	border-radius: 50%;
+	z-index: 11;
+	cursor: pointer;
+}

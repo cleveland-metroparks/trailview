@@ -4,6 +4,7 @@ import urlJoin from 'url-join';
 import '@cmparks/pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@cmparks/pannellum/build/pannellum.css';
+import type { PatchRequestType } from '../routes/admin/edit/+server';
 
 declare const pannellum: PannellumViewer;
 
@@ -171,24 +172,53 @@ export class TrailViewer {
 	private _destroyed = false;
 	private _neighbors: Neighbor[] = [];
 	private _pitchCorrectionOverride: number | undefined;
+	private _editMarkers: mapboxgl.Marker[] = [];
+	private _editList: {
+		imageId: string;
+		new: { latitude: number; longitude: number };
+	}[] = [];
+
+	public allImageData:
+		| {
+				id: string;
+				pitchCorrection: number;
+				bearing: number;
+				longitude: number;
+				latitude: number;
+				flipped: boolean;
+				visibility: boolean;
+				sequenceId: number;
+		  }[]
+		| undefined;
 
 	public constructor(options: TrailViewerOptions = defaultOptions) {
 		this._emitter = new EventEmitter();
 		this._options = options;
 		fetch(urlJoin(this._options.baseUrl, '/api/sequences'), {
 			method: 'GET'
-		}).then(async (res) => {
-			const data = await res.json();
-			if (!data.success) {
-				throw new Error('Failed to fetch sequence data');
-			}
-			this._sequencesData = data.data;
-			await this._initViewer(this._options.initialImageId);
-			if (this._currImg) {
-				this.goToImageID(this._currImg.id, true);
-			}
+		}).then(async (sequencesRes) => {
+			const data = await sequencesRes.json();
+			this.fetchAllImageData().then(async () => {
+				if (!data.success) {
+					throw new Error('Failed to fetch sequence data');
+				}
+				this._sequencesData = data.data;
+				await this._initViewer(this._options.initialImageId);
+				if (this._currImg) {
+					this.goToImageID(this._currImg.id, true);
+				}
+			});
 		});
 		return this;
+	}
+
+	async fetchAllImageData() {
+		const res = await fetch('/api/images/all', { method: 'GET' });
+		const imagesData = await res.json();
+		if (imagesData.success !== true) {
+			throw new Error('Unable to fetch all image data');
+		}
+		this.allImageData = imagesData.data;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -265,6 +295,7 @@ export class TrailViewer {
 			20,
 			1
 		]);
+		this._map.setLayerZoomRange('dots', 0, 17);
 	}
 
 	private _startMap() {
@@ -285,6 +316,10 @@ export class TrailViewer {
 
 		this._map.on('load', () => {
 			this._createMapLayer();
+		});
+
+		this._map.on('moveend', () => {
+			this._updateEditMarkers();
 		});
 
 		this._map.on('mouseenter', 'dots', () => {
@@ -324,6 +359,50 @@ export class TrailViewer {
 			}
 			this.goToImageID(event.features[0].properties.imageID);
 		});
+	}
+
+	private _updateEditMarkers() {
+		if (this._map === undefined || this.allImageData === undefined) {
+			return;
+		}
+		for (const marker of this._editMarkers) {
+			marker.remove();
+		}
+		if (this._map.getZoom() >= 17) {
+			const bounds = this._map.getBounds();
+			for (const image of this.allImageData) {
+				if (!bounds.contains([image.longitude, image.latitude])) {
+					continue;
+				}
+				const element = document.createElement('div');
+				element.classList.add('trailview-draggable');
+				element.addEventListener('click', () => {
+					this.goToImageID(image.id);
+				});
+				let markerLoc: [number, number] = [image.longitude, image.latitude];
+				const lastEdit = this._editList.findLast((e) => {
+					return e.imageId === image.id;
+				});
+				if (lastEdit !== undefined) {
+					markerLoc = [lastEdit.new.longitude, lastEdit.new.latitude];
+				}
+				const marker = new mapboxgl.Marker({
+					element,
+					draggable: true
+				})
+					.setLngLat(markerLoc)
+					.addTo(this._map);
+				marker.on('dragend', () => {
+					const loc = marker.getLngLat();
+					this._editList.push({
+						imageId: image.id,
+						new: { latitude: loc.lat, longitude: loc.lng }
+					});
+					console.log(marker.getLngLat());
+				});
+				this._editMarkers.push(marker);
+			}
+		}
 	}
 
 	private _createMapMarker() {
@@ -614,6 +693,7 @@ export class TrailViewer {
 		}
 		this._startMap();
 		this._createNavContainer();
+
 		this._emitter.emit('init-done');
 	}
 
@@ -676,19 +756,7 @@ export class TrailViewer {
 		if (this._panViewer === undefined) {
 			return;
 		}
-		// if (this._dataArr === undefined) {
-		// 	console.error('Error on scene change, dataArr is undefined');
-		// 	return;
-		// }
-		// const index = this._dataIndex.get(img);
-		// if (index === undefined) {
-		// 	console.error('Cannot find image in index');
-		// 	console.log(img);
-		// 	console.log(this._dataIndex);
-		// 	return;
-		// }
-		// this._currImg = this._dataArr[index];
-
+		
 		// Keep the same bearing on scene change
 		this._prevYaw = this._panViewer.getYaw();
 		const newYaw =
@@ -704,7 +772,14 @@ export class TrailViewer {
 		this._geo.longitude = this._currImg.longitude;
 
 		if (this._map !== undefined && this._mapMarker !== undefined) {
-			this._mapMarker.setLngLat([this._geo.longitude, this._geo.latitude]);
+			let markerLoc: [number, number] = [this._geo.longitude, this._geo.latitude];
+			const lastEdit = this._editList.findLast((e) => {
+				return e.imageId === img;
+			});
+			if (lastEdit !== undefined) {
+				markerLoc = [lastEdit.new.longitude, lastEdit.new.latitude];
+			}
+			this._mapMarker.setLngLat(markerLoc);
 			this._map.easeTo({
 				center: this._mapMarker.getLngLat(),
 				duration: 500
@@ -758,6 +833,41 @@ export class TrailViewer {
 	// 	}
 	// 	return minId;
 	// }
+
+	public undoEdit() {
+		if (this._map !== undefined && this._map.getZoom() > 17) {
+			if (this._editList.length !== 0) {
+				this._editList.pop();
+			}
+			this._updateEditMarkers();
+		}
+	}
+
+	public async submitEdits() {
+		if (this._editList.length === 0) {
+			return;
+		}
+		const latestEdits = new Map<string, { latitude: number; longitude: number }>();
+		for (let i = this._editList.length - 1; i >= 0; --i) {
+			if (latestEdits.has(this._editList[i].imageId)) {
+				continue;
+			}
+			latestEdits.set(this._editList[i].imageId, this._editList[i].new);
+		}
+		const patchData: PatchRequestType = { data: [] };
+		Array.from(latestEdits.entries()).forEach((edit) => {
+			patchData.data.push({
+				imageId: edit[0],
+				new: { latitude: edit[1].latitude, longitude: edit[1].longitude }
+			});
+		});
+		await fetch(urlJoin(this._options.baseUrl, '/admin/edit'), {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(patchData)
+		});
+		this._editList = [];
+	}
 
 	public getImageGeo(): { latitude: number; longitude: number } {
 		return this._geo;

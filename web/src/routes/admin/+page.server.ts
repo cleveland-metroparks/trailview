@@ -10,7 +10,7 @@ export const load = (async ({ cookies }) => {
 
 export const actions = {
 	image: async ({ request, cookies }) => {
-		if (!isSessionValid(cookies)) {
+		if (await isSessionValid(cookies) !== true) {
 			return { success: false, message: 'Invalid session' };
 		}
 		const data = await request.formData();
@@ -28,7 +28,7 @@ export const actions = {
 		return { success: true };
 	},
 	sequence: async ({ request, cookies }) => {
-		if (!isSessionValid(cookies)) {
+		if (await isSessionValid(cookies) !== true) {
 			return { success: false, message: 'Invalid session' };
 		}
 		const data = await request.formData();
@@ -60,7 +60,7 @@ export const actions = {
 		return { success: true };
 	},
 	refresh: async ({ cookies }) => {
-		if (!isSessionValid(cookies)) {
+		if (await isSessionValid(cookies) !== true) {
 			return { success: false, message: 'Invalid session' };
 		}
 		refreshImageData(true);

@@ -21,8 +21,8 @@
 		if (trailviewer !== undefined) {
 			trailviewer.destroy();
 			createTrailViewer();
+			trailviewer.fetchAllImageData();
 		}
-		fetchAllImageData();
 	}
 
 	$mainHeading = 'TrailView Admin';
@@ -33,26 +33,13 @@
 	let pitchCorrection = 0;
 	let flippedValue: boolean;
 	let currentImage: Image | undefined;
-	let originalPitchCorrections: Map<string, number> = new Map();
-	let allImageData:
-		| {
-				id: string;
-				pitchCorrection: number;
-				bearing: number;
-				longitude: number;
-				latitude: number;
-				flipped: boolean;
-				visibility: boolean;
-				sequenceId: number;
-		  }[]
-		| undefined;
 
 	function onSequenceSelectChange(event: Event) {
 		if (trailviewer === undefined) {
 			return;
 		}
-		if (allImageData !== undefined) {
-			const image = allImageData.find((image) => {
+		if (trailviewer.allImageData !== undefined) {
+			const image = trailviewer.allImageData.find((image) => {
 				const sequence = data.sequences.find((sequence) => {
 					return sequence.id === image.sequenceId;
 				});
@@ -71,7 +58,7 @@
 		if (!trailviewer || !currentImage) {
 			return;
 		}
-		if (allImageData !== undefined) {
+		if (trailviewer.allImageData !== undefined) {
 			trailviewer.overridePitchCorrection(pitchCorrection);
 		}
 	}
@@ -102,18 +89,14 @@
 		});
 	}
 
-	async function fetchAllImageData() {
-		const res = await fetch('/api/images/all', { method: 'GET' });
-		const imagesData = await res.json();
-		if (imagesData.success !== true) {
-			throw new Error('Unable to fetch all image data');
+	function handleKeypress(event: KeyboardEvent) {
+		if (event.key === 'z' && trailviewer !== undefined) {
+			trailviewer.undoEdit();
 		}
-		allImageData = imagesData.data;
 	}
 
 	onMount(async () => {
 		await createTrailViewer();
-		await fetchAllImageData();
 	});
 
 	onDestroy(() => {
@@ -125,7 +108,10 @@
 	let showCacheSpinner = false;
 	let showSequenceSpinner = false;
 	let showImageSpinner = false;
+	let showEditSpinner = false;
 </script>
+
+<svelte:window on:keypress={handleKeypress} />
 
 <div class="row mb-5">
 	<div class="col-lg-8">
@@ -226,13 +212,7 @@
 			/>
 			<button
 				on:click={() => {
-					if (currentImage) {
-						const original = originalPitchCorrections.get(currentImage.id);
-						if (original !== undefined) {
-							pitchCorrection = original;
-							onPitchCorrectionChange();
-						}
-					}
+					refreshEverything();
 				}}
 				type="button"
 				class="btn btn-secondary">Reset</button
@@ -289,6 +269,28 @@
 				>{#if showImageSpinner}<span class="spinner-border spinner-border-sm" />{/if}Set</button
 			>
 		</form>
+		<hr />
+		<h4 class="mt-3">Image Move Options</h4>
+		<button
+			on:click={() => {
+				if (trailviewer !== undefined) {
+					trailviewer.undoEdit();
+				}
+			}}
+			type="button"
+			class="btn btn-warning">Undo Image Move (z)</button
+		>
+		<button
+			on:click={async () => {
+				showEditSpinner = true;
+				await trailviewer?.submitEdits();
+				showEditSpinner = false;
+				refreshEverything();
+			}}
+			type="button"
+			class="btn btn-primary"
+			>{#if showEditSpinner}<span class="spinner-border spinner-border-sm" />{/if}Submit Changes</button
+		>
 	</div>
 </div>
 
@@ -308,7 +310,7 @@
 
 	#trailview_map {
 		width: 100%;
-		height: 350px;
+		height: 500px;
 		z-index: 5;
 	}
 </style>
