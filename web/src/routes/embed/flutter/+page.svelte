@@ -64,6 +64,13 @@
 				trailviewer === undefined
 			) {
 				trailviewer = new trailview.TrailViewerBase(trailviewerOptions);
+				trailviewer.on('init-done', () => {
+					messageHandler?.postMessage(
+						JSON.stringify({
+							type: 'onInitDone'
+						})
+					);
+				});
 				trailviewer.on('image-change', (image) => {
 					messageHandler?.postMessage(
 						JSON.stringify({
