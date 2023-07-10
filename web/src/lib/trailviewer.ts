@@ -756,7 +756,7 @@ export class TrailViewer {
 		if (this._panViewer === undefined) {
 			return;
 		}
-		
+
 		// Keep the same bearing on scene change
 		this._prevYaw = this._panViewer.getYaw();
 		const newYaw =

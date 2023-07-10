@@ -8,7 +8,7 @@ import { IMAGES_PATH } from '$env/static/private';
 import { db } from '$lib/server/prisma';
 
 export const POST = (async ({ request, cookies }) => {
-	if (await isSessionValid(cookies) !== true) {
+	if ((await isSessionValid(cookies)) !== true) {
 		return json({ success: false, message: 'Unauthorized' }, { status: 403 });
 	}
 	const formData = await request.formData();

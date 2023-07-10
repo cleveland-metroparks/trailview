@@ -17,10 +17,13 @@ export const load = (async ({ fetch }) => {
 			infoHtml: await (await fetch('/embed/accessibility/info/woodpecker-way.html')).text(),
 			thumbnail: '/embed/accessibility/thumbnails/acacia.jpg'
 		},
-		// {
-		// 	displayName: 'Forbes Woods Loop',
-		//     sequenceId:
-		// },
+		{
+			displayName: 'Forbes Woods Loop',
+			sequenceId: 223,
+			initImgId: 'bb561a5b44a14f7d96c922e460df6311',
+			infoHtml: await (await fetch('/embed/accessibility/info/forbes-woods-loop.html')).text(),
+			thumbnail: '/embed/accessibility/thumbnails/forbes-woods.jpg'
+		},
 		{
 			displayName: 'Bunns Lake Loop',
 			sequenceId: 24,

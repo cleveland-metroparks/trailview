@@ -10,7 +10,7 @@ const postDataType = z.object({
 });
 
 export const POST = (async ({ request, cookies }) => {
-	if (await isSessionValid(cookies) !== true) {
+	if ((await isSessionValid(cookies)) !== true) {
 		return json({ success: false, message: 'Unauthorized' }, { status: 403 });
 	}
 	let postData: unknown;

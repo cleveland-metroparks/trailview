@@ -4,7 +4,7 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/prisma';
 
 export const DELETE = (async ({ params, cookies }) => {
-	if (await isSessionValid(cookies) !== true) {
+	if ((await isSessionValid(cookies)) !== true) {
 		return json({ success: false, message: 'Unauthorized' }, { status: 403 });
 	}
 	const sequenceId = parseInt(params.sequenceId);
