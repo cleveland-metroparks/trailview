@@ -163,7 +163,7 @@ export class TrailViewer {
 	private _sceneList: string[] = [];
 	private _hotSpotList: string[] = [];
 	private _prevImg: Image | undefined;
-	private _map: mapboxgl.Map | undefined;
+	public map: mapboxgl.Map | undefined;
 	private _mapMarker: mapboxgl.Marker | undefined;
 	private _emitter: EventEmitter;
 	private _sequencesData: { name: string; id: number }[] | undefined;
@@ -234,12 +234,12 @@ export class TrailViewer {
 	}
 
 	private _createMapLayer() {
-		if (this._map === undefined) {
+		if (this.map === undefined) {
 			throw new Error('Cannot create map layer as map is undefined');
 		}
-		if (this._map.getSource('dots')) {
-			this._map.removeLayer('dots');
-			this._map.removeSource('dots');
+		if (this.map.getSource('dots')) {
+			this.map.removeLayer('dots');
+			this.map.removeSource('dots');
 		}
 		const layerData: mapboxgl.AnySourceData = {
 			type: 'vector',
@@ -249,9 +249,9 @@ export class TrailViewer {
 			]
 		};
 
-		this._map.addSource('dots', layerData);
+		this.map.addSource('dots', layerData);
 
-		this._map.addLayer({
+		this.map.addLayer({
 			id: 'dots',
 			'source-layer': 'geojsonLayer',
 			source: 'dots',
@@ -261,7 +261,7 @@ export class TrailViewer {
 				'circle-color': ['case', ['==', ['get', 'visible'], true], '#00a108', '#db8904']
 			}
 		});
-		this._map.setPaintProperty('dots', 'circle-radius', [
+		this.map.setPaintProperty('dots', 'circle-radius', [
 			'interpolate',
 
 			['exponential', 0.5],
@@ -278,7 +278,7 @@ export class TrailViewer {
 			20,
 			8
 		]);
-		this._map.setPaintProperty('dots', 'circle-opacity', [
+		this.map.setPaintProperty('dots', 'circle-opacity', [
 			'interpolate',
 
 			['exponential', 0.5],
@@ -295,7 +295,7 @@ export class TrailViewer {
 			20,
 			1
 		]);
-		this._map.setLayerZoomRange('dots', 0, 17);
+		this.map.setLayerZoomRange('dots', 0, 17);
 	}
 
 	private _startMap() {
@@ -303,7 +303,7 @@ export class TrailViewer {
 			return;
 		}
 		mapboxgl.accessToken = this._options.mapboxKey;
-		this._map = new mapboxgl.Map({
+		this.map = new mapboxgl.Map({
 			container: this._options.mapTarget,
 			style: 'mapbox://styles/cleveland-metroparks/cisvvmgwe00112xlk4jnmrehn?optimize=true',
 			center: [-81.682665, 41.4097766],
@@ -314,45 +314,45 @@ export class TrailViewer {
 			boxZoom: false
 		});
 
-		this._map.on('load', () => {
+		this.map.on('load', () => {
 			this._createMapLayer();
 		});
 
-		this._map.on('moveend', () => {
+		this.map.on('moveend', () => {
 			this._updateEditMarkers();
 		});
 
-		this._map.on('mouseenter', 'dots', () => {
+		this.map.on('mouseenter', 'dots', () => {
 			this._mouseOnDot = true;
-			if (this._map) {
-				this._map.getCanvas().style.cursor = 'pointer';
+			if (this.map) {
+				this.map.getCanvas().style.cursor = 'pointer';
 			}
 		});
 
-		this._map.on('mouseleave', 'dots', () => {
+		this.map.on('mouseleave', 'dots', () => {
 			this._mouseOnDot = false;
-			if (this._map) {
-				this._map.getCanvas().style.cursor = 'grab';
+			if (this.map) {
+				this.map.getCanvas().style.cursor = 'grab';
 			}
 		});
 
-		this._map.on('mousedown', () => {
-			if (this._map && !this._mouseOnDot) {
-				this._map.getCanvas().style.cursor = 'grabbing';
+		this.map.on('mousedown', () => {
+			if (this.map && !this._mouseOnDot) {
+				this.map.getCanvas().style.cursor = 'grabbing';
 			}
 		});
 
-		this._map.on('mouseup', () => {
-			if (this._map && this._mouseOnDot) {
-				this._map.getCanvas().style.cursor = 'pointer';
-			} else if (this._map) {
-				this._map.getCanvas().style.cursor = 'grab';
+		this.map.on('mouseup', () => {
+			if (this.map && this._mouseOnDot) {
+				this.map.getCanvas().style.cursor = 'pointer';
+			} else if (this.map) {
+				this.map.getCanvas().style.cursor = 'grab';
 			}
 		});
 
 		this._createMapMarker();
 
-		this._map.on('click', 'dots', (event) => {
+		this.map.on('click', 'dots', (event) => {
 			if (event.features === undefined || event.features[0].properties === null) {
 				console.warn('Features is undefiend or properties are null');
 				return;
@@ -362,17 +362,23 @@ export class TrailViewer {
 	}
 
 	private _updateEditMarkers() {
-		if (this._map === undefined || this.allImageData === undefined) {
+		if (this.map === undefined || this.allImageData === undefined) {
 			return;
 		}
 		for (const marker of this._editMarkers) {
 			marker.remove();
 		}
-		if (this._map.getZoom() >= 17) {
-			const bounds = this._map.getBounds();
+		if (this.map.getZoom() >= 17) {
+			const bounds = this.map.getBounds();
 			for (const image of this.allImageData) {
 				if (!bounds.contains([image.longitude, image.latitude])) {
-					continue;
+					if (
+						this._editList.find((e) => {
+							return e.imageId === image.id && bounds.contains([e.new.longitude, e.new.latitude]);
+						}) === undefined
+					) {
+						continue;
+					}
 				}
 				const element = document.createElement('div');
 				element.classList.add('trailview-draggable');
@@ -391,7 +397,7 @@ export class TrailViewer {
 					draggable: true
 				})
 					.setLngLat(markerLoc)
-					.addTo(this._map);
+					.addTo(this.map);
 				marker.on('dragend', () => {
 					const loc = marker.getLngLat();
 					this._editList.push({
@@ -405,8 +411,12 @@ export class TrailViewer {
 		}
 	}
 
+	public pushEdit(imageId: string, latitude: number, longitude: number): void {
+		this._editList.push({ imageId: imageId, new: { latitude, longitude } });
+	}
+
 	private _createMapMarker() {
-		if (this._map === undefined) {
+		if (this.map === undefined) {
 			throw new Error('Cannot create map marker as map is undefined');
 		}
 		const currentMarker_wrap = document.createElement('div');
@@ -419,12 +429,12 @@ export class TrailViewer {
 		currentMarker_wrap.appendChild(currentMarker_view_div);
 		this._mapMarker = new mapboxgl.Marker(currentMarker_wrap)
 			.setLngLat([-81.682665, 41.4097766])
-			.addTo(this._map)
+			.addTo(this.map)
 			.setRotationAlignment('map');
 
 		this._updateMapMarkerRotation();
 
-		this._map.jumpTo({
+		this.map.jumpTo({
 			center: this._mapMarker.getLngLat(),
 			zoom: 16,
 			bearing: 0
@@ -771,7 +781,7 @@ export class TrailViewer {
 		this._geo.latitude = this._currImg.latitude;
 		this._geo.longitude = this._currImg.longitude;
 
-		if (this._map !== undefined && this._mapMarker !== undefined) {
+		if (this.map !== undefined && this._mapMarker !== undefined) {
 			let markerLoc: [number, number] = [this._geo.longitude, this._geo.latitude];
 			const lastEdit = this._editList.findLast((e) => {
 				return e.imageId === img;
@@ -780,7 +790,7 @@ export class TrailViewer {
 				markerLoc = [lastEdit.new.longitude, lastEdit.new.latitude];
 			}
 			this._mapMarker.setLngLat(markerLoc);
-			this._map.easeTo({
+			this.map.easeTo({
 				center: this._mapMarker.getLngLat(),
 				duration: 500
 			});
@@ -835,7 +845,7 @@ export class TrailViewer {
 	// }
 
 	public undoEdit() {
-		if (this._map !== undefined && this._map.getZoom() > 17) {
+		if (this.map !== undefined && this.map.getZoom() > 17) {
 			if (this._editList.length !== 0) {
 				this._editList.pop();
 			}
@@ -878,9 +888,9 @@ export class TrailViewer {
 		if (this._panViewer !== undefined) {
 			this._panViewer.destroy();
 		}
-		if (this._map !== undefined) {
-			this._map.remove();
-			this._map = undefined;
+		if (this.map !== undefined) {
+			this.map.remove();
+			this.map = undefined;
 		}
 	}
 
