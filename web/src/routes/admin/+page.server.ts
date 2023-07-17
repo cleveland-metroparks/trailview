@@ -36,6 +36,7 @@ export const actions = {
 		const formSequenceId = data.get('sequenceId');
 		const formIsPublic = data.get('isPublic');
 		const formFlip = data.get('flip');
+		const formMapsApiTrailId = data.get('mapsApiTrailId');
 		if (!formPitch) {
 			return { success: false, message: 'pitch not specified' };
 		}
@@ -45,6 +46,17 @@ export const actions = {
 		const sequenceId = parseInt(formSequenceId.toString());
 		if (isNaN(sequenceId)) {
 			return { success: false, message: 'Sequence id is not a number' };
+		}
+		if (formMapsApiTrailId !== null) {
+			const idStr = formMapsApiTrailId.toString();
+			if (idStr === 'unassigned') {
+				await db.sequence.update({ where: { id: sequenceId }, data: { mapsApiTrailId: null } });
+			} else if (!isNaN(parseInt(idStr))) {
+				await db.sequence.update({
+					where: { id: sequenceId },
+					data: { mapsApiTrailId: parseInt(idStr) }
+				});
+			}
 		}
 		const pitch = parseFloat(formPitch.toString());
 		await db.image.updateMany({

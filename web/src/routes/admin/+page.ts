@@ -1,12 +1,14 @@
 import type { PageLoad } from './$types';
 import { z } from 'zod';
 import { error } from '@sveltejs/kit';
+import { fetchTrails } from '$lib/mapsApi';
 
 export const load = (async ({ fetch }) => {
 	const sequencesDataType = z.array(
 		z.object({
 			name: z.string(),
-			id: z.number().int()
+			id: z.number().int(),
+			mapsApiTrailId: z.number().int().nullable()
 		})
 	);
 
@@ -17,7 +19,15 @@ export const load = (async ({ fetch }) => {
 	}
 	const sequences = sequencesDataType.safeParse(data.data);
 	if (!sequences.success) {
-		throw error(500, 'Invalid data format');
+		throw error(500, `Invalid data: ${sequences.error.message}`);
 	}
-	return { sequences: sequences.data };
+
+	const mapsApiTrails = await fetchTrails();
+	if (mapsApiTrails instanceof Error) {
+		console.error(mapsApiTrails.message);
+	}
+	return {
+		sequences: sequences.data,
+		mapsApi: { trails: mapsApiTrails instanceof Error ? null : mapsApiTrails }
+	};
 }) satisfies PageLoad;

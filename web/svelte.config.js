@@ -15,6 +15,9 @@ const config = {
 				'base-uri': ['none']
 			}
 		}
+	},
+	vitePlugin: {
+		inspector: true
 	}
 };
 

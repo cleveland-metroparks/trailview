@@ -29,7 +29,7 @@
 
 	let trailviewer: TrailViewer | undefined;
 
-	let currentSequence: { name: string; id: number } | undefined;
+	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
 	let pitchCorrection = 0;
 	let flippedValue: boolean;
 	let currentImage: Image | undefined;
@@ -105,6 +105,18 @@
 		}
 	});
 
+	function mapsApiTrailSelectValue(sequence: typeof currentSequence): number | 'unassigned' {
+		const id = data.mapsApi.trails?.find((t) => {
+			return t.id === sequence?.mapsApiTrailId;
+		});
+		console.log(id?.id);
+		if (id !== undefined) {
+			return id.id;
+		} else {
+			return 'unassigned';
+		}
+	}
+
 	let showCacheSpinner = false;
 	let showSequenceSpinner = false;
 	let showImageSpinner = false;
@@ -147,6 +159,7 @@
 				<option class="sequence-option" id={`sequence_${sequence.id}`}>{sequence.name}</option>
 			{/each}
 		</select>
+
 		<h4 class="mt-3">Sequence Options</h4>
 		<form
 			action="?/sequence"
@@ -159,8 +172,25 @@
 				};
 			}}
 		>
+			<label for="mapsApiTrailsSelect">Assign to Maps API Trail</label>
+			{#if data.mapsApi.trails !== null}
+				<select
+					name="mapsApiTrailId"
+					id="mapsApiTrailsSelect"
+					class="form-select"
+					value={mapsApiTrailSelectValue(currentSequence)}
+				>
+					<option class="sequence-option" value="unassigned">Unassigned</option>
+					{#each data.mapsApi.trails as trail}
+						<option class="sequence-option" value={trail.id}>{trail.name}</option>
+					{/each}
+				</select>
+			{:else}
+				<div class="alert alert-danger">Failed to fetch data</div>
+			{/if}
+
 			<input name="sequenceId" type="hidden" value={currentSequence?.id} />
-			<label for="sequence_name">Sequence Id and Name</label>
+			<label class="mt-2" for="sequence_name">Sequence Id and Name</label>
 			<div class="input-group">
 				<span class="input-group-text">{currentSequence?.id}</span>
 				<input

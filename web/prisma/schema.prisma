@@ -50,11 +50,12 @@ model Image {
 }
 
 model Sequence {
-  name     String   @unique
+  name           String   @unique
   // Upload -> Blur -> Sequence -> Done
-  status   String
-  toDelete Boolean  @default(false)
-  id       Int      @id @default(autoincrement())
-  isPublic Boolean? @default(true)
-  images   Image[]
+  status         String
+  toDelete       Boolean  @default(false)
+  id             Int      @id @default(autoincrement())
+  isPublic       Boolean? @default(true)
+  images         Image[]
+  mapsApiTrailId Int?
 }
