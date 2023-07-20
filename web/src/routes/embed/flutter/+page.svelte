@@ -6,7 +6,6 @@
 	import '@cmparks/trailviewer/dist/trailviewer-base.css';
 	import { onDestroy, onMount } from 'svelte';
 	import { z } from 'zod';
-	import { messageHandler } from './flutter';
 
 	const flutterTrailViewerBaseOptionsType = z.object({
 		initialImageId: z.string().optional().nullable(),
