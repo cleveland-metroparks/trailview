@@ -1,3 +1,0 @@
-# TrailView Docs
-
-Various documentation
