@@ -8,7 +8,8 @@
     top: 0;
     left: 0;
     width: 100%;
-    transition: width 0.5s cubic-bezier(0.76, 0, 0.24, 1),
+    transition:
+        width 0.5s cubic-bezier(0.76, 0, 0.24, 1),
         height 0.5s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
@@ -23,7 +24,8 @@
 .trailview-map-container {
     position: absolute;
     background-color: rgb(233, 234, 210);
-    transition: width 0.5s cubic-bezier(0.76, 0, 0.24, 1),
+    transition:
+        width 0.5s cubic-bezier(0.76, 0, 0.24, 1),
         height 0.5s cubic-bezier(0.76, 0, 0.24, 1);
 }
 

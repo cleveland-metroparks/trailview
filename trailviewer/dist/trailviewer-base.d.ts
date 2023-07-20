@@ -46,11 +46,11 @@ export interface Neighbor extends Image {
     distance: number;
     neighborBearing: number;
 }
-export interface TrailViewerBase {
+export interface TrailViewerBaseEvents {
     on(event: 'image-change', listener: (image: Image) => void): void;
     on(event: 'init-done', listener: () => void): void;
 }
-export declare class TrailViewerBase {
+export declare class TrailViewerBase implements TrailViewerBaseEvents {
     protected _options: TrailViewerBaseOptions;
     private _panViewer;
     private _geo;
@@ -67,6 +67,7 @@ export declare class TrailViewerBase {
     private _neighbors;
     private _pitchCorrectionOverride;
     constructor(options?: TrailViewerBaseOptions);
+    on(event: string, listener: (...args: any[]) => void): void;
     overridePitchCorrection(pitch?: number): void;
     private _updateNavArrows;
     getCurrentImageID(): string | undefined;

@@ -18,7 +18,7 @@ export default [
             commonjs(),
             typescript({ sourceMap: true }),
             terser(),
-            css({ minify: true, output: './dist/trailviewer-base.css' }),
+            css({ minify: true, output: 'trailviewer-base.css' }),
         ],
     },
     {
@@ -34,7 +34,7 @@ export default [
             commonjs(),
             typescript({ sourceMap: true }),
             terser(),
-            css({ minify: true, output: './dist/trailviewer.css' }),
+            css({ minify: true, output: 'trailviewer.css' }),
         ],
     },
     {
@@ -52,7 +52,7 @@ export default [
             terser(),
             // I am aware that the css is built twice, but working
             // around that would be more complicated than it's worth
-            css({ minify: true, output: './dist/trailviewer-base.css' }),
+            css({ minify: true, output: 'trailviewer-base.css' }),
         ],
     },
     {
@@ -70,7 +70,7 @@ export default [
             terser(),
             // I am aware that the css is built twice, but working
             // around that would be more complicated than it's worth
-            css({ minify: true, output: './dist/trailviewer.css' }),
+            css({ minify: true, output: 'trailviewer.css' }),
         ],
     },
 ];

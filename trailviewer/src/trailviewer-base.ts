@@ -148,12 +148,12 @@ interface NavArrowInfo {
     yaw: number;
 }
 
-export interface TrailViewerBase {
+export interface TrailViewerBaseEvents {
     on(event: 'image-change', listener: (image: Image) => void): void;
     on(event: 'init-done', listener: () => void): void;
 }
 
-export class TrailViewerBase {
+export class TrailViewerBase implements TrailViewerBaseEvents {
     protected _options: TrailViewerBaseOptions = defaultBaseOptions;
     private _panViewer: PannellumViewer | undefined;
     private _geo = { latitude: 0, longitude: 0 };
