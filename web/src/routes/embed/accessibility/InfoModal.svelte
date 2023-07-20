@@ -21,12 +21,12 @@
 </script>
 
 {#if visible}
-	<div transition:fly|local={{ x: 100, duration: 500 }} class="modal">
+	<div transition:fly={{ x: 100, duration: 500 }} class="modal">
 		<button on:click={hide} type="button" class="green-button close-button"
 			><img src="/icons/close.svg" alt="close icon" /></button
 		>
 		{#key infoHtml}
-			<div in:fly={{ x: 100, duration: 500 }}>
+			<div in:fly|global={{ x: 100, duration: 500 }}>
 				<h2 class="title">{options.title}</h2>
 				<hr />
 				<div class="body">
@@ -37,11 +37,8 @@
 		{/key}
 	</div>
 {:else}
-	<button
-		on:click={show}
-		in:scale|local={{ delay: 200 }}
-		out:scale|local
-		class="green-button info-button"><img src="/icons/info.svg" alt="open info icon" /></button
+	<button on:click={show} in:scale={{ delay: 200 }} out:scale class="green-button info-button"
+		><img src="/icons/info.svg" alt="open info icon" /></button
 	>
 {/if}
 
@@ -106,7 +103,9 @@
 		width: 40px;
 		height: 40px;
 		background-color: rgb(106, 176, 62);
-		box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+		box-shadow:
+			rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
+			rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
 
 		transition: background-color 0.2s;
 		&:hover {
@@ -133,7 +132,9 @@
 		top: 14px;
 		right: 10px;
 		z-index: 12;
-		box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+		box-shadow:
+			rgba(0, 0, 0, 0.3) 0px 19px 38px,
+			rgba(0, 0, 0, 0.22) 0px 15px 12px;
 
 		img {
 			width: 40px;

@@ -32,25 +32,25 @@ export function closestIntersection(
 	const perp = { x: -lineVec.y, y: lineVec.x }; // Rotate vector by 90 degrees to get the perpendicular direction
 
 	for (const line of segments) {
-        const segmentVector = subtract(line.p2, line.p1);
+		const segmentVector = subtract(line.p2, line.p1);
 
-        const denom = dotProduct(perp, segmentVector);
-        if (denom === 0) {
-            continue;
-        }
+		const denom = dotProduct(perp, segmentVector);
+		if (denom === 0) {
+			continue;
+		}
 
-        const lineToPointVector = subtract(linePoint, line.p1);
-        const t = dotProduct(perp, lineToPointVector) / denom;
-        if (t < 0 || t > 1) {
-            continue;
-        }
-        const ix = line.p1.x + t * segmentVector.x;
-        const iy = line.p1.y + t * segmentVector.y;
-        const dist = Math.pow(linePoint.x - ix, 2) + Math.pow(linePoint.y - iy, 2);
-        if (dist < closestDistanceSquared) {
-            closestIntersectionPoint = {x: ix, y: iy};
-            closestDistanceSquared = dist;
-        }
+		const lineToPointVector = subtract(linePoint, line.p1);
+		const t = dotProduct(perp, lineToPointVector) / denom;
+		if (t < 0 || t > 1) {
+			continue;
+		}
+		const ix = line.p1.x + t * segmentVector.x;
+		const iy = line.p1.y + t * segmentVector.y;
+		const dist = Math.pow(linePoint.x - ix, 2) + Math.pow(linePoint.y - iy, 2);
+		if (dist < closestDistanceSquared) {
+			closestIntersectionPoint = { x: ix, y: iy };
+			closestDistanceSquared = dist;
+		}
 	}
 
 	return closestIntersectionPoint;

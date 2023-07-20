@@ -6,10 +6,10 @@
 	export let form: Actions;
 </script>
 
-<div transition:fly={{ y: -50 }} class="container login-modal">
+<div transition:fly|global={{ y: -50 }} class="container login-modal">
 	<h1 style="text-align:center" class="mt-3 mb-3">TrailView<br />Admin Login</h1>
 	{#if form}
-		<div transition:slide class="alert alert-danger">{form.message ?? 'Invalid'}</div>
+		<div transition:slide|global class="alert alert-danger">{form.message ?? 'Invalid'}</div>
 	{/if}
 	<form action="?/login" method="POST" use:enhance>
 		<label class="" for="username_input">Username</label>

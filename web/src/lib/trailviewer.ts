@@ -148,12 +148,23 @@ interface NavArrowInfo {
 	yaw: number;
 }
 
-export interface TrailViewer {
+interface ImageData {
+	id: string;
+	pitchCorrection: number;
+	bearing: number;
+	longitude: number;
+	latitude: number;
+	flipped: boolean;
+	visibility: boolean;
+	sequenceId: number;
+}
+
+export interface TrailViewerEvents {
 	on(event: 'image-change', listener: (image: Image) => void): void;
 	on(event: 'init-done', listener: () => void): void;
 }
 
-export class TrailViewer {
+export class TrailViewer implements TrailViewerEvents {
 	private _options: TrailViewerOptions = defaultOptions;
 	private _panViewer: PannellumViewer | undefined;
 	private _geo = { latitude: 0, longitude: 0 };
@@ -178,18 +189,7 @@ export class TrailViewer {
 		new: { latitude: number; longitude: number };
 	}[] = [];
 
-	public allImageData:
-		| {
-				id: string;
-				pitchCorrection: number;
-				bearing: number;
-				longitude: number;
-				latitude: number;
-				flipped: boolean;
-				visibility: boolean;
-				sequenceId: number;
-		  }[]
-		| undefined;
+	public allImageData: ImageData[] | undefined;
 
 	public constructor(options: TrailViewerOptions = defaultOptions) {
 		this._emitter = new EventEmitter();
@@ -404,7 +404,6 @@ export class TrailViewer {
 						imageId: image.id,
 						new: { latitude: loc.lat, longitude: loc.lng }
 					});
-					console.log(marker.getLngLat());
 				});
 				this._editMarkers.push(marker);
 			}

@@ -70,7 +70,7 @@
 	<div class="carousel">
 		{#if showPrevButton}
 			<button
-				transition:scale|local
+				transition:scale
 				on:click={carouselPrev}
 				type="button"
 				class="carousel-button carousel-prev"
@@ -79,7 +79,7 @@
 		{/if}
 		{#if showNextButton}
 			<button
-				transition:scale|local
+				transition:scale
 				on:click={carouselNext}
 				type="button"
 				class="carousel-button carousel-next"
@@ -159,7 +159,9 @@
 		border: none;
 		border-radius: 50%;
 		background-color: rgb(106, 176, 62);
-		box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+		box-shadow:
+			rgba(0, 0, 0, 0.3) 0px 19px 38px,
+			rgba(0, 0, 0, 0.22) 0px 15px 12px;
 
 		transition: background-color 0.2s;
 		&:hover {
@@ -204,9 +206,13 @@
 		left: 10px;
 		font-family: 'Myriad Pro Condensed';
 		z-index: 1;
-		text-shadow: -6px -6px 3px rgba(35, 34, 34, 0.8), -3px -3px 3px rgba(35, 34, 34, 0.8),
-			1px 1px 1px rgba(35, 34, 34, 0.8), 3px 3px 3px rgba(35, 34, 34, 0.8),
-			6px 6px 6px rgba(35, 34, 34, 0.8), 9px 9px 9px rgba(35, 34, 34, 0.8);
+		text-shadow:
+			-6px -6px 3px rgba(35, 34, 34, 0.8),
+			-3px -3px 3px rgba(35, 34, 34, 0.8),
+			1px 1px 1px rgba(35, 34, 34, 0.8),
+			3px 3px 3px rgba(35, 34, 34, 0.8),
+			6px 6px 6px rgba(35, 34, 34, 0.8),
+			9px 9px 9px rgba(35, 34, 34, 0.8);
 		color: rgb(255, 255, 255);
 		font-size: 24px;
 	}

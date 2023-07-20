@@ -19,7 +19,7 @@
 
 {#if $page.form && dismissed === false}
 	<div
-		transition:slide|local
+		transition:slide
 		class={`mt-2 mb-2 alert alert-dismissible alert-${success ? 'success' : 'danger'}`}
 	>
 		{success ? 'Success' : $page.form.message ?? 'Unknown error'}

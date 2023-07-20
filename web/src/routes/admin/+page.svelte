@@ -109,7 +109,6 @@
 		const id = data.mapsApi.trails?.find((t) => {
 			return t.id === sequence?.mapsApiTrailId;
 		});
-		console.log(id?.id);
 		if (id !== undefined) {
 			return id.id;
 		} else {

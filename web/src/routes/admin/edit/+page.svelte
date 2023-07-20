@@ -8,14 +8,9 @@
 	import type { PageData } from './$types';
 	import urlJoin from 'url-join';
 	import { z } from 'zod';
-	import { closestIntersection, degreeToVector, type Line2, type Vec2 } from './icp';
+	import { closestIntersection, degreeToVector, type Line2 } from './icp';
 
 	export let data: PageData;
-
-	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
-	let pitchCorrection = 0;
-	let flippedValue: boolean;
-	let currentImage: Image | undefined;
 
 	let trailviewer: TrailViewer | undefined;
 	async function createTrailViewer() {
@@ -34,13 +29,6 @@
 				newUrl.searchParams.set('i', image.id);
 				goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
 			}
-			currentImage = image;
-			flippedValue = image.flipped;
-			pitchCorrection = image.pitchCorrection;
-			const sequence = data.sequences.find((sequence) => {
-				return sequence.id === image.sequenceId;
-			});
-			currentSequence = sequence;
 		});
 	}
 
@@ -51,17 +39,6 @@
 	onDestroy(() => {
 		trailviewer?.destroy();
 	});
-
-	function mapsApiTrailSelectValue(sequence: typeof currentSequence): number | 'unassigned' {
-		const id = data.mapsApi.trails?.find((t) => {
-			return t.id === sequence?.mapsApiTrailId;
-		});
-		if (id !== undefined) {
-			return id.id;
-		} else {
-			return 'unassigned';
-		}
-	}
 
 	const mapsApiTrailGeometryRes = z.union([
 		z.object({
@@ -95,7 +72,6 @@
 			return;
 		}
 		const resData: unknown = await res.json();
-		console.log(resData);
 		const data = mapsApiTrailGeometryRes.safeParse(resData);
 		if (data.success !== true) {
 			console.error(data.error.message);
@@ -121,7 +97,7 @@
 		if (trailviewer !== undefined && trailviewer.map !== undefined) {
 			trailviewer.map.addSource('mapsApiTrailSource', {
 				type: 'geojson',
-				data: data.data.data.geom_geojson.data as any
+				data: data.data.data.geom_geojson.data
 			});
 			trailviewer.map.addLayer({
 				id: 'mapsApiTrail',
@@ -155,7 +131,6 @@
 			return mapBounds.contains([i.longitude, i.latitude]);
 		});
 		for (const image of imagesInBounds) {
-			console.log(image.bearing);
 			let dir = degreeToVector(image.bearing);
 			dir = { x: -dir.y, y: dir.x };
 			const correction = closestIntersection(
