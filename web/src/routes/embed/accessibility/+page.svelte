@@ -6,6 +6,7 @@
 	import type { PageData } from './$types';
 	import type { TrailViewer } from '@cmparks/trailviewer';
 	import InfoModal, { type InfoModalOptions } from './InfoModal.svelte';
+	import InfoPopup from './InfoPopup.svelte';
 
 	export let data: PageData;
 
@@ -57,6 +58,8 @@
 	let infoModalOptions: InfoModalOptions = { title: data.accessibleTrails[0].displayName };
 	let infoModalHtml: string = data.accessibleTrails[0].infoHtml;
 </script>
+
+<InfoPopup />
 
 <div class="container">
 	<div class="viewer-container">
