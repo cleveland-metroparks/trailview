@@ -22,16 +22,16 @@ export function degreeToVector(degrees: number): Vec2 {
 }
 
 export function closestIntersection(
-	infiniteLinePoint: Vec2,
-	infiniteLineVector: Vec2,
-	lines: Line2[]
+	linePoint: Vec2,
+	lineVec: Vec2,
+	segments: Line2[]
 ): Vec2 | null {
 	let closestIntersectionPoint: Vec2 | null = null;
 	let closestDistanceSquared = Infinity;
 
-	const perp = { x: -infiniteLineVector.y, y: infiniteLineVector.x }; // Rotate vector by 90 degrees to get the perpendicular direction
+	const perp = { x: -lineVec.y, y: lineVec.x }; // Rotate vector by 90 degrees to get the perpendicular direction
 
-	for (const line of lines) {
+	for (const line of segments) {
         const segmentVector = subtract(line.p2, line.p1);
 
         const denom = dotProduct(perp, segmentVector);
@@ -39,14 +39,14 @@ export function closestIntersection(
             continue;
         }
 
-        const lineToPointVector = subtract(infiniteLinePoint, line.p1);
+        const lineToPointVector = subtract(linePoint, line.p1);
         const t = dotProduct(perp, lineToPointVector) / denom;
         if (t < 0 || t > 1) {
             continue;
         }
         const ix = line.p1.x + t * segmentVector.x;
         const iy = line.p1.y + t * segmentVector.y;
-        const dist = Math.pow(infiniteLinePoint.x - ix, 2) + Math.pow(infiniteLinePoint.y - iy, 2);
+        const dist = Math.pow(linePoint.x - ix, 2) + Math.pow(linePoint.y - iy, 2);
         if (dist < closestDistanceSquared) {
             closestIntersectionPoint = {x: ix, y: iy};
             closestDistanceSquared = dist;
