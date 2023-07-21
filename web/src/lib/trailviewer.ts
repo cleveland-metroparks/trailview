@@ -162,6 +162,7 @@ interface ImageData {
 export interface TrailViewerEvents {
 	on(event: 'image-change', listener: (image: Image) => void): void;
 	on(event: 'init-done', listener: () => void): void;
+	on(event: 'edit', listener: () => void): void;
 }
 
 export class TrailViewer implements TrailViewerEvents {
@@ -184,7 +185,7 @@ export class TrailViewer implements TrailViewerEvents {
 	private _neighbors: Neighbor[] = [];
 	private _pitchCorrectionOverride: number | undefined;
 	private _editMarkers: mapboxgl.Marker[] = [];
-	private _editList: {
+	public editList: {
 		imageId: string;
 		new: { latitude: number; longitude: number };
 	}[] = [];
@@ -361,7 +362,7 @@ export class TrailViewer implements TrailViewerEvents {
 		});
 	}
 
-	private _updateEditMarkers() {
+	public _updateEditMarkers() {
 		if (this.map === undefined || this.allImageData === undefined) {
 			return;
 		}
@@ -373,7 +374,7 @@ export class TrailViewer implements TrailViewerEvents {
 			for (const image of this.allImageData) {
 				if (!bounds.contains([image.longitude, image.latitude])) {
 					if (
-						this._editList.find((e) => {
+						this.editList.find((e) => {
 							return e.imageId === image.id && bounds.contains([e.new.longitude, e.new.latitude]);
 						}) === undefined
 					) {
@@ -386,7 +387,7 @@ export class TrailViewer implements TrailViewerEvents {
 					this.goToImageID(image.id);
 				});
 				let markerLoc: [number, number] = [image.longitude, image.latitude];
-				const lastEdit = this._editList.findLast((e) => {
+				const lastEdit = this.editList.findLast((e) => {
 					return e.imageId === image.id;
 				});
 				if (lastEdit !== undefined) {
@@ -400,10 +401,11 @@ export class TrailViewer implements TrailViewerEvents {
 					.addTo(this.map);
 				marker.on('dragend', () => {
 					const loc = marker.getLngLat();
-					this._editList.push({
+					this.editList.push({
 						imageId: image.id,
 						new: { latitude: loc.lat, longitude: loc.lng }
 					});
+					this._emitter.emit('edit');
 				});
 				this._editMarkers.push(marker);
 			}
@@ -411,7 +413,8 @@ export class TrailViewer implements TrailViewerEvents {
 	}
 
 	public pushEdit(imageId: string, latitude: number, longitude: number): void {
-		this._editList.push({ imageId: imageId, new: { latitude, longitude } });
+		this.editList.push({ imageId: imageId, new: { latitude, longitude } });
+		this._emitter.emit('edit');
 	}
 
 	private _createMapMarker() {
@@ -782,7 +785,7 @@ export class TrailViewer implements TrailViewerEvents {
 
 		if (this.map !== undefined && this._mapMarker !== undefined) {
 			let markerLoc: [number, number] = [this._geo.longitude, this._geo.latitude];
-			const lastEdit = this._editList.findLast((e) => {
+			const lastEdit = this.editList.findLast((e) => {
 				return e.imageId === img;
 			});
 			if (lastEdit !== undefined) {
@@ -845,23 +848,24 @@ export class TrailViewer implements TrailViewerEvents {
 
 	public undoEdit() {
 		if (this.map !== undefined && this.map.getZoom() > 17) {
-			if (this._editList.length !== 0) {
-				this._editList.pop();
+			if (this.editList.length !== 0) {
+				this.editList.pop();
 			}
 			this._updateEditMarkers();
 		}
+		this._emitter.emit('edit');
 	}
 
 	public async submitEdits() {
-		if (this._editList.length === 0) {
+		if (this.editList.length === 0) {
 			return;
 		}
 		const latestEdits = new Map<string, { latitude: number; longitude: number }>();
-		for (let i = this._editList.length - 1; i >= 0; --i) {
-			if (latestEdits.has(this._editList[i].imageId)) {
+		for (let i = this.editList.length - 1; i >= 0; --i) {
+			if (latestEdits.has(this.editList[i].imageId)) {
 				continue;
 			}
-			latestEdits.set(this._editList[i].imageId, this._editList[i].new);
+			latestEdits.set(this.editList[i].imageId, this.editList[i].new);
 		}
 		const patchData: PatchRequestType = { data: [] };
 		Array.from(latestEdits.entries()).forEach((edit) => {
@@ -875,7 +879,7 @@ export class TrailViewer implements TrailViewerEvents {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(patchData)
 		});
-		this._editList = [];
+		this.editList = [];
 	}
 
 	public getImageGeo(): { latitude: number; longitude: number } {

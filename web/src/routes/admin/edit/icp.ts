@@ -1,3 +1,7 @@
+import CheapRuler from 'cheap-ruler';
+
+const ruler = new CheapRuler(41, 'meters');
+
 export type Vec2 = {
 	x: number;
 	y: number;
@@ -24,7 +28,8 @@ export function degreeToVector(degrees: number): Vec2 {
 export function closestIntersection(
 	linePoint: Vec2,
 	lineVec: Vec2,
-	segments: Line2[]
+	segments: Line2[],
+	limitRangeMeters: number | undefined = undefined
 ): Vec2 | null {
 	let closestIntersectionPoint: Vec2 | null = null;
 	let closestDistanceSquared = Infinity;
@@ -48,6 +53,12 @@ export function closestIntersection(
 		const iy = line.p1.y + t * segmentVector.y;
 		const dist = Math.pow(linePoint.x - ix, 2) + Math.pow(linePoint.y - iy, 2);
 		if (dist < closestDistanceSquared) {
+			if (
+				limitRangeMeters !== undefined &&
+				ruler.distance([linePoint.x, linePoint.y], [ix, iy]) > limitRangeMeters
+			) {
+				continue;
+			}
 			closestIntersectionPoint = { x: ix, y: iy };
 			closestDistanceSquared = dist;
 		}

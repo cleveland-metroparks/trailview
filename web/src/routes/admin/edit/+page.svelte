@@ -9,8 +9,12 @@
 	import urlJoin from 'url-join';
 	import { z } from 'zod';
 	import { closestIntersection, degreeToVector, type Line2 } from './icp';
+	import type { MultiLineString } from 'geojson';
+	import type { GeoJSONSource } from 'mapbox-gl';
 
 	export let data: PageData;
+
+	let listenForEdits = true;
 
 	let trailviewer: TrailViewer | undefined;
 	async function createTrailViewer() {
@@ -28,6 +32,11 @@
 				const newUrl = $page.url;
 				newUrl.searchParams.set('i', image.id);
 				goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
+			}
+		});
+		trailviewer.on('edit', () => {
+			if (listenForEdits === true) {
+				updateEditLines();
 			}
 		});
 	}
@@ -60,6 +69,7 @@
 		})
 	]);
 
+	let currentDrawnTrail: string | undefined;
 	let currentApiTrailGeoJson: Line2[] | undefined;
 	async function drawTrail() {
 		if (mapsApiTrailValue === 'unassigned') {
@@ -95,27 +105,100 @@
 		}
 
 		if (trailviewer !== undefined && trailviewer.map !== undefined) {
-			trailviewer.map.addSource('mapsApiTrailSource', {
+			if (currentDrawnTrail !== undefined) {
+				(trailviewer.map.getSource('mapsApiTrailSource') as GeoJSONSource).setData(
+					data.data.data.geom_geojson.data as any
+				);
+			} else {
+				trailviewer.map.addSource('mapsApiTrailSource', {
+					type: 'geojson',
+					data: data.data.data.geom_geojson.data
+				});
+				trailviewer.map.addLayer({
+					id: 'mapsApiTrail',
+					type: 'line',
+					source: 'mapsApiTrailSource',
+					layout: {
+						'line-join': 'round',
+						'line-cap': 'round'
+					},
+					paint: {
+						'line-color': '#888',
+						'line-width': 8
+					}
+				});
+			}
+			currentDrawnTrail = mapsApiTrailValue.toString();
+
+			if (data.data.data.geom_geojson.data.coordinates.length !== 0) {
+				trailviewer.map.easeTo({
+					center: [
+						data.data.data.geom_geojson.data.coordinates[0][0][0],
+						data.data.data.geom_geojson.data.coordinates[0][0][1]
+					]
+				});
+			}
+		}
+	}
+
+	let mapsApiTrailValue: number | 'unassigned' = 'unassigned';
+
+	let mapHasEditLayer = false;
+
+	function updateEditLines() {
+		if (
+			trailviewer === undefined ||
+			trailviewer.map === undefined ||
+			trailviewer.allImageData === undefined
+		) {
+			return;
+		}
+		const geoJsonData: MultiLineString = {
+			type: 'MultiLineString',
+			coordinates: []
+		};
+
+		const updated = new Set<string>();
+		for (let i = trailviewer.editList.length - 1; i >= 0; --i) {
+			const edit = trailviewer.editList[i];
+			if (updated.has(edit.imageId)) {
+				continue;
+			}
+			updated.add(edit.imageId);
+			const image = trailviewer.allImageData.find((im) => im.id === edit.imageId);
+			if (image === undefined) {
+				console.warn('Unable to find image Id');
+				continue;
+			}
+			geoJsonData.coordinates.push([
+				[image.longitude, image.latitude],
+				[edit.new.longitude, edit.new.latitude]
+			]);
+		}
+
+		if (mapHasEditLayer === true) {
+			(trailviewer.map.getSource('editLinesSource') as GeoJSONSource).setData(geoJsonData as any);
+		} else {
+			trailviewer.map.addSource('editLinesSource', {
 				type: 'geojson',
-				data: data.data.data.geom_geojson.data
+				data: geoJsonData
 			});
 			trailviewer.map.addLayer({
-				id: 'mapsApiTrail',
+				id: 'editLines',
 				type: 'line',
-				source: 'mapsApiTrailSource',
+				source: 'editLinesSource',
 				layout: {
 					'line-join': 'round',
 					'line-cap': 'round'
 				},
 				paint: {
-					'line-color': '#888',
-					'line-width': 8
+					'line-color': '#eb4034',
+					'line-width': 2
 				}
 			});
+			mapHasEditLayer = true;
 		}
 	}
-
-	let mapsApiTrailValue: number | 'unassigned' = 'unassigned';
 
 	function alignImages() {
 		if (
@@ -136,23 +219,44 @@
 			const correction = closestIntersection(
 				{ x: image.latitude, y: image.longitude },
 				dir,
-				currentApiTrailGeoJson
+				currentApiTrailGeoJson,
+				rangeLimit
 			);
+			listenForEdits = false;
 			if (correction !== null) {
 				trailviewer.pushEdit(image.id, correction.x, correction.y);
 			}
+			listenForEdits = true;
+		}
+		updateEditLines();
+		trailviewer._updateEditMarkers();
+	}
+
+	function onKeyPress(event: KeyboardEvent) {
+		if (event.key === 'a') {
+			alignImages();
+		} else if (event.key === 'z') {
+			undoEdit();
 		}
 	}
+
+	function undoEdit() {
+		trailviewer?.undoEdit();
+	}
+
+	let rangeLimit: number = 10;
 </script>
 
-<div class="row">
-	<div class="col col-md-10">
+<svelte:window on:keypress={onKeyPress} />
+
+<div class="row mb-5">
+	<div class="col-12 col-md-9">
 		<div id="viewer-container">
 			<div id="trailview_panorama" />
 		</div>
 		<div id="trailview_map" />
 	</div>
-	<div class="col col-md-2">
+	<div class="col-12 col-md-3">
 		<h4>Maps API Trails</h4>
 		{#if data.mapsApi.trails !== null}
 			<select
@@ -170,15 +274,35 @@
 			<div class="alert alert-danger">Failed to fetch data</div>
 		{/if}
 		<div class="row mt-2" />
-		<button on:click={drawTrail} type="button" class="btn btn-primary">Draw</button>
-		<button on:click={alignImages} type="button" class="btn btn-warning">Align</button>
+		<h4>Actions</h4>
+		<div class="flex-row d-flex gap-2 flex-wrap">
+			<div class="col-auto">
+				<button on:click={drawTrail} type="button" class="btn btn-primary">Draw Trail</button>
+			</div>
+			<div class="col-auto">
+				<button on:click={alignImages} type="button" class="btn btn-warning">Align (a)</button>
+			</div>
+			<div class="col-auto">
+				<button on:click={undoEdit} type="button" class="btn btn-warning">Undo (z)</button>
+			</div>
+		</div>
+		<label for="limitRange" class="mt-3 form-label">Limit Align Range (meters) - {rangeLimit}</label
+		>
+		<input
+			bind:value={rangeLimit}
+			type="range"
+			class="form-range"
+			id="limitRange"
+			min="1"
+			max="50"
+		/>
 	</div>
 </div>
 
 <style>
 	#viewer-container {
 		width: 100%;
-		height: 450px;
+		height: 350px;
 	}
 
 	#trailview_panorama {
