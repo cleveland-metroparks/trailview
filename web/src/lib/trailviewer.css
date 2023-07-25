@@ -1198,3 +1198,7 @@ div.pnlm-tooltip:hover span:after {
 	z-index: 11;
 	cursor: pointer;
 }
+
+.trailview-draggable-private {
+	background: radial-gradient(orange, transparent);
+}

@@ -5,9 +5,14 @@
 
 	let dismissed = false;
 	let success = false;
+	let message: string | undefined;
+	let manualPopup = false;
 
 	$: if ($page.form) {
+		manualPopup = false;
 		dismissed = false;
+		success = $page.form.success;
+		message = $page.form.message;
 	}
 
 	afterUpdate(() => {
@@ -15,14 +20,21 @@
 			success = $page.form.success;
 		}
 	});
+
+	export function popup(data: { success: boolean; message?: string }) {
+		dismissed = false;
+		manualPopup = true;
+		success = data.success;
+		message = data.message;
+	}
 </script>
 
-{#if $page.form && dismissed === false}
+{#if ($page.form && dismissed === false) || (manualPopup === true && dismissed === false)}
 	<div
-		transition:slide
+		transition:slide|local
 		class={`mt-2 mb-2 alert alert-dismissible alert-${success ? 'success' : 'danger'}`}
 	>
-		{success ? 'Success' : $page.form.message ?? 'Unknown error'}
+		{success ? 'Success' : message ?? 'Unknown error'}
 		<button
 			on:click={() => {
 				dismissed = true;

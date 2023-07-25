@@ -163,6 +163,7 @@ export interface TrailViewerEvents {
 	on(event: 'image-change', listener: (image: Image) => void): void;
 	on(event: 'init-done', listener: () => void): void;
 	on(event: 'edit', listener: () => void): void;
+	on(event: 'map-move-end', listener: (bounds: mapboxgl.LngLatBounds) => void): void;
 }
 
 export class TrailViewer implements TrailViewerEvents {
@@ -321,6 +322,7 @@ export class TrailViewer implements TrailViewerEvents {
 
 		this.map.on('moveend', () => {
 			this._updateEditMarkers();
+			this._emitter.emit('map-move-end', this.map!.getBounds());
 		});
 
 		this.map.on('mouseenter', 'dots', () => {
@@ -383,6 +385,9 @@ export class TrailViewer implements TrailViewerEvents {
 				}
 				const element = document.createElement('div');
 				element.classList.add('trailview-draggable');
+				if (image.visibility === false) {
+					element.classList.add('trailview-draggable-private');
+				}
 				element.addEventListener('click', () => {
 					this.goToImageID(image.id);
 				});

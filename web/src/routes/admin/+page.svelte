@@ -9,6 +9,7 @@
 	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import FormAlert from '$lib/FormAlert.svelte';
+	import ConfirmModal from '$lib/ConfirmModal.svelte';
 
 	export let data: PageData;
 	export let form: Actions;
@@ -116,13 +117,68 @@
 		}
 	}
 
+	async function setViewVisibility(visible: boolean) {
+		if (
+			trailviewer === undefined ||
+			trailviewer.allImageData === undefined ||
+			trailviewer.map === undefined
+		) {
+			return;
+		}
+		if (
+			(await confirmModal.prompt(
+				`Are you sure you want all set all images in the current view on the map to be ${
+					visible ? 'public' : 'private'
+				}?`,
+				`Confirm Set ${visible ? 'Public' : 'Private'}`
+			)) !== true
+		) {
+			return;
+		}
+		if (visible) {
+			showPublicViewSpinner = true;
+		} else {
+			showPrivateViewSpinner = true;
+		}
+
+		const bounds = trailviewer.map.getBounds();
+		const imageIdList: string[] = [];
+		for (const image of trailviewer.allImageData) {
+			if (bounds.contains([image.longitude, image.latitude])) {
+				imageIdList.push(image.id);
+			}
+		}
+		const data = {
+			imageIds: imageIdList
+		};
+		const res = await fetch(visible === true ? '/admin/edit/public' : '/admin/edit/private', {
+			method: 'PATCH',
+			body: JSON.stringify(data)
+		});
+		const resData = await res.json();
+		formAlert.popup(resData);
+		if (visible) {
+			showPublicViewSpinner = false;
+		} else {
+			showPrivateViewSpinner = false;
+		}
+		refreshEverything();
+	}
+
 	let showCacheSpinner = false;
 	let showSequenceSpinner = false;
 	let showImageSpinner = false;
 	let showEditSpinner = false;
+	let showPrivateViewSpinner = false;
+	let showPublicViewSpinner = false;
+
+	let formAlert: FormAlert;
+	let confirmModal: ConfirmModal;
 </script>
 
 <svelte:window on:keypress={handleKeypress} />
+
+<ConfirmModal bind:this={confirmModal} />
 
 <div class="row mb-5">
 	<div class="col-lg-8">
@@ -132,7 +188,7 @@
 		<div id="trailview_map" />
 	</div>
 	<div class="col-lg-4">
-		<FormAlert />
+		<FormAlert bind:this={formAlert} />
 		<a href="/admin/import" class="btn btn-outline-success">Import</a>
 		<a href="/admin/status" class="btn btn-outline-warning">Sequence List</a>
 		<form
@@ -268,7 +324,6 @@
 
 		<h4 class="mt-3">Image Options</h4>
 		<form
-			action="?/image"
 			method="POST"
 			use:enhance={() => {
 				showImageSpinner = true;
@@ -294,9 +349,29 @@
 				/>
 				<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
 			</div>
-			<button type="submit" class="mt-2 btn btn-primary"
-				>{#if showImageSpinner}<span class="spinner-border spinner-border-sm" />{/if}Set</button
-			>
+			<div class="d-flex flex-row mt-2 gap-2">
+				<button formaction="?/image" type="submit" class="btn btn-primary"
+					>{#if showImageSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set</button
+				>
+				<button
+					on:click={async () => {
+						await setViewVisibility(false);
+					}}
+					type="button"
+					class="btn btn-warning"
+					>{#if showPrivateViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all
+					in view private</button
+				>
+				<button
+					on:click={async () => {
+						await setViewVisibility(true);
+					}}
+					type="button"
+					class="btn btn-warning"
+					>{#if showPublicViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all
+					in view public</button
+				>
+			</div>
 		</form>
 		<hr />
 		<h4 class="mt-3">Image Move Options</h4>
