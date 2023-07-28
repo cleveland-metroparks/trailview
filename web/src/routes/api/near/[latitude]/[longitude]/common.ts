@@ -17,7 +17,7 @@ export async function getNearestImage(
 	imageData: Image[],
 	latitude: number,
 	longitude: number
-): Promise<Image | undefined> {
+): Promise<(Image & { distance: number }) | undefined> {
 	let nearestDistance = Number.MAX_VALUE;
 	let nearestImage: Image | null = null;
 	for (let i = 0; i < imageData.length; i++) {
@@ -31,5 +31,5 @@ export async function getNearestImage(
 	if (nearestImage === null) {
 		return undefined;
 	}
-	return nearestImage;
+	return { ...nearestImage, distance: nearestDistance };
 }
