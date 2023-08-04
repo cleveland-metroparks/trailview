@@ -40,8 +40,8 @@ export const load = (async ({ fetch }) => {
 		},
 		{
 			displayName: 'Lower Edgewater APT Loop',
-			sequenceIds: [2],
-			initImgId: 'b29c6295453340fb98028680ca54dac0',
+			sequenceIds: [36],
+			initImgId: 'cfcb74567f6f44c28821b030acface0e',
 			infoHtml: await (
 				await fetch('/embed/accessibility/info/lower-edgewater-apt-loop.html')
 			).text(),
