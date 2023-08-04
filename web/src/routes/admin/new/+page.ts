@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { error } from '@sveltejs/kit';
 import { fetchTrails } from '$lib/mapsApi';
 
-export const load = (async ({ fetch }) => {
+export const load = (async ({ data, fetch }) => {
 	const sequencesDataType = z.array(
 		z.object({
 			name: z.string(),
@@ -13,11 +13,11 @@ export const load = (async ({ fetch }) => {
 	);
 
 	const res = await fetch('/api/sequences', { method: 'GET' });
-	const data = await res.json();
-	if (!data.success) {
+	const seqData = await res.json();
+	if (!seqData.success) {
 		throw error(500, 'Unable to fetch data from API');
 	}
-	const sequences = sequencesDataType.safeParse(data.data);
+	const sequences = sequencesDataType.safeParse(seqData.data);
 	if (!sequences.success) {
 		throw error(500, `Invalid data: ${sequences.error.message}`);
 	}
@@ -27,6 +27,7 @@ export const load = (async ({ fetch }) => {
 		console.error(mapsApiTrails.message);
 	}
 	return {
+		...data,
 		sequences: sequences.data,
 		mapsApi: { trails: mapsApiTrails instanceof Error ? null : mapsApiTrails }
 	};

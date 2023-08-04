@@ -6,6 +6,10 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load = (async ({ cookies }) => {
 	await redirectIfSessionInvalid('/login', cookies);
+
+	const groups = await db.group.findMany({ select: { id: true, name: true } });
+
+	return { groups };
 }) satisfies PageServerLoad;
 
 export const actions = {
@@ -77,6 +81,22 @@ export const actions = {
 		}
 		refreshImageData(true);
 		refreshGeoJsonData(true);
+		return { success: true };
+	},
+	'create-group': async ({ cookies, request }) => {
+		if ((await isSessionValid(cookies)) !== true) {
+			return { success: false, message: 'Invalid session' };
+		}
+		const form = await request.formData();
+		const formName = form.get('name');
+		if (formName === null) {
+			return { success: false, message: 'Incomplete form data' };
+		}
+		const name = formName.toString().trim();
+		if ((await db.group.count({ where: { name: name } })) !== 0) {
+			return { success: false, message: 'Name already taken' };
+		}
+		await db.group.create({ data: { name: name } });
 		return { success: true };
 	}
 } satisfies Actions;

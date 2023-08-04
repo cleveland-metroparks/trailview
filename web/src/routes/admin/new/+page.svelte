@@ -115,7 +115,7 @@
 		refreshEverything();
 	}
 
-	let inspectorPages = ['Sequence', 'Image', 'Move'] as const;
+	let inspectorPages = ['Sequence', 'Image', 'Group', 'Move'] as const;
 	let inspectorPage: (typeof inspectorPages)[number] = 'Sequence';
 
 	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
@@ -406,6 +406,21 @@
 						>
 					</div>
 				</form>
+			{:else if inspectorPage === 'Group'}
+				<label for="groupSelect">Create Group</label>
+				<form action="?/create-group" method="POST" use:enhance>
+					<div class="input-group input-group-sm">
+						<input name="name" class="form-control" type="text" placeholder="New Name" required />
+						<button class="btn btn-sm btn-success">Create</button>
+					</div>
+				</form>
+				<label class="mt-1" for="groupSelect">Select Group</label>
+				<select class="form-select form-select-sm" id="groupSelect">
+					<option value="select">Select</option>
+					{#each data.groups as group}
+						<option value={`group_${group.id}`}>{group.name}</option>
+					{/each}
+				</select>
 			{:else if inspectorPage === 'Move'}
 				<button
 					on:click={() => {
@@ -439,7 +454,7 @@
 		bottom: 8px;
 		width: 400px;
 		height: 300px;
-		z-index: 10;
+		z-index: 11;
 		overflow: hidden;
 		border-radius: 5px;
 		outline-style: solid;
