@@ -21,6 +21,13 @@
 		options.initial = data.accessibleTrails[0].initImgId;
 		options.mapboxKey = PUBLIC_MAPBOX_KEY;
 		options.target = 'viewer';
+		const sequences: number[] = [];
+		for (const t of data.accessibleTrails) {
+			for (const s of t.sequenceIds) {
+				sequences.push(s);
+			}
+		}
+		options.filterSequences = sequences;
 		trailviewer = new trailviewerLib.TrailViewer(options);
 
 		onCarouselScroll();
