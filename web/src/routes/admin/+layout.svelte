@@ -14,6 +14,9 @@
 
 <div class="container">
 	<div style="position:relative">
+		<a style="position:absolute; bottom:0; left:0" href="/admin" class="btn btn-outline-primary"
+			>Home</a
+		>
 		<h1 class="mt-3" style="text-align:center">{$mainHeading}</h1>
 		<button
 			on:click={async () => {

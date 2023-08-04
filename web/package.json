@@ -41,6 +41,7 @@
 		"@cmparks/pannellum": "^2.6.0",
 		"@cmparks/trailviewer": "^0.8.6",
 		"@prisma/client": "^5.1.1",
+		"apexcharts": "^3.41.1",
 		"bootstrap": "^5.3.1",
 		"cheap-ruler": "^3.0.2",
 		"events": "^3.3.0",

@@ -191,6 +191,7 @@
 		<FormAlert bind:this={formAlert} />
 		<a href="/admin/import" class="btn btn-outline-success">Import</a>
 		<a href="/admin/status" class="btn btn-outline-warning">Sequence List</a>
+		<a href="/admin/analytics" class="btn btn-outline-primary">Analytics</a>
 		<form
 			class="mt-2"
 			action="?/refresh"
