@@ -1,0 +1,30 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[Image] ADD [groupId] INT;
+
+-- CreateTable
+CREATE TABLE [dbo].[Group] (
+    [id] INT NOT NULL IDENTITY(1,1),
+    [name] NVARCHAR(1000) NOT NULL,
+    CONSTRAINT [Group_pkey] PRIMARY KEY CLUSTERED ([id]),
+    CONSTRAINT [Group_name_key] UNIQUE NONCLUSTERED ([name])
+);
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Image] ADD CONSTRAINT [Image_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH

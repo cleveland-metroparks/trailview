@@ -48,6 +48,7 @@ model Image {
   sequenceId        Int
   sequence          Sequence    @relation(fields: [sequenceId], references: [id])
   analytics         Analytics[]
+  groups            Group[]
 }
 
 model Sequence {
@@ -59,6 +60,12 @@ model Sequence {
   isPublic       Boolean? @default(true)
   images         Image[]
   mapsApiTrailId Int?
+}
+
+model Group {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  images Image[]
 }
 
 model Analytics {
