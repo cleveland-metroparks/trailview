@@ -69,7 +69,7 @@ model Group {
 }
 
 model Analytics {
-  id      Int      @id @default(autoincrement())
+  id      BigInt   @id @default(autoincrement())
   image   Image    @relation(fields: [imageId], references: [id])
   imageId String   @db.VarChar(50)
   date    DateTime
