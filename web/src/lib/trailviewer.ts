@@ -164,6 +164,7 @@ export interface TrailViewerEvents {
 	on(event: 'init-done', listener: () => void): void;
 	on(event: 'edit', listener: () => void): void;
 	on(event: 'map-move-end', listener: (bounds: mapboxgl.LngLatBounds) => void): void;
+	on(event: 'map-load', listener: () => void): void;
 }
 
 export class TrailViewer implements TrailViewerEvents {
@@ -318,6 +319,7 @@ export class TrailViewer implements TrailViewerEvents {
 
 		this.map.on('load', () => {
 			this._createMapLayer();
+			this._emitter.emit('map-load');
 		});
 
 		this.map.on('moveend', () => {

@@ -93,10 +93,37 @@ export const actions = {
 			return { success: false, message: 'Incomplete form data' };
 		}
 		const name = formName.toString().trim();
+		if (name === '') {
+			return { success: false, message: 'Empty name' };
+		}
 		if ((await db.group.count({ where: { name: name } })) !== 0) {
 			return { success: false, message: 'Name already taken' };
 		}
 		await db.group.create({ data: { name: name } });
+		return { success: true };
+	},
+	'delete-group': async ({ cookies, request }) => {
+		if ((await isSessionValid(cookies)) !== true) {
+			return { success: false, message: 'Invalid session' };
+		}
+		const form = await request.formData();
+		const formGroupId = form.get('groupId');
+		if (formGroupId === null) {
+			return { success: false, message: 'Incomplete form data' };
+		}
+		const groupId = parseInt(formGroupId.toString());
+		if (isNaN(groupId)) {
+			return { success: false, message: 'Invalid group id' };
+		}
+		try {
+			await db.$queryRaw`
+				DELETE FROM "_ImageGroupRelation"
+				WHERE "A" = ${groupId};`;
+			await db.group.delete({ where: { id: groupId } });
+		} catch (error) {
+			console.error(error);
+			return { success: false, message: 'Database error' };
+		}
 		return { success: true };
 	}
 } satisfies Actions;

@@ -48,7 +48,7 @@ model Image {
   sequenceId        Int
   sequence          Sequence    @relation(fields: [sequenceId], references: [id])
   analytics         Analytics[]
-  groups            Group[]
+  groups            Group[]     @relation("ImageGroupRelation")
 }
 
 model Sequence {
@@ -65,7 +65,7 @@ model Sequence {
 model Group {
   id     Int     @id @default(autoincrement())
   name   String  @unique
-  images Image[]
+  images Image[] @relation("ImageGroupRelation")
 }
 
 model Analytics {
