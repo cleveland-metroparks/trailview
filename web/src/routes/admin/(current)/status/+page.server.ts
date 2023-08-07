@@ -1,7 +1,8 @@
 import { redirectIfSessionInvalid } from '$lib/server/auth.js';
 import { db } from '$lib/server/prisma';
+import type { PageServerLoad } from './$types';
 
-export const load = async ({ cookies }) => {
+export const load = (async ({ cookies }) => {
 	await redirectIfSessionInvalid('/login', cookies);
 	const sequences = await db.sequence.findMany();
 	return {
@@ -15,4 +16,4 @@ export const load = async ({ cookies }) => {
 			return 0;
 		})
 	};
-};
+}) satisfies PageServerLoad;

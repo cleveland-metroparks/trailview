@@ -28,7 +28,15 @@ export const load = (async ({ data, fetch }) => {
 	}
 	return {
 		...data,
-		sequences: sequences.data,
+		sequences: sequences.data.sort((a, b) => {
+			if (a.name < b.name) {
+				return -1;
+			}
+			if (a.name > b.name) {
+				return 1;
+			}
+			return 0;
+		}),
 		mapsApi: { trails: mapsApiTrails instanceof Error ? null : mapsApiTrails }
 	};
 }) satisfies PageLoad;

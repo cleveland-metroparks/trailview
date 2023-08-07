@@ -42,6 +42,26 @@
 		}
 	}
 
+	async function onGoToGroupChange(event: Event) {
+		const groupSelect = event.target as HTMLSelectElement;
+		const selectValue = groupSelect.value;
+		groupSelect.value = 'select';
+		if (selectValue.startsWith('group_')) {
+			const groupId = parseInt(selectValue.split('_')[1]);
+			const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
+			const resData = (await res.json()) as GroupGetResType;
+			if (resData.success === true) {
+				const image = resData.data.images.at(0);
+				if (image !== undefined) {
+					trailviewer?.goToImageID(image.id);
+					inspectorPage = 'Group';
+					selectedGroupId = groupId;
+					drawSelectedGroup();
+				}
+			}
+		}
+	}
+
 	function mapsApiTrailSelectValue(sequence: typeof currentSequence): number | 'unassigned' {
 		const id = data.mapsApi.trails?.find((t) => {
 			return t.id === sequence?.mapsApiTrailId;
@@ -69,6 +89,7 @@
 			});
 			if (image) {
 				trailviewer.goToImageID(image.id);
+				inspectorPage = 'Sequence';
 			}
 		}
 		goToSequenceSelect.value = 'select';
@@ -352,6 +373,16 @@
 				<option class="sequence-option" id={`sequence_${sequence.id}`}>{sequence.name}</option>
 			{/each}
 		</select>
+		<select
+			on:change={onGoToGroupChange}
+			class="col-auto form-select form-select-sm"
+			style="width:210px"
+		>
+			<option value="select">Go To Group</option>
+			{#each data.groups as group}
+				<option value={`group_${group.id}`}>{group.name}</option>
+			{/each}
+		</select>
 	</div>
 	<div class="d-flex flex-row-reverse gap-1">
 		<form
@@ -579,9 +610,6 @@
 					{/each}
 				</select>
 				{#if selectedGroup !== undefined}
-					<button on:click={drawSelectedGroup} class="mt-2 btn btn-sm btn-primary"
-						>Draw on Map</button
-					>
 					<div class="mt-2 d-flex flex-row gap-2 flex-wrap">
 						<button
 							on:click={() => {

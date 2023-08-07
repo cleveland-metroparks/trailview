@@ -7,7 +7,15 @@ import type { Actions, PageServerLoad } from './$types';
 export const load = (async ({ cookies }) => {
 	await redirectIfSessionInvalid('/login', cookies);
 
-	const groups = await db.group.findMany({ select: { id: true, name: true } });
+	const groups = (await db.group.findMany({ select: { id: true, name: true } })).sort((a, b) => {
+		if (a.name < b.name) {
+			return -1;
+		}
+		if (a.name > b.name) {
+			return 1;
+		}
+		return 0;
+	});
 
 	return { groups };
 }) satisfies PageServerLoad;
