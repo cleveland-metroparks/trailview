@@ -338,6 +338,10 @@
 		}
 	});
 
+	function toggleLayout() {
+		layout = layout === 'map' ? 'viewer' : 'map';
+	}
+
 	let goToSequenceSelect: HTMLSelectElement;
 	let confirmModal: ConfirmModal;
 	let formAlert: FormAlert;
@@ -349,6 +353,15 @@
 	let showPrivateViewSpinner = false;
 	let showEditSpinner = false;
 	let showGroupSpinner = false;
+
+	let layout: 'viewer' | 'map' = 'map';
+
+	$: if (layout) {
+		setTimeout(() => {
+			trailviewer?.map?.resize();
+			trailviewer?.centerMarker();
+		}, 0);
+	}
 </script>
 
 <svelte:window on:keypress={handleKeypress} />
@@ -407,10 +420,14 @@
 
 <div class="d-flex flex-row flex-grow-1">
 	<div class="col position-relative">
-		<div id="trailview_map" class="w-100 h-100" />
-		<div class="trailview-viewer-container">
-			<div id="trailview_panorama" />
-		</div>
+		<div id="trailview_map" class={layout === 'map' ? 'main-container' : 'small-container'} />
+		<div
+			id="trailview_panorama"
+			class={layout === 'viewer' ? 'main-container' : 'small-container'}
+		/>
+		<button on:click={toggleLayout} type="button" class="btn btn-sm btn-light expand-btn"
+			><i class="bi bi-arrows-angle-expand"></i></button
+		>
 	</div>
 	<div style="width:350px">
 		<div class="mt-1 mx-2">
@@ -701,7 +718,12 @@
 </div>
 
 <style lang="scss">
-	.trailview-viewer-container {
+	.main-container {
+		width: 100%;
+		height: 100%;
+	}
+
+	.small-container {
 		position: absolute;
 		left: 8px;
 		bottom: 8px;
@@ -713,5 +735,15 @@
 		outline-style: solid;
 		outline-width: 3px;
 		outline-color: rgba(0, 0, 0, 0.4);
+	}
+
+	.expand-btn {
+		position: absolute;
+		left: 370px;
+		bottom: 270px;
+		z-index: 100;
+		border-style: solid;
+		border-width: 2px;
+		border-color: rgba(0, 0, 0, 0.4);
 	}
 </style>

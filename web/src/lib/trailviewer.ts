@@ -366,6 +366,12 @@ export class TrailViewer implements TrailViewerEvents {
 		});
 	}
 
+	public centerMarker() {
+		if (this.map !== undefined && this._mapMarker !== undefined) {
+			this.map.easeTo({ center: this._mapMarker.getLngLat() });
+		}
+	}
+
 	public _updateEditMarkers() {
 		if (this.map === undefined || this.allImageData === undefined) {
 			return;
