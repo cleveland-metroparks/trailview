@@ -28,6 +28,8 @@ export let allImageData:
 
 export let imagePreviews: Map<string, string>;
 
+export let groupData: { A: number; B: string }[] | undefined;
+
 export async function refreshImageData(once: boolean) {
 	const previews = await db.image.findMany({ select: { id: true, shtHash: true } });
 	imagePreviews = new Map();
@@ -59,6 +61,9 @@ export async function refreshImageData(once: boolean) {
 			visibility: true
 		}
 	});
+
+	groupData = await db.$queryRaw`SELECT * FROM "_ImageGroupRelation";`;
+
 	if (once) {
 		return;
 	} else {

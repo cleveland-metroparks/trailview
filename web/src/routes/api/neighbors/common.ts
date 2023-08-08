@@ -1,4 +1,4 @@
-import { imagePreviews } from '$lib/server/dbcache';
+import { groupData, imagePreviews, refreshImageData } from '$lib/server/dbcache';
 import CheapRuler from 'cheap-ruler';
 
 interface Image {
@@ -30,7 +30,8 @@ function customMod(a: number, b: number): number {
 export function getNeighbors(
 	data: Image[],
 	imageId: string,
-	sequencesFilter: number[] | undefined = undefined
+	sequencesFilter: number[] | undefined = undefined,
+	groupsFilter: number[] | undefined = undefined
 ): undefined | Neighbor[] {
 	const image = data.find((image) => {
 		return image.id === imageId;
@@ -38,16 +39,18 @@ export function getNeighbors(
 	if (image === undefined) {
 		return undefined;
 	}
+
+	if (groupData === undefined) {
+		refreshImageData(true);
+		return undefined;
+	}
+
 	const neighbors: (Neighbor | undefined)[] = [];
 	for (let p = 0; p < data.length; p++) {
-		if (data[p].id == image.id) {
+		if (data[p].id === image.id) {
 			continue;
 		}
-		if (sequencesFilter !== undefined) {
-			if (!sequencesFilter.includes(data[p].sequenceId)) {
-				continue;
-			}
-		}
+
 		const distance = ruler.distance(
 			[image.longitude, image.latitude],
 			[data[p].longitude, data[p].latitude]
@@ -77,19 +80,44 @@ export function getNeighbors(
 				}
 			}
 			if (skip == false) {
-				neighbors.push({
-					sequenceId: data[p].sequenceId,
-					id: data[p].id,
-					bearing: data[p].bearing,
-					neighborBearing: bearing,
-					flipped: data[p].flipped,
-					distance: distance,
-					latitude: data[p].latitude,
-					longitude: data[p].longitude,
-					shtHash: imagePreviews.get(data[p].id),
-					pitchCorrection: data[p].pitchCorrection,
-					visibility: data[p].visibility
-				});
+				let filteredBySeq = false;
+				if (sequencesFilter !== undefined) {
+					if (!sequencesFilter.includes(data[p].sequenceId)) {
+						filteredBySeq = true;
+					}
+				}
+
+				let filteredByGroup = groupsFilter === undefined ? false : true;
+				if (groupsFilter !== undefined) {
+					for (const g of groupsFilter) {
+						if (
+							groupData.findIndex((r) => {
+								return r.A === g && r.B === data[p].id;
+							}) !== -1
+						) {
+							filteredByGroup = false;
+							break;
+						}
+					}
+				}
+				if (
+					(groupsFilter !== undefined && filteredByGroup === false) ||
+					(sequencesFilter !== undefined && filteredBySeq === false)
+				) {
+					neighbors.push({
+						sequenceId: data[p].sequenceId,
+						id: data[p].id,
+						bearing: data[p].bearing,
+						neighborBearing: bearing,
+						flipped: data[p].flipped,
+						distance: distance,
+						latitude: data[p].latitude,
+						longitude: data[p].longitude,
+						shtHash: imagePreviews.get(data[p].id),
+						pitchCorrection: data[p].pitchCorrection,
+						visibility: data[p].visibility
+					});
+				}
 			}
 		}
 	}
