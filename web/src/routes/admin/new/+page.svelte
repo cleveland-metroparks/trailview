@@ -627,6 +627,10 @@
 					{/each}
 				</select>
 				{#if selectedGroup !== undefined}
+					<div class="mt-2 input-group input-group-sm">
+						<span class="input-group-text">Group Id</span>
+						<input type="text" class="form-control" readonly value={selectedGroup.id.toString()} />
+					</div>
 					<div class="mt-2 d-flex flex-row gap-2 flex-wrap">
 						<button
 							on:click={() => {
