@@ -101,6 +101,7 @@ export function getNeighbors(
 					}
 				}
 				if (
+					(groupsFilter === undefined && sequencesFilter === undefined) ||
 					(groupsFilter !== undefined && filteredByGroup === false) ||
 					(sequencesFilter !== undefined && filteredBySeq === false)
 				) {

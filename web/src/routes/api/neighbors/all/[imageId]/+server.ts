@@ -11,6 +11,16 @@ export const GET = (async ({ url, params }) => {
 			return parseInt(sequenceId);
 		});
 	}
+
+	const searchParamGroupsFilter = url.searchParams.get('g');
+	let groupsFilter: number[] | undefined = undefined;
+	if (searchParamGroupsFilter !== null) {
+		const filterStrings = searchParamGroupsFilter.split(',');
+		groupsFilter = filterStrings.map((groupId) => {
+			return parseInt(groupId);
+		});
+	}
+
 	if (params.imageId === undefined) {
 		return json({ success: false, message: 'No imageId specified' }, { status: 400 });
 	}
@@ -20,7 +30,7 @@ export const GET = (async ({ url, params }) => {
 	if (allImageData === undefined) {
 		return json({ success: false, message: 'Server error' }, { status: 500 });
 	}
-	const neighbors = getNeighbors(allImageData, params.imageId, sequencesFilter);
+	const neighbors = getNeighbors(allImageData, params.imageId, sequencesFilter, groupsFilter);
 	if (neighbors === undefined) {
 		return json({ success: false, message: 'Invalid image id' }, { status: 404 });
 	}
