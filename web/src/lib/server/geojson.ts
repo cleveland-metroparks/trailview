@@ -58,11 +58,18 @@ export async function refreshGeoJsonData(once = false) {
 			type: 'FeatureCollection',
 			features: []
 		};
-		standardImageData.forEach((image) => {
+		for (const image of standardImageData) {
 			const feature: Feature = {
 				type: 'Feature',
 				properties: {
 					sequenceId: image.sequenceId,
+					groupIds: groupData
+						.filter((g) => {
+							return g.B === image.id;
+						})
+						.map((g) => {
+							return g.A;
+						}),
 					imageID: image.id,
 					visible: image.visibility
 				},
@@ -72,7 +79,7 @@ export async function refreshGeoJsonData(once = false) {
 				}
 			};
 			features.features.push(feature);
-		});
+		}
 		standardTileIndex = geojsonvt(features, {
 			maxZoom: 24, // max zoom to preserve detail on; can't be higher than 24
 			tolerance: 3, // simplification tolerance (higher means simpler)
