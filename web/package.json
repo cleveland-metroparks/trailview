@@ -39,7 +39,7 @@
 	"type": "module",
 	"dependencies": {
 		"@cmparks/pannellum": "^2.6.0",
-		"@cmparks/trailviewer": "^0.8.6",
+		"@cmparks/trailviewer": "^0.9.0",
 		"@prisma/client": "^5.1.1",
 		"apexcharts": "^3.41.1",
 		"bootstrap": "^5.3.1",
