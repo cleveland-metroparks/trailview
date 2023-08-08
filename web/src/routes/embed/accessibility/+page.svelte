@@ -22,12 +22,22 @@
 		options.mapboxKey = PUBLIC_MAPBOX_KEY;
 		options.target = 'viewer';
 		const sequences: number[] = [];
+		const groups: number[] = [];
 		for (const t of data.accessibleTrails) {
-			for (const s of t.sequenceIds) {
-				sequences.push(s);
+			if ('sequenceIds' in t.filter) {
+				t.filter.sequenceIds.forEach((s) => {
+					sequences.push(s);
+				});
+			}
+			if ('groupIds' in t.filter) {
+				t.filter.groupIds.forEach((g) => {
+					groups.push(g);
+				});
 			}
 		}
+
 		options.filterSequences = sequences;
+		options.filterGroups = groups;
 		trailviewer = new trailviewerLib.TrailViewer(options);
 
 		onCarouselScroll();
