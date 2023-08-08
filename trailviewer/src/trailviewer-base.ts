@@ -89,6 +89,7 @@ export interface TrailViewerBaseOptions {
     navArrowMaxAngle: number;
     imageFetchType: 'standard' | 'all';
     filterSequences: number[] | undefined;
+    filterGroups: number[] | undefined;
 }
 
 export const defaultBaseOptions: TrailViewerBaseOptions = {
@@ -99,6 +100,7 @@ export const defaultBaseOptions: TrailViewerBaseOptions = {
     navArrowMaxAngle: -20,
     imageFetchType: 'standard',
     filterSequences: undefined,
+    filterGroups: undefined,
 };
 
 interface HTMLNavArrowElement extends HTMLImageElement {
@@ -431,20 +433,33 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
     }
 
     private async _getNeighbors(image: Image): Promise<Neighbor[]> {
-        let neighborsUrl = urlJoin(
-            this._options.baseUrl,
-            '/api/neighbors',
-            this._options.imageFetchType,
-            image.id
+        const neighborsUrl = new URL(
+            urlJoin(
+                this._options.baseUrl,
+                '/api/neighbors',
+                this._options.imageFetchType,
+                image.id
+            )
         );
         if (this._options.filterSequences !== undefined) {
-            neighborsUrl += '?s=';
+            let ids = '';
             for (let i = 0; i < this._options.filterSequences.length; i++) {
-                neighborsUrl += this._options.filterSequences[i];
+                ids += this._options.filterSequences[i];
                 if (i !== this._options.filterSequences.length - 1) {
-                    neighborsUrl += ',';
+                    ids += ',';
                 }
             }
+            neighborsUrl.searchParams.set('s', ids);
+        }
+        if (this._options.filterGroups !== undefined) {
+            let ids = '';
+            for (let i = 0; i < this._options.filterGroups.length; i++) {
+                ids += this._options.filterGroups[i];
+                if (i !== this._options.filterGroups.length - 1) {
+                    ids += ',';
+                }
+            }
+            neighborsUrl.searchParams.set('g', ids);
         }
         const res = await fetch(neighborsUrl);
         const data = await res.json();

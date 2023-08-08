@@ -248,11 +248,39 @@ export class TrailViewer extends TrailViewerBase {
                 ],
             },
         };
-        if (this._extended_options.filterSequences !== undefined) {
+        if (
+            this._extended_options.filterSequences !== undefined &&
+            this._extended_options.filterGroups === undefined
+        ) {
             layer.filter = [
                 'in',
-                'sequenceId',
-                ...this._extended_options.filterSequences,
+                ['get', 'sequenceId'],
+                ['literal', this._extended_options.filterSequences],
+            ];
+        } else if (
+            this._extended_options.filterSequences === undefined &&
+            this._extended_options.filterGroups !== undefined
+        ) {
+            layer.filter = [
+                'any',
+                ...this._extended_options.filterGroups.map((f) => {
+                    return ['in', f, ['get', 'groupIds']];
+                }),
+            ];
+        } else if (
+            this._extended_options.filterSequences !== undefined &&
+            this._extended_options.filterGroups !== undefined
+        ) {
+            layer.filter = [
+                'any',
+                [
+                    'in',
+                    ['get', 'sequenceId'],
+                    ['literal', this._extended_options.filterSequences],
+                ],
+                ...this._extended_options.filterGroups.map((f) => {
+                    return ['in', f, ['get', 'groupIds']];
+                }),
             ];
         }
         this._map.addLayer(layer);
