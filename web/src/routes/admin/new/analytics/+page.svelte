@@ -4,67 +4,20 @@
 	import type { PageData } from './$types';
 	import type { GetResType as DayAnalyticsGetResType } from './[dateValue]/+server';
 	import type ApexCharts from 'apexcharts';
+	import { fly, scale } from 'svelte/transition';
 
 	export let data: PageData;
 
 	let chartContainer: HTMLDivElement;
 	let mainChart: ApexCharts | undefined;
 
+	let selectedDay: Date;
 	let dayChartContainer: HTMLDivElement;
 	let dayChart: ApexCharts | undefined;
+	let showLoadingSpinner = false;
 
 	onMount(async () => {
 		await createMainChart();
-
-		// const sequenceAnalyticsMap = new Map<string, number>();
-		// data.analytics.forEach((a) => {
-		// 	const val = sequenceAnalyticsMap.get(a.image.sequence.name);
-		// 	if (val !== undefined) {
-		// 		sequenceAnalyticsMap.set(a.image.sequence.name, val + a.count);
-		// 	} else {
-		// 		sequenceAnalyticsMap.set(a.image.sequence.name, a.count);
-		// 	}
-		// });
-
-		// const sortedSequenceAnalytics = Array.from(sequenceAnalyticsMap.entries()).sort((a, b) => {
-		// 	return b[1] - a[1];
-		// });
-
-		// var options: ApexOptions = {
-		// 	theme: {
-		// 		mode: 'dark'
-		// 	},
-		// 	colors: ['#6ab03e'],
-		// 	series: [
-		// 		{
-		// 			name: 'Image Hits',
-		// 			data: sortedSequenceAnalytics.map((a) => {
-		// 				return a[1];
-		// 			})
-		// 		}
-		// 	],
-		// 	chart: {
-		// 		type: 'bar',
-		// 		height: 600
-		// 	},
-		// 	plotOptions: {
-		// 		bar: {
-		// 			borderRadius: 4,
-		// 			horizontal: true
-		// 		}
-		// 	},
-		// 	dataLabels: {
-		// 		enabled: true
-		// 	},
-		// 	xaxis: {
-		// 		categories: sortedSequenceAnalytics.map((a) => {
-		// 			return a[0];
-		// 		})
-		// 	}
-		// };
-
-		// var chart = new ApexCharts.default(chartContainer, options);
-		// chart.render();
 	});
 
 	onDestroy(() => {
@@ -89,7 +42,7 @@
 			chart: {
 				type: 'area',
 				stacked: false,
-				height: 350,
+				height: 250,
 				zoom: {
 					type: 'x',
 					enabled: true,
@@ -100,7 +53,8 @@
 				},
 				events: {
 					markerClick(e, chart, options) {
-						const selectedDay = new Date(data.hitsPerDay[options.dataPointIndex as number][0]);
+						const day = new Date(data.hitsPerDay[options.dataPointIndex as number][0]);
+						selectedDay = day;
 						showDayDetails(selectedDay);
 					}
 				}
@@ -141,31 +95,104 @@
 	}
 
 	async function showDayDetails(day: Date) {
+		showLoadingSpinner = true;
 		const res = await fetch(`/admin/new/analytics/${day.valueOf()}`, {
 			method: 'GET',
 			credentials: 'same-origin'
 		});
 		const resData: DayAnalyticsGetResType = await res.json();
 		if (resData.success === true) {
-			createDayChart(resData.data);
+			await createDayChart(resData.data);
+			showLoadingSpinner = false;
 		}
+		showLoadingSpinner = false;
 	}
 
-	function createDayChart(
+	async function createDayChart(
 		data: {
 			sequenceName: string;
 			hits: number;
 		}[]
-	) {}
+	) {
+		if (dayChart === undefined) {
+			const ApexCharts = await import('apexcharts');
+			var options: ApexOptions = {
+				theme: {
+					mode: 'dark'
+				},
+				colors: ['#6ab03e'],
+				series: [
+					{
+						name: 'Image Hits',
+						data: data.map((a) => {
+							return a.hits;
+						})
+					}
+				],
+				chart: {
+					type: 'bar',
+					height: Math.max(data.length * 30, 200)
+				},
+				plotOptions: {
+					bar: {
+						borderRadius: 4,
+						horizontal: true
+					}
+				},
+				dataLabels: {
+					enabled: true
+				},
+				xaxis: {
+					categories: data.map((a) => {
+						return a.sequenceName;
+					})
+				}
+			};
+
+			dayChart = new ApexCharts.default(dayChartContainer, options);
+			dayChart.render();
+		} else {
+			dayChart.updateSeries(
+				[
+					{
+						name: 'Image Hits',
+						data: data.map((a) => {
+							return a.hits;
+						})
+					}
+				],
+				true
+			);
+			dayChart.updateOptions(
+				{
+					chart: { height: Math.max(data.length * 30, 200) },
+					xaxis: {
+						categories: data.map((a) => {
+							return a.sequenceName;
+						})
+					}
+				} as ApexOptions,
+				true,
+				true
+			);
+		}
+	}
 </script>
 
 <svelte:head>
 	<title>TrailView Analytics</title>
 </svelte:head>
 
-<div class="mt-3 container h-100">
+<div class="px-5 mt-3 h-100 w-100 overflow-y-auto">
+	<p>Click on the dots on the graph to see a detailed view of image hits per sequence</p>
 	<h2 style="font-size:24px">Image Hits per Day</h2>
 	<div bind:this={chartContainer} />
+	{#if selectedDay !== undefined}
+		<h2 transition:fly style="font-size:24px">
+			Image Hits per Sequence on {selectedDay.toLocaleDateString()}
+			{#if showLoadingSpinner}<span transition:scale class="spinner-border"></span>{/if}
+		</h2>
+	{/if}
 	<div bind:this={dayChartContainer} />
 </div>
 

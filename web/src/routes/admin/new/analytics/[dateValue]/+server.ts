@@ -38,8 +38,12 @@ export const GET = (async ({ cookies, params }) => {
 			analyticsMap.set(a.image.sequence.name, 1);
 		}
 	}
-	const dayAnalytics = Array.from(analyticsMap.entries()).map((a) => {
-		return { sequenceName: a[0], hits: a[1] };
-	});
+	const dayAnalytics = Array.from(analyticsMap.entries())
+		.map((a) => {
+			return { sequenceName: a[0], hits: a[1] };
+		})
+		.sort((a, b) => {
+			return b.hits - a.hits;
+		});
 	return json({ success: true, data: dayAnalytics } as GetResType);
 }) satisfies RequestHandler;
