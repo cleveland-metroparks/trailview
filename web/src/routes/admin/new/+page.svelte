@@ -37,6 +37,7 @@
 	import type { GetResType as GroupGetResType } from '../../api/group/[groupId]/all/+server';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
+	import InspectorMove from './InspectorMove.svelte';
 
 	export let data: PageData;
 
@@ -237,7 +238,6 @@
 	let formAlert: FormAlert;
 
 	let showCacheSpinner = false;
-	let showEditSpinner = false;
 
 	let layout: 'viewer' | 'map' = 'map';
 
@@ -361,26 +361,7 @@
 					on:should-refresh={refreshEverything}
 				/>
 			{:else if inspectorPage === 'Move'}
-				<button
-					on:click={() => {
-						if (trailviewer !== undefined) {
-							trailviewer.undoEdit();
-						}
-					}}
-					type="button"
-					class="btn btn-warning">Undo Image Move (z)</button
-				>
-				<button
-					on:click={async () => {
-						showEditSpinner = true;
-						await trailviewer?.submitEdits();
-						showEditSpinner = false;
-						refreshEverything();
-					}}
-					type="button"
-					class="btn btn-primary"
-					>{#if showEditSpinner}<span class="spinner-border spinner-border-sm" />{/if}Submit Changes</button
-				>
+				<InspectorMove {trailviewer} on:should-refresh={refreshEverything} />
 			{/if}
 		</div>
 	</div>
