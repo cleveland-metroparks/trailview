@@ -2,8 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { createEventDispatcher } from 'svelte';
 	import { mapsApiTrailSelectValue, type MapsApiTrailsType } from './+page.svelte';
-	import type { Image } from '$lib/trailviewer';
+	import type { TrailViewer, Image } from '$lib/trailviewer';
 
+	export let trailviewer: TrailViewer | undefined;
 	export let currentSequence:
 		| { name: string; id: number; mapsApiTrailId: number | null }
 		| undefined;
@@ -14,11 +15,18 @@
 
 	const dispatch = createEventDispatcher<{
 		'should-refresh': void;
-		'should-view-side': void;
-		'pitch-correction-change': number;
 	}>();
 
 	let showSequenceSpinner = false;
+
+	function onPitchCorrectionChange() {
+		if (!trailviewer || !currentImage) {
+			return;
+		}
+		if (trailviewer.allImageData !== undefined) {
+			trailviewer.overridePitchCorrection(pitchCorrection);
+		}
+	}
 </script>
 
 <form
@@ -91,9 +99,7 @@
 	</div>
 	<label for="pitch_range" class="mt-2 form-label">Pitch Correction: {pitchCorrection}</label>
 	<input
-		on:change={() => {
-			dispatch('pitch-correction-change', pitchCorrection);
-		}}
+		on:change={onPitchCorrectionChange}
 		bind:value={pitchCorrection}
 		name="pitch"
 		type="range"
@@ -112,7 +118,7 @@
 	>
 	<button
 		on:click={() => {
-			dispatch('should-view-side');
+			trailviewer?.getPanViewer()?.lookAt(0, 90, 120, false);
 		}}
 		type="button"
 		class="btn btn-secondary">View from Side</button
