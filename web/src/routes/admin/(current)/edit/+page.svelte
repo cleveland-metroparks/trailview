@@ -107,6 +107,7 @@
 		if (trailviewer !== undefined && trailviewer.map !== undefined) {
 			if (currentDrawnTrail !== undefined) {
 				(trailviewer.map.getSource('mapsApiTrailSource') as GeoJSONSource).setData(
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					data.data.data.geom_geojson.data as any
 				);
 			} else {
@@ -177,6 +178,7 @@
 		}
 
 		if (mapHasEditLayer === true) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			(trailviewer.map.getSource('editLinesSource') as GeoJSONSource).setData(geoJsonData as any);
 		} else {
 			trailviewer.map.addSource('editLinesSource', {

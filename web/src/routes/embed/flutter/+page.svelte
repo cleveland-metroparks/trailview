@@ -1,11 +1,19 @@
+<script context="module" lang="ts">
+	declare class FlutterChannel {
+		postMessage(message: string): void;
+	}
+</script>
+
 <script lang="ts">
+	import '@cmparks/trailviewer/dist/trailviewer-base.css';
+	import { onDestroy, onMount } from 'svelte';
+	import { z } from 'zod';
 	import type {
 		TrailViewerBase,
 		TrailViewerBaseOptions
 	} from '@cmparks/trailviewer/dist/trailviewer-base';
-	import '@cmparks/trailviewer/dist/trailviewer-base.css';
-	import { onDestroy, onMount } from 'svelte';
-	import { z } from 'zod';
+
+	let messageHandler: FlutterChannel | undefined;
 
 	const flutterTrailViewerBaseOptionsType = z.object({
 		initialImageId: z.string().optional().nullable(),
