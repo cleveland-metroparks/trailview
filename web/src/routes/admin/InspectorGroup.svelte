@@ -16,8 +16,8 @@
 	import type { TrailViewer } from '$lib/trailviewer';
 	import type FormAlert from '$lib/FormAlert.svelte';
 
-	import type { PatchReqType as GroupPatchReqType } from '../(current)/edit/group/[groupId]/view/+server';
-	import type { PatchReqType as GroupSeqPatchReqType } from '../(current)/edit/group/[groupId]/sequence/+server';
+	import type { PatchReqType as GroupPatchReqType } from './edit/group/[groupId]/view/+server';
+	import type { PatchReqType as GroupSeqPatchReqType } from './edit/group/[groupId]/sequence/+server';
 	import type ConfirmModal from '$lib/ConfirmModal.svelte';
 	import { createEventDispatcher } from 'svelte';
 

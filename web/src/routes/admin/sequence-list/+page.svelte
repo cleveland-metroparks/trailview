@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { mainHeading } from '../stores';
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
 	import type { Sequence } from '@prisma/client';
 
 	export let data: PageData;
-
-	$mainHeading = 'Processing Status';
 
 	let showDone = true;
 	let tableData = data.sequences;
@@ -68,50 +65,53 @@
 	});
 </script>
 
-<a href="/admin" class="btn btn-outline-primary">Dashboard</a>
+<svelte:head>
+	<title>Sequence List</title>
+</svelte:head>
 
-<h2 class="mt-3">Sequences</h2>
-<div class="form-check form-switch">
-	<input bind:checked={showDone} id="showDoneSwitch" type="checkbox" class="form-check-input" />
-	<label for="showDoneSwitch">Show Done</label>
-</div>
-<table class="table table-bordered">
-	<thead>
-		<tr>
-			<th>Id</th>
-			<th>Name</th>
-			<th>Status</th>
-			<th>Actions</th>
-		</tr>
-	</thead>
-	<tbody>
-		{#each tableData as sequence}
+<div class="px-2 w-100 overflow-y-auto">
+	<div class="form-check form-switch">
+		<input bind:checked={showDone} id="showDoneSwitch" type="checkbox" class="form-check-input" />
+		<label for="showDoneSwitch">Show Done</label>
+	</div>
+	<table class="table table-bordered">
+		<thead>
 			<tr>
-				<td>{sequence.id}</td>
-				<td>{sequence.name}</td>
-				{#if sequence.toDelete === false}
-					<td class="status-text"
-						><span class={`badge bg-${statusColor(sequence.status)}`}>{sequence.status}</span></td
-					>
-				{:else}
-					<td class="status-text"><span class="badge bg-danger">Delete</span></td>
-				{/if}
-				<td>
-					{#if sequence.toDelete === false}
-						<form
-							on:submit|preventDefault={() => {
-								onDelete(sequence);
-							}}
-							method="POST"
-						>
-							<button type="submit" class="btn btn-sm btn-danger">Delete</button>
-						</form>
-					{/if}
-				</td>
+				<th>Id</th>
+				<th>Name</th>
+				<th>Status</th>
+				<th>Actions</th>
 			</tr>
-		{/each}
-	</tbody>
-</table>
+		</thead>
+		<tbody>
+			{#each tableData as sequence}
+				<tr>
+					<td>{sequence.id}</td>
+					<td>{sequence.name}</td>
+					{#if sequence.toDelete === false}
+						<td class="status-text"
+							><span class={`badge bg-${statusColor(sequence.status)}`}>{sequence.status}</span></td
+						>
+					{:else}
+						<td class="status-text"><span class="badge bg-danger">Delete</span></td>
+					{/if}
+					<td>
+						{#if sequence.toDelete === false}
+							<form
+								on:submit|preventDefault={() => {
+									onDelete(sequence);
+								}}
+								method="POST"
+							>
+								<button type="submit" class="btn btn-sm btn-danger">Delete</button>
+							</form>
+						{/if}
+					</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+</div>
 
 <style>
 	.status-text {

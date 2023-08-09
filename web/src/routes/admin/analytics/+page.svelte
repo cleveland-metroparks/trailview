@@ -96,7 +96,7 @@
 
 	async function showDayDetails(day: Date) {
 		showLoadingSpinner = true;
-		const res = await fetch(`/admin/new/analytics/${day.valueOf()}`, {
+		const res = await fetch(`/admin/analytics/${day.valueOf()}`, {
 			method: 'GET',
 			credentials: 'same-origin'
 		});

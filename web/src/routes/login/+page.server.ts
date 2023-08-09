@@ -4,7 +4,7 @@ import { attemptLogin, isSessionValid } from '$lib/server/auth';
 
 export const load = (async ({ cookies }) => {
 	if (await isSessionValid(cookies)) {
-		throw redirect(301, '/admin/new');
+		throw redirect(301, '/admin');
 	}
 }) satisfies PageServerLoad;
 

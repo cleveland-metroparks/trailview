@@ -35,7 +35,7 @@
 	import InspectorMove from './InspectorMove.svelte';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import type { PageData } from './$types';
-	import type { GetResType as GroupGetResType } from '../../api/group/[groupId]/all/+server';
+	import type { GetResType as GroupGetResType } from '../api/group/[groupId]/all/+server';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
 

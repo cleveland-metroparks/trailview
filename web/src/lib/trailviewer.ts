@@ -4,7 +4,7 @@ import urlJoin from 'url-join';
 import '@cmparks/pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@cmparks/pannellum/build/pannellum.css';
-import type { PatchRequestType } from '../routes/admin/(current)/edit/+server';
+import type { PatchRequestType } from '../routes/admin/edit/+server';
 
 declare const pannellum: PannellumViewer;
 
