@@ -2,11 +2,13 @@
 	import { enhance } from '$app/forms';
 	import { createEventDispatcher } from 'svelte';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
-	import ConfirmModal from '$lib/ConfirmModal.svelte';
-	import FormAlert from '$lib/FormAlert.svelte';
+	import type ConfirmModal from '$lib/ConfirmModal.svelte';
+	import type FormAlert from '$lib/FormAlert.svelte';
 
 	export let currentImage: Image | undefined;
 	export let trailviewer: TrailViewer | undefined;
+	export let confirmModal: ConfirmModal;
+	export let formAlert: FormAlert;
 
 	const dispatch = createEventDispatcher<{
 		'should-refresh': void;
@@ -15,8 +17,6 @@
 	let showImageSpinner = false;
 	let showPrivateViewSpinner = false;
 	let showPublicViewSpinner = false;
-	let confirmModal: ConfirmModal;
-	let formAlert: FormAlert;
 
 	async function setViewVisibility(visible: boolean) {
 		if (
@@ -66,9 +66,6 @@
 		dispatch('should-refresh');
 	}
 </script>
-
-<FormAlert bind:this={formAlert} />
-<ConfirmModal bind:this={confirmModal} />
 
 <form
 	method="POST"

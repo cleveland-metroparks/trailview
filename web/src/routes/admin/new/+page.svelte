@@ -31,14 +31,12 @@
 	import FormAlert from '$lib/FormAlert.svelte';
 	import type { PageData } from './$types';
 	import ConfirmModal from '$lib/ConfirmModal.svelte';
-	import type { GetResType as GroupGetResType } from '../../api/group/[groupId]/all/+server';
-	import type { GeoJSONSource } from 'mapbox-gl';
-	import type { FeatureCollection } from 'geojson';
-	import type { PatchReqType as GroupPatchReqType } from '../(current)/edit/group/[groupId]/view/+server';
-	import { scale } from 'svelte/transition';
-	import type { PatchReqType as GroupSeqPatchReqType } from '../(current)/edit/group/[groupId]/sequence/+server';
 	import InspectorSequence from './InspectorSequence.svelte';
 	import InspectorImage from './InspectorImage.svelte';
+	import InspectorGroup from './InspectorGroup.svelte';
+	import type { GetResType as GroupGetResType } from '../../api/group/[groupId]/all/+server';
+	import type { FeatureCollection } from 'geojson';
+	import type { GeoJSONSource } from 'mapbox-gl';
 
 	export let data: PageData;
 
@@ -54,114 +52,44 @@
 			createTrailViewer();
 			trailviewer.fetchAllImageData();
 		}
-		hasMapGroupLayer = false;
 	}
 
+	let selectedGroupId: number | undefined = undefined;
 	async function onGoToGroupChange(event: Event) {
 		const groupSelect = event.target as HTMLSelectElement;
 		const selectValue = groupSelect.value;
 		groupSelect.value = 'select';
 		if (selectValue.startsWith('group_')) {
 			const groupId = parseInt(selectValue.split('_')[1]);
-			const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
-			const resData = (await res.json()) as GroupGetResType;
-			if (resData.success === true) {
-				const image = resData.data.images.at(0);
-				if (image !== undefined) {
-					trailviewer?.goToImageID(image.id);
+			selectedGroupId = groupId;
+			await goToGroup(groupId);
+			await drawGroup(groupId);
+		}
+	}
+
+	async function goToGroup(groupId: number) {
+		const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
+		const resData = (await res.json()) as GroupGetResType;
+		if (resData.success === true) {
+			const image = resData.data.images.at(0);
+			if (image !== undefined) {
+				trailviewer?.goToImageID(image.id);
+				if (inspectorPage !== 'Group') {
 					inspectorPage = 'Group';
-					selectedGroupId = groupId;
-					drawSelectedGroup();
 				}
 			}
 		}
 	}
 
-	function onSequenceSelectChange(event: Event) {
-		if (trailviewer === undefined) {
-			return;
-		}
-		if (trailviewer.allImageData !== undefined) {
-			const image = trailviewer.allImageData.find((image) => {
-				const sequence = data.sequences.find((sequence) => {
-					return sequence.id === image.sequenceId;
-				});
-				if (!sequence) {
-					return;
-				}
-				return sequence.name === (event.target as HTMLSelectElement).value;
-			});
-			if (image) {
-				trailviewer.goToImageID(image.id);
-				inspectorPage = 'Sequence';
-			}
-		}
-		goToSequenceSelect.value = 'select';
-	}
-
-	async function onChangeViewGroup(action: 'add' | 'remove') {
+	async function drawGroup(groupId: number) {
 		if (
-			selectedGroupId === undefined ||
-			trailviewer === undefined ||
-			trailviewer.map === undefined ||
-			trailviewer.allImageData === undefined
-		) {
-			return;
-		}
-		showGroupSpinner = true;
-		const bounds = trailviewer.map.getBounds();
-		const imageIdList: string[] = [];
-		for (const image of trailviewer.allImageData) {
-			if (bounds.contains([image.longitude, image.latitude])) {
-				imageIdList.push(image.id);
-			}
-		}
-		const data: GroupPatchReqType = {
-			action: action === 'add' ? 'addImages' : 'removeImages',
-			imageIds: imageIdList
-		};
-		const res = await fetch(`/admin/edit/group/${selectedGroupId}/view`, {
-			method: 'PATCH',
-			body: JSON.stringify(data)
-		});
-		const resData = await res.json();
-		formAlert.popup(resData);
-		drawSelectedGroup();
-		showGroupSpinner = false;
-	}
-
-	let groupSequenceSelectValue: string | undefined;
-	async function onGroupSequenceAction(action: 'add' | 'remove') {
-		if (selectedGroupId === undefined || groupSequenceSelectValue === undefined) {
-			return;
-		}
-		showGroupSpinner = true;
-		const sequenceId = parseInt(groupSequenceSelectValue.split('_')[1]);
-		const data: GroupSeqPatchReqType = {
-			action: action,
-			sequenceId: sequenceId
-		};
-		const res = await fetch(`/admin/edit/group/${selectedGroupId}/sequence`, {
-			method: 'PATCH',
-			body: JSON.stringify(data)
-		});
-		const resData = await res.json();
-		formAlert.popup(resData);
-		showGroupSpinner = false;
-		drawSelectedGroup();
-	}
-
-	let hasMapGroupLayer = false;
-	async function drawSelectedGroup() {
-		if (
-			selectedGroupId === undefined ||
 			trailviewer === undefined ||
 			trailviewer.allImageData === undefined ||
 			trailviewer.map === undefined
 		) {
 			return;
 		}
-		const res = await fetch(`/api/group/${selectedGroupId}/all`, { method: 'GET' });
+		const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === false) {
 			formAlert.popup(resData);
@@ -184,7 +112,7 @@
 			})
 		};
 
-		if (!hasMapGroupLayer) {
+		if (!trailviewer.map.getLayer('groupLayer')) {
 			trailviewer.map.addSource('groupSource', {
 				type: 'geojson',
 				data: geoJsonData
@@ -224,30 +152,36 @@
 				18,
 				1
 			]);
-			hasMapGroupLayer = true;
 		} else {
 			(trailviewer.map.getSource('groupSource') as GeoJSONSource).setData(geoJsonData);
 		}
+		goToGroup(groupId);
+	}
+
+	function onSequenceSelectChange(event: Event) {
+		if (trailviewer === undefined) {
+			return;
+		}
+		if (trailviewer.allImageData !== undefined) {
+			const image = trailviewer.allImageData.find((image) => {
+				const sequence = data.sequences.find((sequence) => {
+					return sequence.id === image.sequenceId;
+				});
+				if (!sequence) {
+					return;
+				}
+				return sequence.name === (event.target as HTMLSelectElement).value;
+			});
+			if (image) {
+				trailviewer.goToImageID(image.id);
+				inspectorPage = 'Sequence';
+			}
+		}
+		goToSequenceSelect.value = 'select';
 	}
 
 	let inspectorPages = ['Sequence', 'Image', 'Group', 'Move'] as const;
 	let inspectorPage: (typeof inspectorPages)[number] = 'Sequence';
-
-	let selectedGroupId: number | undefined;
-	let selectedGroup: (typeof data.groups)[number] | undefined;
-	$: selectedGroup = data.groups.find((g) => {
-		return g.id === selectedGroupId;
-	});
-
-	function onGroupSelectChange(event: Event) {
-		const element = event.target as HTMLSelectElement;
-		if (element.value.startsWith('group_')) {
-			selectedGroupId = parseInt(element.value.split('_')[1]);
-			drawSelectedGroup();
-		} else {
-			selectedGroupId = undefined;
-		}
-	}
 
 	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
 	let pitchCorrection = 0;
@@ -304,7 +238,6 @@
 
 	let showCacheSpinner = false;
 	let showEditSpinner = false;
-	let showGroupSpinner = false;
 
 	let layout: 'viewer' | 'map' = 'map';
 
@@ -407,93 +340,26 @@
 					on:should-refresh={refreshEverything}
 				/>
 			{:else if inspectorPage === 'Image'}
-				<InspectorImage {trailviewer} {currentImage} on:should-refresh={refreshEverything} />
+				<InspectorImage
+					{confirmModal}
+					{formAlert}
+					{trailviewer}
+					{currentImage}
+					on:should-refresh={refreshEverything}
+				/>
 			{:else if inspectorPage === 'Group'}
-				<label for="groupSelect">Create Group</label>
-				<form action="?/create-group" method="POST" use:enhance>
-					<div class="input-group input-group-sm">
-						<input name="name" class="form-control" type="text" placeholder="New Name" required />
-						<button class="btn btn-sm btn-success">Create</button>
-					</div>
-				</form>
-				<label class="mt-1" for="groupSelect">Select Group</label>
-				<select on:change={onGroupSelectChange} class="form-select form-select-sm" id="groupSelect">
-					<option value="select">Select</option>
-					{#each data.groups as group}
-						<option value={`group_${group.id}`} selected={selectedGroupId === group.id}
-							>{group.name}</option
-						>
-					{/each}
-				</select>
-				{#if selectedGroup !== undefined}
-					<div class="mt-2 input-group input-group-sm">
-						<span class="input-group-text">Group Id</span>
-						<input type="text" class="form-control" readonly value={selectedGroup.id.toString()} />
-					</div>
-					<div class="mt-2 d-flex flex-row gap-2 flex-wrap">
-						<button
-							on:click={() => {
-								onChangeViewGroup('add');
-							}}
-							class="btn btn-sm btn-success">Assign all Images in View to Group</button
-						>
-						<button
-							on:click={() => {
-								onChangeViewGroup('remove');
-							}}
-							class="btn btn-sm btn-danger">Remove all Images in View from Group</button
-						>
-					</div>
-					<hr />
-					<h5>From Sequence</h5>
-					<select bind:value={groupSequenceSelectValue} class="form-select form-select-sm">
-						{#each data.sequences as sequence}
-							<option value={`seq_${sequence.id}`}>{sequence.name}</option>
-						{/each}
-					</select>
-					<div class="mt-1 d-flex flex-row gap-2">
-						<button
-							on:click={() => {
-								onGroupSequenceAction('add');
-							}}
-							class="btn btn-sm btn-success">Add from sequence</button
-						>
-						<button
-							on:click={() => {
-								onGroupSequenceAction('remove');
-							}}
-							class="btn btn-sm btn-danger">Remove from sequence</button
-						>
-					</div>
-
-					{#if showGroupSpinner}
-						<div transition:scale class="mt-2 spinner-border" role="status">
-							<span class="visually-hidden">Loading...</span>
-						</div>
-					{/if}
-					<hr />
-					<form
-						action="?/delete-group"
-						method="POST"
-						use:enhance={async ({ cancel }) => {
-							if (
-								selectedGroup === undefined ||
-								(await confirmModal.prompt(
-									`Are you sure you want to delete this group (${selectedGroup.name})?`
-								)) !== true
-							) {
-								cancel();
-							}
-							return async ({ update }) => {
-								await update();
-								refreshEverything();
-							};
-						}}
-					>
-						<input name="groupId" type="hidden" value={selectedGroupId?.toString()} />
-						<button class="btn btn-sm btn-danger">Delete Group</button>
-					</form>
-				{/if}
+				<InspectorGroup
+					{formAlert}
+					{trailviewer}
+					{confirmModal}
+					groupData={data.groups}
+					sequenceData={data.sequences}
+					bind:selectedGroupId
+					on:draw-group={(e) => {
+						drawGroup(e.detail.groupId);
+					}}
+					on:should-refresh={refreshEverything}
+				/>
 			{:else if inspectorPage === 'Move'}
 				<button
 					on:click={() => {
