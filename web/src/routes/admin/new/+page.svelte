@@ -25,21 +25,59 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
-	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import { onDestroy, onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import FormAlert from '$lib/FormAlert.svelte';
-	import type { PageData } from './$types';
 	import ConfirmModal from '$lib/ConfirmModal.svelte';
 	import InspectorSequence from './InspectorSequence.svelte';
 	import InspectorImage from './InspectorImage.svelte';
 	import InspectorGroup from './InspectorGroup.svelte';
+	import InspectorMove from './InspectorMove.svelte';
+	import type { TrailViewer, Image } from '$lib/trailviewer';
+	import type { PageData } from './$types';
 	import type { GetResType as GroupGetResType } from '../../api/group/[groupId]/all/+server';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
-	import InspectorMove from './InspectorMove.svelte';
 
 	export let data: PageData;
+
+	let selectedGroupId: number | undefined = undefined;
+
+	let inspectorPages = ['Sequence', 'Image', 'Group', 'Move'] as const;
+	let inspectorPage: (typeof inspectorPages)[number] = 'Sequence';
+
+	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
+	let pitchCorrection = 0;
+	let flipped: boolean;
+	let currentImage: Image | undefined;
+
+	let trailviewer: TrailViewer | undefined;
+
+	let goToSequenceSelect: HTMLSelectElement;
+
+	let confirmModal: ConfirmModal;
+	let formAlert: FormAlert;
+
+	let showCacheSpinner = false;
+
+	let layout: 'viewer' | 'map' = 'map';
+
+	$: if (layout) {
+		// This defers the map resize until the layout
+		// changes after current event loop
+		setTimeout(() => {
+			trailviewer?.map?.resize();
+			trailviewer?.centerMarker();
+		}, 0);
+	}
+
+	onMount(async () => {
+		await createTrailViewer();
+	});
+
+	onDestroy(() => {
+		trailviewer?.destroy();
+	});
 
 	function handleKeypress(event: KeyboardEvent) {
 		if (event.key === 'z' && trailviewer !== undefined) {
@@ -55,7 +93,6 @@
 		}
 	}
 
-	let selectedGroupId: number | undefined = undefined;
 	async function onGoToGroupChange(event: Event) {
 		const groupSelect = event.target as HTMLSelectElement;
 		const selectValue = groupSelect.value;
@@ -181,15 +218,6 @@
 		goToSequenceSelect.value = 'select';
 	}
 
-	let inspectorPages = ['Sequence', 'Image', 'Group', 'Move'] as const;
-	let inspectorPage: (typeof inspectorPages)[number] = 'Sequence';
-
-	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
-	let pitchCorrection = 0;
-	let flipped: boolean;
-	let currentImage: Image | undefined;
-
-	let trailviewer: TrailViewer | undefined;
 	async function createTrailViewer() {
 		const trailview = await import('$lib/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
@@ -219,33 +247,8 @@
 		});
 	}
 
-	onMount(async () => {
-		await createTrailViewer();
-	});
-
-	onDestroy(() => {
-		if (trailviewer) {
-			trailviewer.destroy();
-		}
-	});
-
 	function toggleLayout() {
 		layout = layout === 'map' ? 'viewer' : 'map';
-	}
-
-	let goToSequenceSelect: HTMLSelectElement;
-	let confirmModal: ConfirmModal;
-	let formAlert: FormAlert;
-
-	let showCacheSpinner = false;
-
-	let layout: 'viewer' | 'map' = 'map';
-
-	$: if (layout) {
-		setTimeout(() => {
-			trailviewer?.map?.resize();
-			trailviewer?.centerMarker();
-		}, 0);
 	}
 </script>
 
