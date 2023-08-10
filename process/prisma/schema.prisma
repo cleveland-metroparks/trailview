@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Not currently used
 model TrailInfo {
   ID          Int     @id(map: "PK_TrailInfo") @default(autoincrement())
   ImageID     String? @db.VarChar(50)
@@ -34,7 +35,7 @@ model Session {
 }
 
 model Image {
-  id                String   @id @db.VarChar(50)
+  id                String      @id @db.VarChar(50)
   originalLatitude  Float
   originalLongitude Float
   latitude          Float
@@ -45,14 +46,34 @@ model Image {
   pitchCorrection   Float
   visibility        Boolean
   sequenceId        Int
-  sequence          Sequence @relation(fields: [sequenceId], references: [id])
+  sequence          Sequence    @relation(fields: [sequenceId], references: [id])
+  analytics         Analytics[]
+  groups            Group[]     @relation("ImageGroupRelation")
 }
 
 model Sequence {
-  name     String   @unique
-  status   String
-  toDelete Boolean  @default(false)
-  id       Int      @id @default(autoincrement())
-  isPublic Boolean? @default(true)
-  images   Image[]
+  name           String   @unique
+  // Upload -> Blur -> Tile -> Sequence -> Done
+  status         String
+  toDelete       Boolean  @default(false)
+  id             Int      @id @default(autoincrement())
+  isPublic       Boolean? @default(true)
+  images         Image[]
+  mapsApiTrailId Int?
+}
+
+model Group {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  images Image[] @relation("ImageGroupRelation")
+}
+
+model Analytics {
+  id      BigInt   @id @default(autoincrement())
+  image   Image    @relation(fields: [imageId], references: [id])
+  imageId String   @db.VarChar(50)
+  date    DateTime
+  count   Int
+
+  @@unique([imageId, date])
 }

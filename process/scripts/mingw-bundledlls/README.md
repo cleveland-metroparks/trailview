@@ -3,17 +3,20 @@
 A convenient Python3 script that copies all dependency DLLs next to the executable. Suitable for creating a ready-to-go application bundle for Windows. The script assumes Fedora 21 mingw32 install paths, but that is easy to change.
 
 ## Features
-  - find all dependencies of an EXE or DLL file (recursively)
-  - copy all dependencies next to the EXE or DLL
-  - (optional) run UPX on all the copied dependencies and the EXE
+
+-   find all dependencies of an EXE or DLL file (recursively)
+-   copy all dependencies next to the EXE or DLL
+-   (optional) run UPX on all the copied dependencies and the EXE
 
 ## Requirements
-  - python3 or python2
-  - objdump in $PATH
-  - (optional) upx in $PATH
+
+-   python3 or python2
+-   objdump in $PATH
+-   (optional) upx in $PATH
 
 ## Environment Variables
-  - `$MINGW_BUNDLEDLLS_SEARCH_PATH`: Colon-separated list of paths to search for DLLs
+
+-   `$MINGW_BUNDLEDLLS_SEARCH_PATH`: Colon-separated list of paths to search for DLLs
 
 ## Usage
 
@@ -32,8 +35,9 @@ optional arguments:
 ```
 
 ## Example
+
 ```
-$ ./mingw-bundledlls --copy ./scap-workbench/scap-workbench.exe 
+$ ./mingw-bundledlls --copy ./scap-workbench/scap-workbench.exe
 /usr/i686-w64-mingw32/sys-root/mingw/bin/libssh2-1.dll
 /usr/i686-w64-mingw32/sys-root/mingw/bin/QtNetwork4.dll
 /usr/i686-w64-mingw32/sys-root/mingw/bin/libcrypto-10.dll
