@@ -28,12 +28,12 @@ export const actions = {
 		const data = await request.formData();
 		const formImageId = data.get('imageId');
 		const formPublic = data.get('public');
-		if (!formImageId) {
+		if (formImageId === null) {
 			return { success: false, message: 'Image Id not specified' };
 		}
 		await db.image.update({
 			where: { id: formImageId.toString() },
-			data: { visibility: formPublic ? true : false }
+			data: { visibility: formPublic !== null ? true : false }
 		});
 		await refreshImageData(true);
 		await refreshGeoJsonData(true);
@@ -49,10 +49,10 @@ export const actions = {
 		const formIsPublic = data.get('isPublic');
 		const formFlip = data.get('flip');
 		const formMapsApiTrailId = data.get('mapsApiTrailId');
-		if (!formPitch) {
+		if (formPitch === null) {
 			return { success: false, message: 'pitch not specified' };
 		}
-		if (!formSequenceId) {
+		if (formSequenceId === null) {
 			return { success: false, message: 'Sequence Id not specified' };
 		}
 		const sequenceId = parseInt(formSequenceId.toString());
@@ -74,9 +74,9 @@ export const actions = {
 		await db.image.updateMany({
 			where: { sequenceId: sequenceId },
 			data: {
-				flipped: formFlip ? true : false,
+				flipped: formFlip !== null ? true : false,
 				pitchCorrection: pitch,
-				visibility: formIsPublic ? true : false
+				visibility: formIsPublic !== null ? true : false
 			}
 		});
 		await refreshImageData(true);

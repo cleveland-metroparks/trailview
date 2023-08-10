@@ -14,7 +14,7 @@ export const load = (async ({ data, fetch }) => {
 
 	const res = await fetch('/api/sequences', { method: 'GET' });
 	const seqData = await res.json();
-	if (!seqData.success) {
+	if (seqData.success !== true) {
 		throw error(500, 'Unable to fetch data from API');
 	}
 	const sequences = sequencesDataType.safeParse(seqData.data);

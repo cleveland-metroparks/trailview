@@ -13,7 +13,7 @@ export const actions = {
 		const data = await request.formData();
 		const username = data.get('username');
 		const password = data.get('password');
-		if (!username || !password) {
+		if (username === null || password === null) {
 			return { success: false };
 		}
 		if ((await attemptLogin(cookies, username.toString(), password.toString())) === true) {

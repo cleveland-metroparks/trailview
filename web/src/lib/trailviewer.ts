@@ -202,7 +202,7 @@ export class TrailViewer implements TrailViewerEvents {
 		}).then(async (sequencesRes) => {
 			const data = await sequencesRes.json();
 			this.fetchAllImageData().then(async () => {
-				if (!data.success) {
+				if (data.success !== true) {
 					throw new Error('Failed to fetch sequence data');
 				}
 				this._sequencesData = data.data;
@@ -240,7 +240,7 @@ export class TrailViewer implements TrailViewerEvents {
 		if (this.map === undefined) {
 			throw new Error('Cannot create map layer as map is undefined');
 		}
-		if (this.map.getSource('dots')) {
+		if (this.map.getSource('dots') !== undefined) {
 			this.map.removeLayer('dots');
 			this.map.removeSource('dots');
 		}
@@ -302,7 +302,7 @@ export class TrailViewer implements TrailViewerEvents {
 	}
 
 	private _startMap() {
-		if (!this._options.mapboxKey || !this._options.mapTarget) {
+		if (this._options.mapboxKey === undefined || this._options.mapTarget === undefined) {
 			return;
 		}
 		mapboxgl.accessToken = this._options.mapboxKey;
@@ -690,7 +690,7 @@ export class TrailViewer implements TrailViewerEvents {
 			throw new Error('Unable to fetch initial image');
 		}
 		this._currImg = data.data as Image;
-		if (this._currImg) {
+		if (this._currImg !== undefined) {
 			config = this._addSceneToConfig(config, this._currImg);
 			config = this._addSceneToConfig(config, this._currImg);
 			this._sceneList.push(this._currImg.id);

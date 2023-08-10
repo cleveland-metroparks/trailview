@@ -8,7 +8,7 @@
 	let message: string | undefined;
 	let manualPopup = false;
 
-	$: if ($page.form) {
+	$: if ($page.form !== null) {
 		manualPopup = false;
 		dismissed = false;
 		success = $page.form.success;
@@ -16,7 +16,7 @@
 	}
 
 	afterUpdate(() => {
-		if ($page.form) {
+		if ($page.form !== null) {
 			success = $page.form.success;
 		}
 	});
@@ -29,7 +29,7 @@
 	}
 </script>
 
-{#if ($page.form && dismissed === false) || (manualPopup === true && dismissed === false)}
+{#if ($page.form !== null && dismissed === false) || (manualPopup === true && dismissed === false)}
 	<div
 		transition:slide|local
 		class={`mt-2 mb-2 alert alert-dismissible alert-${success ? 'success' : 'danger'}`}

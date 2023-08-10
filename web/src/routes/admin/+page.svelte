@@ -150,7 +150,7 @@
 			})
 		};
 
-		if (!trailviewer.map.getLayer('groupLayer')) {
+		if (trailviewer.map.getLayer('groupLayer') === undefined) {
 			trailviewer.map.addSource('groupSource', {
 				type: 'geojson',
 				data: geoJsonData
