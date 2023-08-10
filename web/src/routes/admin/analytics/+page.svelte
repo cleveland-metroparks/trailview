@@ -74,8 +74,6 @@
 				events: {
 					zoomed(chart, options: { xaxis: { min: number | undefined; max: number | undefined } }) {
 						// x-axis is undefined when fully zoomed out
-						let minDate: Date | undefined;
-						let maxDate: Date | undefined;
 						if (options.xaxis.min !== undefined && options.xaxis.max !== undefined) {
 							selectedRange = {
 								min: new Date(options.xaxis.min),
@@ -90,9 +88,6 @@
 									max: new Date(max[0])
 								};
 							}
-						}
-						if (minDate !== undefined && maxDate !== undefined) {
-							console.log(localDateTimeString(minDate), localDateTimeString(maxDate));
 						}
 					}
 				}
