@@ -210,6 +210,20 @@ async function processDelete(sequence: Sequence) {
     console.log('=== Start Deleting ===');
 
     await fs.remove(sequencePath);
+    const sequenceQuery = await db.sequence.findUnique({
+        where: { id: sequence.id },
+        include: { images: { select: { id: true } } },
+    });
+    if (sequenceQuery === null) {
+        console.error(`Sequence id is invalid: ${sequence.id}`);
+        return;
+    }
+    for (const i of sequenceQuery.images) {
+        await db.$queryRaw`DELETE FROM "_ImageGroupRelation" WHERE "B" = ${i.id};`;
+    }
+    await db.analytics.deleteMany({
+        where: { imageId: { in: sequenceQuery.images.map((i) => i.id) } },
+    });
     await db.image.deleteMany({ where: { sequenceId: sequence.id } });
     await db.sequence.delete({ where: { id: sequence.id } });
 
