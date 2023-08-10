@@ -228,7 +228,7 @@
 </svelte:head>
 
 <div class="px-5 mt-3 h-100 w-100 overflow-y-auto">
-	<p>Click on the dots on the graph to see a detailed view of image hits per sequence</p>
+	<p>Select a range from the top chart to see a detailed breakdown for that selected range</p>
 	<h2 style="font-size:24px">Image Hits per Day</h2>
 	<div bind:this={chartContainer} />
 	{#if selectedRange !== undefined}
