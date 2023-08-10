@@ -16,7 +16,7 @@ export const actions = {
 		if (!username || !password) {
 			return { success: false };
 		}
-		if (await attemptLogin(cookies, username.toString(), password.toString())) {
+		if ((await attemptLogin(cookies, username.toString(), password.toString())) === true) {
 			return { success: true };
 		}
 		return { success: false, message: 'Invalid login' };
