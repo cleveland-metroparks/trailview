@@ -120,6 +120,9 @@
 			},
 			xaxis: {
 				type: 'datetime',
+				labels: {
+					datetimeUTC: false
+				},
 				tooltip: {
 					enabled: false
 				}
