@@ -38,6 +38,7 @@
 	import type { GetResType as GroupGetResType } from '../api/group/[groupId]/all/+server';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
+	import { scale } from 'svelte/transition';
 
 	export let data: PageData;
 
@@ -59,6 +60,8 @@
 	let formAlert: FormAlert;
 
 	let showCacheSpinner = false;
+
+	let isSequenceHighlighted = false;
 
 	let layout: 'viewer' | 'map' = 'map';
 
@@ -309,6 +312,7 @@
 				18,
 				1
 			]);
+			isSequenceHighlighted = true;
 		} else {
 			(trailviewer.map.getSource('sequenceSource') as GeoJSONSource).setData(geoJsonData);
 		}
@@ -384,14 +388,18 @@
 				<option value={`group_${group.id}`}>{group.name}</option>
 			{/each}
 		</select>
-		<button
-			on:click={() => {
-				trailviewer?.map?.removeLayer('sequenceLayer');
-				trailviewer?.map?.removeSource('sequenceSource');
-			}}
-			type="button"
-			class="btn btn-sm btn-outline-secondary">Remove Sequence Highlight</button
-		>
+		{#if isSequenceHighlighted}
+			<button
+				transition:scale
+				on:click={() => {
+					trailviewer?.map?.removeLayer('sequenceLayer');
+					trailviewer?.map?.removeSource('sequenceSource');
+					isSequenceHighlighted = false;
+				}}
+				type="button"
+				class="btn btn-sm btn-outline-secondary">Remove Sequence Highlight</button
+			>
+		{/if}
 	</div>
 	<div class="d-flex flex-row-reverse gap-1">
 		<form
