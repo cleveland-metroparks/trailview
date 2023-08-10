@@ -20,13 +20,15 @@ export const GET = (async ({ cookies, params }) => {
 	if ((await isSessionValid(cookies)) !== true) {
 		return json({ success: false, message: 'Invalid session' } as GetResType, { status: 403 });
 	}
-	const paramDateValue = parseInt(params.dateValue);
-	if (isNaN(paramDateValue)) {
+	const paramBeginDate = parseInt(params.beginDate);
+	const paramEndDate = parseInt(params.endDate);
+	if (isNaN(paramBeginDate) || isNaN(paramEndDate)) {
 		return json({ success: false, message: 'Invalid date value' } as GetResType, { status: 400 });
 	}
-	const day = new Date(paramDateValue);
+	const beginDate = new Date(paramBeginDate);
+	const endDate = new Date(paramEndDate);
 	const query = await db.analytics.findMany({
-		where: { date: { equals: day } },
+		where: { date: { gte: beginDate }, AND: { date: { lte: endDate } } },
 		include: { image: { select: { sequence: { select: { name: true } } } } }
 	});
 	const analyticsMap = new Map<string, number>();

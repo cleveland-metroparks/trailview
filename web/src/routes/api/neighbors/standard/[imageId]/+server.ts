@@ -35,7 +35,14 @@ export const GET = (async ({ url, params }) => {
 
 	// Analytics
 	const current = new Date();
-	const day = new Date(current.getFullYear(), current.getMonth(), current.getDate(), 0, 0, 0);
+	const day = new Date(
+		current.getFullYear(),
+		current.getMonth(),
+		current.getDate(),
+		current.getHours(),
+		0,
+		0
+	);
 	await db.analytics.upsert({
 		where: { imageId_date: { imageId: params.imageId, date: day } },
 		create: { imageId: params.imageId, date: day, count: 1 },

@@ -2,31 +2,48 @@
 	import { onDestroy, onMount } from 'svelte';
 	import type { ApexOptions } from 'apexcharts';
 	import type { PageData } from './$types';
-	import type { GetResType as DayAnalyticsGetResType } from './[dateValue]/+server';
+	import type { GetResType as DayAnalyticsGetResType } from './[beginDate]/[endDate]/+server';
 	import type ApexCharts from 'apexcharts';
 	import { fly, scale } from 'svelte/transition';
+	import { localDateTimeString } from '$lib/util';
 
 	export let data: PageData;
 
 	let chartContainer: HTMLDivElement;
 	let mainChart: ApexCharts | undefined;
 
-	let selectedDay: Date;
-	let dayChartContainer: HTMLDivElement;
-	let dayChart: ApexCharts | undefined;
+	let rangeChartContainer: HTMLDivElement;
+	let rangeChart: ApexCharts | undefined;
 	let showLoadingSpinner = false;
+	let selectedRange: { min: Date; max: Date } | undefined;
+
+	$: if (selectedRange) {
+		(async () => {
+			await showRangeDetails();
+		})();
+	}
 
 	onMount(async () => {
 		await createMainChart();
+		await showRangeDetails();
 	});
 
 	onDestroy(() => {
 		mainChart?.destroy();
-		dayChart?.destroy();
+		rangeChart?.destroy();
 	});
 
 	async function createMainChart() {
 		const ApexCharts = await import('apexcharts');
+
+		const min = data.hitsPerDay.at(0);
+		const max = data.hitsPerDay.at(data.hitsPerDay.length - 1);
+		if (min !== undefined && max !== undefined) {
+			selectedRange = {
+				min: new Date(min[0]),
+				max: new Date(max[0])
+			};
+		}
 
 		const options: ApexOptions = {
 			theme: {
@@ -49,13 +66,34 @@
 					autoScaleYaxis: false
 				},
 				toolbar: {
-					autoSelected: 'zoom'
+					autoSelected: 'zoom',
+					tools: {
+						pan: false
+					}
 				},
 				events: {
-					markerClick(e, chart, options) {
-						const day = new Date(data.hitsPerDay[options.dataPointIndex as number][0]);
-						selectedDay = day;
-						showDayDetails(selectedDay);
+					zoomed(chart, options: { xaxis: { min: number | undefined; max: number | undefined } }) {
+						// x-axis is undefined when fully zoomed out
+						let minDate: Date | undefined;
+						let maxDate: Date | undefined;
+						if (options.xaxis.min !== undefined && options.xaxis.max !== undefined) {
+							selectedRange = {
+								min: new Date(options.xaxis.min),
+								max: new Date(options.xaxis.max)
+							};
+						} else {
+							const min = data.hitsPerDay.at(0);
+							const max = data.hitsPerDay.at(data.hitsPerDay.length - 1);
+							if (min !== undefined && max !== undefined) {
+								selectedRange = {
+									min: new Date(min[0]),
+									max: new Date(max[0])
+								};
+							}
+						}
+						if (minDate !== undefined && maxDate !== undefined) {
+							console.log(localDateTimeString(minDate), localDateTimeString(maxDate));
+						}
 					}
 				}
 			},
@@ -94,27 +132,33 @@
 		mainChart.render();
 	}
 
-	async function showDayDetails(day: Date) {
+	async function showRangeDetails() {
+		if (selectedRange === undefined) {
+			return;
+		}
 		showLoadingSpinner = true;
-		const res = await fetch(`/admin/analytics/${day.valueOf()}`, {
-			method: 'GET',
-			credentials: 'same-origin'
-		});
+		const res = await fetch(
+			`/admin/analytics/${selectedRange.min.valueOf()}/${selectedRange.max.valueOf()}`,
+			{
+				method: 'GET',
+				credentials: 'same-origin'
+			}
+		);
 		const resData: DayAnalyticsGetResType = await res.json();
 		if (resData.success === true) {
-			await createDayChart(resData.data);
+			await createRangeChart(resData.data);
 			showLoadingSpinner = false;
 		}
 		showLoadingSpinner = false;
 	}
 
-	async function createDayChart(
+	async function createRangeChart(
 		data: {
 			sequenceName: string;
 			hits: number;
 		}[]
 	) {
-		if (dayChart === undefined) {
+		if (rangeChart === undefined) {
 			const ApexCharts = await import('apexcharts');
 			var options: ApexOptions = {
 				theme: {
@@ -149,10 +193,10 @@
 				}
 			};
 
-			dayChart = new ApexCharts.default(dayChartContainer, options);
-			dayChart.render();
+			rangeChart = new ApexCharts.default(rangeChartContainer, options);
+			rangeChart.render();
 		} else {
-			dayChart.updateSeries(
+			rangeChart.updateSeries(
 				[
 					{
 						name: 'Image Hits',
@@ -163,7 +207,7 @@
 				],
 				true
 			);
-			dayChart.updateOptions(
+			rangeChart.updateOptions(
 				{
 					chart: { height: Math.max(data.length * 30, 200) },
 					xaxis: {
@@ -187,13 +231,15 @@
 	<p>Click on the dots on the graph to see a detailed view of image hits per sequence</p>
 	<h2 style="font-size:24px">Image Hits per Day</h2>
 	<div bind:this={chartContainer} />
-	{#if selectedDay !== undefined}
+	{#if selectedRange !== undefined}
 		<h2 transition:fly style="font-size:24px">
-			Image Hits per Sequence on {selectedDay.toLocaleDateString()}
+			Image Hits per Sequence for {localDateTimeString(selectedRange.min)} - {localDateTimeString(
+				selectedRange.max
+			)}
 			{#if showLoadingSpinner}<span transition:scale class="spinner-border"></span>{/if}
 		</h2>
 	{/if}
-	<div bind:this={dayChartContainer} />
+	<div bind:this={rangeChartContainer} />
 </div>
 
 <style lang="scss">
