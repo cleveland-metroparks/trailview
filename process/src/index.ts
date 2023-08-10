@@ -136,6 +136,10 @@ async function processTile(sequence: Sequence) {
                 where: { id: sequence.id },
                 data: { status: 'Sequence' },
             });
+            const blurPath = join(sequencePath, 'img_blur');
+            if (fs.existsSync(blurPath) === true) {
+                await fs.remove(blurPath);
+            }
             return;
         }
     }
