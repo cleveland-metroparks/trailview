@@ -101,7 +101,7 @@
 				enabled: false
 			},
 			markers: {
-				size: 4
+				size: 0
 			},
 			fill: {
 				type: 'gradient',
