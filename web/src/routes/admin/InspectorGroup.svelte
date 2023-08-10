@@ -31,6 +31,7 @@
 	const dispatch = createEventDispatcher<{
 		'should-refresh': void;
 		'draw-group': { groupId: number };
+		'sequence-select': { sequenceId: number };
 	}>();
 
 	let selectedGroup: GroupType | undefined;
@@ -101,6 +102,11 @@
 		showGroupSpinner = false;
 		dispatch('draw-group', { groupId: selectedGroupId });
 	}
+
+	function onSequenceChange(event: Event) {
+		const sequenceId = parseInt((event.target as HTMLSelectElement).value.split('_')[1]);
+		dispatch('sequence-select', { sequenceId });
+	}
 </script>
 
 <label for="groupSelect">Create Group</label>
@@ -139,7 +145,11 @@
 	</div>
 	<hr />
 	<h5>From Sequence</h5>
-	<select bind:value={groupSequenceSelectValue} class="form-select form-select-sm">
+	<select
+		on:change={onSequenceChange}
+		bind:value={groupSequenceSelectValue}
+		class="form-select form-select-sm"
+	>
 		{#each sequenceData as sequence}
 			<option value={`seq_${sequence.id}`}>{sequence.name}</option>
 		{/each}

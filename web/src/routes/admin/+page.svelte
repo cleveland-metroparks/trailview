@@ -201,6 +201,7 @@
 			return;
 		}
 		if (trailviewer.allImageData !== undefined) {
+			let sequenceId: number | undefined;
 			const image = trailviewer.allImageData.find((image) => {
 				const sequence = data.sequences.find((sequence) => {
 					return sequence.id === image.sequenceId;
@@ -208,14 +209,109 @@
 				if (!sequence) {
 					return;
 				}
-				return sequence.name === (event.target as HTMLSelectElement).value;
+				if (sequence.name === (event.target as HTMLSelectElement).value) {
+					sequenceId = sequence.id;
+					return true;
+				} else {
+					return false;
+				}
 			});
 			if (image) {
 				trailviewer.goToImageID(image.id);
 				inspectorPage = 'Sequence';
+				if (sequenceId !== undefined) {
+					highlightSequence(sequenceId);
+				}
 			}
 		}
 		goToSequenceSelect.value = 'select';
+	}
+
+	function goToSequence(sequenceId: number) {
+		if (
+			trailviewer === undefined ||
+			trailviewer.map === undefined ||
+			trailviewer.allImageData === undefined
+		) {
+			return;
+		}
+		const image = trailviewer.allImageData.find((i) => {
+			return i.sequenceId === sequenceId;
+		});
+		if (image !== undefined) {
+			trailviewer.goToImageID(image.id);
+			highlightSequence(image.sequenceId);
+		}
+	}
+
+	function highlightSequence(sequenceId: number) {
+		if (
+			trailviewer === undefined ||
+			trailviewer.map === undefined ||
+			trailviewer.allImageData === undefined
+		) {
+			return;
+		}
+		const geoJsonData: FeatureCollection = {
+			type: 'FeatureCollection',
+			features: trailviewer.allImageData
+				.filter((i) => {
+					return i.sequenceId === sequenceId;
+				})
+				.map((i) => {
+					return {
+						type: 'Feature',
+						geometry: {
+							type: 'Point',
+							coordinates: [i.longitude, i.latitude]
+						},
+						properties: {}
+					};
+				})
+		};
+		if (trailviewer.map.getLayer('sequenceLayer') === undefined) {
+			trailviewer.map.addSource('sequenceSource', {
+				type: 'geojson',
+				data: geoJsonData
+			});
+			trailviewer.map.addLayer({
+				id: 'sequenceLayer',
+				source: 'sequenceSource',
+				type: 'circle',
+				paint: {
+					'circle-radius': 12,
+					'circle-color': 'rgb(243,247,5)'
+				}
+			});
+			trailviewer.map.setPaintProperty('sequenceLayer', 'circle-radius', [
+				'interpolate',
+
+				['exponential', 0.5],
+				['zoom'],
+				13,
+				5,
+
+				16,
+				7,
+
+				17,
+				15
+			]);
+			trailviewer.map.setPaintProperty('sequenceLayer', 'circle-opacity', [
+				'interpolate',
+
+				['exponential', 0.5],
+				['zoom'],
+
+				17,
+				0.2,
+
+				18,
+				1
+			]);
+		} else {
+			(trailviewer.map.getSource('sequenceSource') as GeoJSONSource).setData(geoJsonData);
+		}
 	}
 
 	async function createTrailViewer() {
@@ -249,6 +345,10 @@
 
 	function toggleLayout() {
 		layout = layout === 'map' ? 'viewer' : 'map';
+	}
+
+	function onGroupSequenceSelect(event: CustomEvent<{ sequenceId: number }>) {
+		goToSequence(event.detail.sequenceId);
 	}
 </script>
 
@@ -284,6 +384,14 @@
 				<option value={`group_${group.id}`}>{group.name}</option>
 			{/each}
 		</select>
+		<button
+			on:click={() => {
+				trailviewer?.map?.removeLayer('sequenceLayer');
+				trailviewer?.map?.removeSource('sequenceSource');
+			}}
+			type="button"
+			class="btn btn-sm btn-outline-secondary">Remove Sequence Highlight</button
+		>
 	</div>
 	<div class="d-flex flex-row-reverse gap-1">
 		<form
@@ -362,6 +470,7 @@
 						drawGroup(e.detail.groupId);
 					}}
 					on:should-refresh={refreshEverything}
+					on:sequence-select={onGroupSequenceSelect}
 				/>
 			{:else if inspectorPage === 'Move'}
 				<InspectorMove {trailviewer} on:should-refresh={refreshEverything} />
