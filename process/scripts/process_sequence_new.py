@@ -171,8 +171,7 @@ for img_data in img_data_list:
         'longitude': img_data['longitude'],
         'bearing': img_bearing_dict[img_data['id']],
         'flipped': flipped,
-        'creationDate': datetime.datetime.strptime(
-            str(img_data['creationDate']), '%Y-%m-%d %H:%M:%S'),
+        'creationDate': str(img_data['creationDate']),
         'shtHash': sht_dict[img_data['id']]
     })
 
