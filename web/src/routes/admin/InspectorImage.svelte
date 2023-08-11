@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { createEventDispatcher } from 'svelte';
+	import moment from 'moment';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import type ConfirmModal from '$lib/ConfirmModal.svelte';
 	import type FormAlert from '$lib/FormAlert.svelte';
@@ -17,6 +18,10 @@
 	let showImageSpinner = false;
 	let showPrivateViewSpinner = false;
 	let showPublicViewSpinner = false;
+
+	$: if (currentImage !== undefined) {
+		console.log(currentImage.createdAt);
+	}
 
 	async function setViewVisibility(visible: boolean) {
 		if (
@@ -81,6 +86,23 @@
 	<input name="imageId" type="hidden" value={currentImage?.id} />
 	<label for="image_id">Image Id</label>
 	<input id="image_id" readonly class="form-control" value={currentImage?.id ?? 'Undefined'} />
+
+	{#if currentImage !== undefined}
+		<div class="mt-2 input-group input-group-sm">
+			<div class="input-group-text">Captured At</div>
+			{#if currentImage.createdAt !== null}
+				<input
+					class="form-control"
+					readonly
+					type="datetime-local"
+					value={moment(currentImage.createdAt).format('YYYY-MM-DDTkk:mm')}
+				/>
+			{:else}
+				<input class="form-control" readonly type="text" value="Unknown" />
+			{/if}
+		</div>
+	{/if}
+
 	<div class="mt-2 form-check form-switch">
 		<input
 			checked={(() => {

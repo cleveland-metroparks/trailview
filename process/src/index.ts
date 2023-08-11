@@ -109,22 +109,6 @@ async function processSequence(sequence: Sequence) {
         currentImagesIndex.set(image.id, image);
     });
 
-    // TODO: Temporary migration for creation date
-    for (const image of masterData.data) {
-        if (image.creationDate === undefined) {
-            continue;
-        }
-        const imageQuery = await db.image.findUnique({
-            where: { id: image.id },
-        });
-        if (imageQuery !== null && imageQuery.createdAt === null) {
-            await db.image.update({
-                where: { id: image.id },
-                data: { createdAt: parseCustomDateTime(image.creationDate) },
-            });
-        }
-    }
-
     for (const image of masterData.data) {
         if (currentImagesIndex.has(image.id) === true) {
             continue;
@@ -292,7 +276,7 @@ async function loop() {
     while (true) {
         await loop();
         await new Promise<void>((resolve) => {
-            setTimeout(resolve, 1000 * 1);
+            setTimeout(resolve, 1000 * 30);
         });
     }
 })();

@@ -10,6 +10,7 @@ interface Image {
 	flipped: boolean;
 	pitchCorrection: number;
 	visibility: boolean;
+	createdAt: Date | null;
 }
 
 export interface Neighbor extends Image {
@@ -116,6 +117,7 @@ export function getNeighbors(
 						longitude: data[p].longitude,
 						shtHash: imagePreviews.get(data[p].id),
 						pitchCorrection: data[p].pitchCorrection,
+						createdAt: data[p].createdAt,
 						visibility: data[p].visibility
 					});
 				}

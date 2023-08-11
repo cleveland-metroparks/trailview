@@ -8,6 +8,7 @@ interface Image {
 	bearing: number;
 	flipped: boolean;
 	pitchCorrection: number;
+	createdAt: Date | null;
 	visibility: boolean;
 }
 

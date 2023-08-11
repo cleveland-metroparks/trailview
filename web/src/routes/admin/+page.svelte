@@ -61,7 +61,7 @@
 
 	let showCacheSpinner = false;
 
-	let isSequenceHighlighted = false;
+	let highlightedSequenceId: number | undefined = undefined;
 
 	let layout: 'viewer' | 'map' = 'map';
 
@@ -312,9 +312,10 @@
 				18,
 				1
 			]);
-			isSequenceHighlighted = true;
+			highlightedSequenceId = sequenceId;
 		} else {
 			(trailviewer.map.getSource('sequenceSource') as GeoJSONSource).setData(geoJsonData);
+			highlightedSequenceId = sequenceId;
 		}
 	}
 
@@ -388,13 +389,25 @@
 				<option value={`group_${group.id}`}>{group.name}</option>
 			{/each}
 		</select>
-		{#if isSequenceHighlighted}
+		{#if currentSequence !== undefined && currentSequence.id !== highlightedSequenceId}
+			<button
+				transition:scale
+				on:click={() => {
+					if (currentSequence !== undefined) {
+						highlightSequence(currentSequence.id);
+					}
+				}}
+				type="button"
+				class="btn btn-sm btn-outline-warning">Highlight current sequence</button
+			>
+		{/if}
+		{#if highlightedSequenceId !== undefined}
 			<button
 				transition:scale
 				on:click={() => {
 					trailviewer?.map?.removeLayer('sequenceLayer');
 					trailviewer?.map?.removeSource('sequenceSource');
-					isSequenceHighlighted = false;
+					highlightedSequenceId = undefined;
 				}}
 				type="button"
 				class="btn btn-sm btn-outline-secondary">Remove Sequence Highlight</button

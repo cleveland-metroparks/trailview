@@ -10,6 +10,7 @@ export let standardImageData:
 			flipped: boolean;
 			pitchCorrection: number;
 			visibility: boolean;
+			createdAt: Date | null;
 	  }[]
 	| undefined;
 
@@ -23,6 +24,7 @@ export let allImageData:
 			flipped: boolean;
 			visibility: boolean;
 			sequenceId: number;
+			createdAt: Date | null;
 	  }[]
 	| undefined;
 
@@ -45,7 +47,8 @@ export async function refreshImageData(once: boolean) {
 			bearing: true,
 			flipped: true,
 			pitchCorrection: true,
-			visibility: true
+			visibility: true,
+			createdAt: true
 		}
 	});
 	standardImageData = await db.image.findMany({
@@ -58,7 +61,8 @@ export async function refreshImageData(once: boolean) {
 			bearing: true,
 			flipped: true,
 			pitchCorrection: true,
-			visibility: true
+			visibility: true,
+			createdAt: true
 		}
 	});
 
