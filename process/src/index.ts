@@ -97,7 +97,7 @@ async function processSequence(sequence: Sequence) {
             longitude: number;
             bearing: number;
             flipped: boolean;
-            creationDate: string;
+            creationDate?: string;
             shtHash: string;
         }[];
     };
@@ -108,6 +108,23 @@ async function processSequence(sequence: Sequence) {
     currentImages.forEach((image) => {
         currentImagesIndex.set(image.id, image);
     });
+
+    // TODO: Temporary migration for creation date
+    for (const image of masterData.data) {
+        if (image.creationDate === undefined) {
+            continue;
+        }
+        const imageQuery = await db.image.findUnique({
+            where: { id: image.id },
+        });
+        if (imageQuery !== null && imageQuery.createdAt === null) {
+            await db.image.update({
+                where: { id: image.id },
+                data: { createdAt: parseCustomDateTime(image.creationDate) },
+            });
+        }
+    }
+
     for (const image of masterData.data) {
         if (currentImagesIndex.has(image.id) === true) {
             continue;
@@ -130,7 +147,10 @@ async function processSequence(sequence: Sequence) {
                 flipped: image.flipped,
                 shtHash: image.shtHash,
                 pitchCorrection: 0,
-                createdAt: parseCustomDateTime(image.creationDate),
+                createdAt:
+                    image.creationDate !== undefined
+                        ? parseCustomDateTime(image.creationDate)
+                        : null,
                 visibility: false,
                 sequenceId: sequence.id,
             },
@@ -272,7 +292,7 @@ async function loop() {
     while (true) {
         await loop();
         await new Promise<void>((resolve) => {
-            setTimeout(resolve, 1000 * 30);
+            setTimeout(resolve, 1000 * 1);
         });
     }
 })();
