@@ -20,12 +20,16 @@ This script creates image tiles
 '''
 
 # Get creation date from picture
+
+
 def get_exif_date(img: Image) -> datetime.datetime:
     exif = img.getexif()
     creation_date_str: str = str(exif.get(306))
     return datetime.datetime.strptime(creation_date_str, "%Y:%m:%d %H:%M:%S")
 
 # Get latitude and longitude from picture
+
+
 def get_exif_geo(img: Image) -> tuple[float, float]:
     exif_table = {}
     info = img._getexif()
@@ -44,16 +48,22 @@ def get_exif_geo(img: Image) -> tuple[float, float]:
     if 'GPSLatitude' in gps_info and 'GPSLongitude' in gps_info:
         lat = gps_info['GPSLatitude']
         lon = gps_info['GPSLongitude']
-        lat_str = str(int(lat[0])) + "°" + str(int(lat[1])) + "'" + str(lat[2]) + '"' + str(gps_info['GPSLatitudeRef'])
-        lon_str = str(int(lon[0])) + "°" + str(int(lon[1])) + "'" + str(lon[2]) + '"' + str(gps_info['GPSLongitudeRef'])
+        lat_str = str(int(lat[0])) + "°" + str(int(lat[1])) + \
+            "'" + str(lat[2]) + '"' + str(gps_info['GPSLatitudeRef'])
+        lon_str = str(int(lon[0])) + "°" + str(int(lon[1])) + "'" + \
+            str(lon[2]) + '"' + str(gps_info['GPSLongitudeRef'])
         geo = (dms2dec(lat_str), dms2dec(lon_str))
 
     return geo
 
+
 parser = argparse.ArgumentParser(description="Process image tiles.")
-parser.add_argument('dir', type=str, help='Directory that contains the img_original folder.')
-parser.add_argument('--replace', nargs='?', type=bool, help='If set to true, then will replace existing img folder; default: False', default=False)
-parser.add_argument('--useblurred', nargs='?', type=bool, help='When enabled, it uses images from the img_blur folder and metadata from img_original')
+parser.add_argument(
+    'dir', type=str, help='Directory that contains the img_original folder.')
+parser.add_argument('--replace', nargs='?', type=bool,
+                    help='If set to true, then will replace existing img folder; default: False', default=False)
+parser.add_argument('--useblurred', nargs='?', type=bool,
+                    help='When enabled, it uses images from the img_blur folder and metadata from img_original')
 args = parser.parse_args()
 
 directory = args.dir
@@ -112,17 +122,17 @@ for filename in os.listdir(original_path):
         with open(os.path.join(directory, 'img',  image_id + ".json"), "w") as outfile:
             json.dump(image_data, outfile, indent=4)
 
-        img_file = file_path 
+        img_file = file_path
         if use_blurred:
             img_file = os.path.join(blur_path, filename)
 
         # Generate image tiles
         sys.stdout.flush()
-        subprocess.run("python " + os.path.join(os.path.dirname(os.path.realpath(__file__)), 'generate.py') + " --haov 360.0 --fallbacksize 0 --vaov 180.0 \"" + str(img_file) + "\" -q 70 -o \"" + directory + "/img/" + image_id + "\"", shell=True)
+        subprocess.run("python " + os.path.join(os.path.dirname(os.path.realpath(__file__)), 'generate.py') +
+                       " --haov 360.0 --fallbacksize 0 --vaov 180.0 \"" + str(img_file) + "\" -q 70 -o \"" + directory + "/img/" + image_id + "\"", shell=True)
         sys.stdout.flush()
         count += 1
         if count > 50:
-            exit();
+            exit()
 
 print("Done!")
-

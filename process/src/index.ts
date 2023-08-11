@@ -14,6 +14,21 @@ if (process.env.IMAGES_PATH === undefined) {
 }
 const IMAGES_PATH = process.env.IMAGES_PATH;
 
+function parseCustomDateTime(dateTimeString: string): Date | null {
+    // Convert the custom format to ISO 8601 format
+    const isoDateTimeString = dateTimeString.replace(' ', 'T') + '-04:00'; // Assuming New York timezone offset is UTC-4
+
+    // Parse the ISO 8601 formatted string
+    const parsedDate = new Date(isoDateTimeString);
+
+    // Check if parsing was successful
+    if (isNaN(parsedDate.getTime())) {
+        return null; // Parsing failed
+    }
+
+    return parsedDate;
+}
+
 async function countJpgs(dir: string) {
     const files = await fs.readdir(dir);
     const jpgs = files.filter((file) => {
@@ -82,6 +97,7 @@ async function processSequence(sequence: Sequence) {
             longitude: number;
             bearing: number;
             flipped: boolean;
+            creationDate: string;
             shtHash: string;
         }[];
     };
@@ -114,6 +130,7 @@ async function processSequence(sequence: Sequence) {
                 flipped: image.flipped,
                 shtHash: image.shtHash,
                 pitchCorrection: 0,
+                createdAt: parseCustomDateTime(image.creationDate),
                 visibility: false,
                 sequenceId: sequence.id,
             },

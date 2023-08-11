@@ -1,7 +1,8 @@
 import json             # for processing json files
 import argparse         # for processing console arguments
 import os               # For directory manipulation
-from geographiclib.geodesic import Geodesic # for processing geo distance and bearing
+# for processing geo distance and bearing
+from geographiclib.geodesic import Geodesic
 import datetime         # for sorting by creation date
 from cmath import rect, phase       # for angle calculations
 from math import radians, degrees   # for angle calculations
@@ -17,12 +18,13 @@ eventually gets combined into a master data.json file
 # Process console arguments
 parser = argparse.ArgumentParser(description="Create sequence_new.json")
 parser.add_argument('dir', type=str, help='The sequence directory')
-parser.add_argument('--flip', action=argparse.BooleanOptionalAction, help='The sequence will be flipped 180*')
+parser.add_argument('--flip', action=argparse.BooleanOptionalAction,
+                    help='The sequence will be flipped 180*')
 args = parser.parse_args()
 
 seq_dir = str(args.dir)
 img_dir = os.path.join(seq_dir, 'img')
-flipped = True;#args.flip
+flipped = True  # args.flip
 
 # Create json structure
 sequence_json = {
@@ -32,10 +34,14 @@ sequence_json = {
 }
 
 # Returns mean of list of angles in degrees
+
+
 def mean_angle(deg: list[float]) -> float:
     return degrees(phase(sum(rect(1, radians(d)) for d in deg)/len(deg))) % 360
 
 # Create dictionary from img json files
+
+
 def get_all_images(dir: str) -> list:
     # Format of images list
     # [{'id', 'date', 'latitude', 'longitude'}, ...]
@@ -53,12 +59,14 @@ def get_all_images(dir: str) -> list:
         # Add data to images list
         image = {}
         image['id'] = filename.replace('.json', '')
-        image['date'] = datetime.datetime.strptime(str(img_data['creationDate']), '%Y-%m-%d %H:%M:%S')
+        image['date'] = datetime.datetime.strptime(
+            str(img_data['creationDate']), '%Y-%m-%d %H:%M:%S')
         image['latitude'] = img_data['latitude']
         image['longitude'] = img_data['longitude']
         if image['latitude'] != 0.0 and image['longitude'] != 0.0 and image['date'] != None:
             images.append(image)
     return images
+
 
 # Verify directory
 if not os.path.exists(os.path.join(seq_dir, 'img')):
@@ -83,7 +91,8 @@ for i in range(len(images)):
         continue
     img1 = images[i]
     img2 = images[i + 1]
-    info = Geodesic.WGS84.Inverse(img1['latitude'], img1['longitude'], img2['latitude'], img2['longitude'])
+    info = Geodesic.WGS84.Inverse(
+        img1['latitude'], img1['longitude'], img2['latitude'], img2['longitude'])
     # If distance is less than cutoff, then base bearing on next and previous image
     if (info['s12'] <= 10):
         # Get bearing based on next image
@@ -102,7 +111,7 @@ for i in range(len(images)):
                 images[i]['bearing'] = avg
             else:
                 # Only base bearing on next image
-                images[i]['bearing'] = brng 
+                images[i]['bearing'] = brng
         else:
             # Only base bearing on next image
             images[i]['bearing'] = brng
@@ -133,7 +142,8 @@ for f in os.listdir(img_dir):
         j = open(f_path)
         img_data = json.load(j)
         j.close()
-        img_data['creationDate'] = datetime.datetime.strptime(str(img_data['creationDate']), '%Y-%m-%d %H:%M:%S')
+        img_data['creationDate'] = datetime.datetime.strptime(
+            str(img_data['creationDate']), '%Y-%m-%d %H:%M:%S')
         img_data['id'] = f.replace('.json', '')
         img_data_list.append(img_data)
     elif os.path.isdir(f_path):
@@ -141,7 +151,7 @@ for f in os.listdir(img_dir):
         config_data = json.load(j)
         j.close()
         sht_dict[f] = config_data['multiRes']['shtHash']
-        
+
 
 # Sort images by datetime taken
 img_data_list.sort(key=lambda x: x['creationDate'])
@@ -153,7 +163,7 @@ for img_data in img_data_list:
     #     info = Geodesic.WGS84.Inverse(img_data['latitude'], img_data['longitude'], prev_data['latitude'], prev_data['longitude'])
     #     if info['s12'] >= 10:
     if not img_data['id'] in img_bearing_dict:
-        continue;
+        continue
     sequence_json['sequence'].append({
         'id': img_data['id'],
         'sequence': os.path.basename(seq_dir),
@@ -161,6 +171,7 @@ for img_data in img_data_list:
         'longitude': img_data['longitude'],
         'bearing': img_bearing_dict[img_data['id']],
         'flipped': flipped,
+        'creationDate': img_data['creationDate'],
         'shtHash': sht_dict[img_data['id']]
     })
 
@@ -172,7 +183,7 @@ for img_data in img_data_list:
     #         'longitude': img_data['longitude']
     #     })
     #     prev_data = img_data
-        
+
 # Write json file
 with open(os.path.join(seq_dir, "sequence_new.json"), "w") as outfile:
     json.dump(sequence_json, outfile)

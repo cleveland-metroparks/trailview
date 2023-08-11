@@ -12,8 +12,10 @@ image metadata that gets uploaded to the database
 '''
 
 # Process console arguments
-parser = argparse.ArgumentParser(description="Create data.json and img_hash.json")
-parser.add_argument('dir', type=str, help='Directory that contains all the sequences.')
+parser = argparse.ArgumentParser(
+    description="Create data.json and img_hash.json")
+parser.add_argument(
+    'dir', type=str, help='Directory that contains all the sequences.')
 args = parser.parse_args()
 
 directory = str(args.dir)
@@ -57,21 +59,13 @@ for trail in seq_dict:
             "longitude": point["longitude"],
             "bearing": point["bearing"],
             'flipped': point['flipped'],
+            'creationDate': point['creationDate'],
             'shtHash': point['shtHash']
         })
         hash_json['img_hash'][point['id']] = point['shtHash']
 
-def round_floats(o):
-    if isinstance(o, float):
-        return round(o, 7)
-    if isinstance(o, dict):
-        return {k: round_floats(v) for k, v in o.items()}
-    if isinstance(o, (list, tuple)):
-        return [round_floats(x) for x in o]
-    return o
-
 with open(os.path.join(directory, "data.json"), "w") as outfile:
-    json.dump(round_floats(data_json), outfile)
+    json.dump(data_json, outfile)
 
 with open(os.path.join(directory, "img_hash.json"), "w") as outfile:
     json.dump(hash_json, outfile)
