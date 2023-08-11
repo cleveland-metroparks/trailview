@@ -10,7 +10,7 @@ export let standardImageData:
 			flipped: boolean;
 			pitchCorrection: number;
 			visibility: boolean;
-			createdAt: Date | null;
+			createdAt: Date;
 	  }[]
 	| undefined;
 
@@ -24,7 +24,7 @@ export let allImageData:
 			flipped: boolean;
 			visibility: boolean;
 			sequenceId: number;
-			createdAt: Date | null;
+			createdAt: Date;
 	  }[]
 	| undefined;
 

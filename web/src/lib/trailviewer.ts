@@ -134,7 +134,7 @@ export interface Image {
 	flipped: boolean;
 	pitchCorrection: number;
 	visibility: boolean;
-	createdAt: Date | null;
+	createdAt: Date;
 	shtHash: string | undefined;
 }
 

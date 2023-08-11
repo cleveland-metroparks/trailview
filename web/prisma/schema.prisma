@@ -46,7 +46,7 @@ model Image {
   pitchCorrection   Float
   visibility        Boolean
   sequenceId        Int
-  createdAt         DateTime?
+  createdAt         DateTime
   sequence          Sequence    @relation(fields: [sequenceId], references: [id])
   analytics         Analytics[]
   groups            Group[]     @relation("ImageGroupRelation")

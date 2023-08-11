@@ -10,7 +10,7 @@ interface Image {
 	flipped: boolean;
 	pitchCorrection: number;
 	visibility: boolean;
-	createdAt: Date | null;
+	createdAt: Date;
 }
 
 export interface Neighbor extends Image {

@@ -97,7 +97,7 @@ async function processSequence(sequence: Sequence) {
             longitude: number;
             bearing: number;
             flipped: boolean;
-            creationDate?: string;
+            creationDate: string;
             shtHash: string;
         }[];
     };
@@ -120,6 +120,13 @@ async function processSequence(sequence: Sequence) {
             console.error(`Failed to find sequence: ${image.sequence}`);
             continue;
         }
+        const createdAt = parseCustomDateTime(image.creationDate);
+        if (createdAt === null) {
+            console.error(
+                `Image does not have a valid creation date, id: ${image.id}`
+            );
+            continue;
+        }
         await db.image.create({
             data: {
                 id: image.id,
@@ -131,10 +138,7 @@ async function processSequence(sequence: Sequence) {
                 flipped: image.flipped,
                 shtHash: image.shtHash,
                 pitchCorrection: 0,
-                createdAt:
-                    image.creationDate !== undefined
-                        ? parseCustomDateTime(image.creationDate)
-                        : null,
+                createdAt: createdAt,
                 visibility: false,
                 sequenceId: sequence.id,
             },
