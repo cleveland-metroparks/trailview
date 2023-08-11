@@ -136,6 +136,7 @@ export interface Image {
     flipped: boolean;
     pitchCorrection: number;
     visibility: boolean;
+    createdAt: Date | null;
     shtHash: string | undefined;
 }
 
@@ -171,6 +172,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
     protected _destroyed = false;
     private _neighbors: Neighbor[] = [];
     private _pitchCorrectionOverride: number | undefined;
+    private _dateCapturedElement: HTMLDivElement | undefined;
 
     public constructor(options: TrailViewerBaseOptions = defaultBaseOptions) {
         this._emitter = new EventEmitter();
@@ -532,7 +534,25 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             this._addNeighborsToViewer(this._neighbors, this._currImg.flipped);
         }
         this._createNavContainer();
+        this._createDateTimeTaken();
         this._emitter.emit('init-done');
+    }
+
+    private _createDateTimeTaken() {
+        const div = document.createElement('div');
+        div.classList.add('trailview-datetime');
+        document.getElementById(this._options.target)?.appendChild(div);
+        this._dateCapturedElement = div;
+    }
+
+    private _updateDateTimeTaken() {
+        if (this._dateCapturedElement !== undefined) {
+            this._dateCapturedElement.innerHTML = `Captured: ${
+                this._currImg !== undefined && this._currImg.createdAt !== null
+                    ? new Date(this._currImg.createdAt).toLocaleDateString()
+                    : 'Unknown'
+            }`;
+        }
     }
 
     private _createNavContainer() {
@@ -593,6 +613,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
         this._sceneList = visibleScenes;
         this._prevImg = this._currImg;
         this._addNeighborsToViewer(this._neighbors, this._currImg.flipped);
+        this._updateDateTimeTaken();
         this._emitter.emit('image-change', this._currImg);
     }
 

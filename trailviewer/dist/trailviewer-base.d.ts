@@ -41,6 +41,7 @@ export interface Image {
     flipped: boolean;
     pitchCorrection: number;
     visibility: boolean;
+    createdAt: Date | null;
     shtHash: string | undefined;
 }
 export interface Neighbor extends Image {
@@ -67,6 +68,7 @@ export declare class TrailViewerBase implements TrailViewerBaseEvents {
     protected _destroyed: boolean;
     private _neighbors;
     private _pitchCorrectionOverride;
+    private _dateCapturedElement;
     constructor(options?: TrailViewerBaseOptions);
     on(event: string, listener: (...args: any[]) => void): void;
     overridePitchCorrection(pitch?: number): void;
@@ -84,6 +86,8 @@ export declare class TrailViewerBase implements TrailViewerBaseEvents {
     private _customMod;
     private _getNeighbors;
     private _initViewer;
+    private _createDateTimeTaken;
+    private _updateDateTimeTaken;
     private _createNavContainer;
     private _onImageChange;
     getImageGeo(): {

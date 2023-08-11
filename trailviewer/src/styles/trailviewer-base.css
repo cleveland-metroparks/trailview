@@ -58,3 +58,15 @@
 .pnlm-about-msg {
     visibility: hidden;
 }
+
+.trailview-datetime {
+    position: absolute;
+    font-size: 11px;
+    font-family: sans-serif;
+    color: white;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2;
+    padding: 2px;
+}
