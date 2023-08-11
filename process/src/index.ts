@@ -114,10 +114,10 @@ async function processSequence(sequence: Sequence) {
         if (image.creationDate === undefined) {
             continue;
         }
-        const imageQuery = await db.image.findUnique({
-            where: { id: image.id },
+        const currentImage = currentImages.find((i) => {
+            return i.id === image.id;
         });
-        if (imageQuery !== null && imageQuery.createdAt === null) {
+        if (currentImage !== undefined && currentImage.createdAt === null) {
             await db.image.update({
                 where: { id: image.id },
                 data: { createdAt: parseCustomDateTime(image.creationDate) },
