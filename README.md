@@ -3,6 +3,6 @@
 ## Modules
 
 - `docs` - Documentation
-- `tools` - Backend tools (for image processing)
+- `prisma` - Database schema with Prisma ORM
 - `trailviewer` - Frontend client library for viewer
 - `web` - Admin page and API
