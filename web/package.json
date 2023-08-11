@@ -12,6 +12,9 @@
 		"format": "prettier --plugin prettier-plugin-svelte --write .",
 		"start": "node build"
 	},
+	"prisma": {
+		"schema": "../prisma/schema.prisma"
+	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.1.0",
 		"@sveltejs/adapter-node": "^1.3.1",
