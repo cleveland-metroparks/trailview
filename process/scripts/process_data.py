@@ -52,16 +52,18 @@ for trail in seq_dict:
             continue
         if "bearing" not in point:
             continue
-        data_json['data'].append({
+        point_data = {
             'id': point['id'],
             "sequence": trail,
             "latitude": point["latitude"],
             "longitude": point["longitude"],
             "bearing": point["bearing"],
             'flipped': point['flipped'],
-            'creationDate': point['creationDate'],
             'shtHash': point['shtHash']
-        })
+        }
+        if "creationDate" in point:
+            point_data['creationDate'] = point['creationDate']
+        data_json['data'].append(point_data)
         hash_json['img_hash'][point['id']] = point['shtHash']
 
 with open(os.path.join(directory, "data.json"), "w") as outfile:
