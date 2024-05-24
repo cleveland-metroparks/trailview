@@ -21,6 +21,9 @@ const trailsResType = z.union([
 export async function fetchTrails(
 	f: typeof fetch = fetch
 ): Promise<{ id: number; name: string; description: string }[] | Error> {
+	if (PUBLIC_MAPS_API === '') {
+		return new Error('No Maps API URL specified');
+	}
 	const res = await f(urlJoin(PUBLIC_MAPS_API, '/trails'), { method: 'GET' });
 	if (res.status !== 200) {
 		return new Error(`${res.status}: ${res.statusText}`);

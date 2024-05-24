@@ -16,7 +16,7 @@
 		window.onbeforeunload = uploading
 			? () => {
 					return true;
-			  }
+				}
 			: null;
 	}
 
@@ -94,8 +94,8 @@
 			{error
 				? errorMessage ?? 'An error has occured, uploading cancelled'
 				: complete
-				? 'Upload complete!'
-				: 'Undefined'}
+					? 'Upload complete!'
+					: 'Undefined'}
 		</div>
 	{/if}
 

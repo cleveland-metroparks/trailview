@@ -75,6 +75,9 @@
 		if (mapsApiTrailValue === 'unassigned') {
 			return;
 		}
+		if (PUBLIC_MAPS_API === '') {
+			return;
+		}
 		const res = await fetch(
 			urlJoin(PUBLIC_MAPS_API, '/trail_geometries', mapsApiTrailValue.toString())
 		);

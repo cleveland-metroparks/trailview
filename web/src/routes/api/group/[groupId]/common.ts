@@ -21,11 +21,11 @@ export async function getGroup(
 			? await db.group.findUnique({
 					where: { id: id },
 					include: { images: { select: { id: true } } }
-			  })
+				})
 			: await db.group.findUnique({
 					where: { id: id },
 					include: { images: { select: { id: true }, where: { visibility: true } } }
-			  });
+				});
 	if (group === null) {
 		return new Error('Invalid group id');
 	}

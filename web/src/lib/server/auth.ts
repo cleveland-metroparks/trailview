@@ -18,7 +18,7 @@ export async function logout(cookies: Cookies): Promise<boolean> {
 	if (sessionCookie === undefined) {
 		return false;
 	}
-	cookies.delete('session');
+	cookies.delete('session', { path: '/admin' });
 	try {
 		await db.session.delete({ where: { Id: sessionCookie } });
 	} catch {
@@ -43,6 +43,7 @@ export async function attemptLogin(
 	if (user.Password === password.toString()) {
 		const session = await db.session.create({ data: { AdminAccountId: user.Id } });
 		cookies.set('session', session.Id, {
+			path: '/admin',
 			secure: process.env.NODE_ENV === 'development' ? false : true,
 			httpOnly: true,
 			sameSite: 'strict',

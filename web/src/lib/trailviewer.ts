@@ -478,9 +478,8 @@ export class TrailViewer implements TrailViewerEvents {
 					360 - angle180to360(this._panViewer.getYaw()) + (arrow as HTMLNavArrowElement).yaw,
 					360
 				);
-				(
-					arrow as HTMLNavArrowElement
-				).style.transform = `scale(80%) translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
+				(arrow as HTMLNavArrowElement).style.transform =
+					`scale(80%) translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
 			}
 			let rot = (this._panViewer.getPitch() + 90) / 2.5;
 			if (rot > 80) {
@@ -488,9 +487,8 @@ export class TrailViewer implements TrailViewerEvents {
 			} else if (rot < 0) {
 				rot = 0;
 			}
-			(
-				document.getElementById('trailview-nav-container') as HTMLDivElement
-			).style.transform = `translate(-50%, 0) perspective(300px) rotateX(${rot}deg)`;
+			(document.getElementById('trailview-nav-container') as HTMLDivElement).style.transform =
+				`translate(-50%, 0) perspective(300px) rotateX(${rot}deg)`;
 		}
 		if (!once && this._destroyed === false) {
 			requestAnimationFrame(this._updateNavArrows.bind(this, false));

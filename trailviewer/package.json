@@ -11,7 +11,8 @@
     "exports": {
         ".": {
             "import": "./dist/trailviewer.mjs",
-            "require": "./dist/trailviewer.umd.js"
+            "require": "./dist/trailviewer.umd.js",
+            "types": "./dist/trailviewer.d.ts"
         },
         "./dist/trailviewer.css": {
             "import": "./dist/trailviewer.css",
@@ -19,14 +20,14 @@
         },
         "./dist/trailviewer-base": {
             "import": "./dist/trailviewer-base.mjs",
-            "require": "./dist/trailviewer-base.umd.js"
+            "require": "./dist/trailviewer-base.umd.js",
+            "types": "./dist/trailviewer-base.d.ts"
         },
         "./dist/trailviewer-base.css": {
             "import": "./dist/trailviewer-base.css",
             "require": "./dist/trailviewer-base.css"
         }
     },
-    "types": "./dist/trailviewer.d.ts",
     "scripts": {
         "build": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs",
         "format": "prettier --write .",
@@ -36,28 +37,28 @@
     },
     "devDependencies": {
         "@cmparks/pannellum": "^2.6.0",
-        "@rollup/plugin-commonjs": "^25.0.3",
-        "@rollup/plugin-node-resolve": "^15.1.0",
-        "@rollup/plugin-terser": "^0.4.3",
-        "@rollup/plugin-typescript": "^11.1.2",
-        "@types/events": "^3.0.0",
-        "@types/mapbox-gl": "^2.7.13",
-        "@types/node": "^20.4.9",
-        "@typescript-eslint/eslint-plugin": "^6.3.0",
-        "@typescript-eslint/parser": "^6.3.0",
+        "@rollup/plugin-commonjs": "^25.0.8",
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@rollup/plugin-terser": "^0.4.4",
+        "@rollup/plugin-typescript": "^11.1.6",
+        "@types/events": "^3.0.3",
+        "@types/mapbox-gl": "^3.1.0",
+        "@types/node": "^20.12.12",
+        "@typescript-eslint/eslint-plugin": "^7.10.0",
+        "@typescript-eslint/parser": "^7.10.0",
         "copyfiles": "^2.4.1",
         "eslint": "^8.47.0",
         "http-server": "^14.1.1",
-        "prettier": "^3.0.1",
-        "rimraf": "^5.0.1",
-        "rollup": "^3.28.0",
-        "rollup-plugin-import-css": "^3.3.1",
-        "tslib": "^2.6.1",
-        "typescript": "^5.1.6"
+        "prettier": "^3.2.5",
+        "rimraf": "^5.0.7",
+        "rollup": "^4.18.0",
+        "rollup-plugin-import-css": "^3.5.0",
+        "tslib": "^2.6.2",
+        "typescript": "^5.4.5"
     },
     "dependencies": {
         "events": "^3.3.0",
-        "mapbox-gl": "^2.15.0",
+        "mapbox-gl": "^3.4.0",
         "url-join": "^5.0.0"
     }
 }
