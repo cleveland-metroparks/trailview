@@ -2,7 +2,7 @@
 	export type MapsApiTrailsType = {
 		id: number;
 		name: string;
-		description: string;
+		description: string | null;
 	}[];
 
 	export function mapsApiTrailSelectValue(

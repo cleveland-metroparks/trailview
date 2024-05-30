@@ -12,7 +12,7 @@ const trailsResType = z.union([
 			z.object({
 				id: z.number(),
 				name: z.string(),
-				description: z.string()
+				description: z.string().nullable()
 			})
 		)
 	})
@@ -20,7 +20,7 @@ const trailsResType = z.union([
 
 export async function fetchTrails(
 	f: typeof fetch = fetch
-): Promise<{ id: number; name: string; description: string }[] | Error> {
+): Promise<{ id: number; name: string; description: string | null }[] | Error> {
 	if (PUBLIC_MAPS_API === '') {
 		return new Error('No Maps API URL specified');
 	}
