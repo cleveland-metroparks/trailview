@@ -2,7 +2,6 @@
 	import { onDestroy, onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
-	import type { Sequence } from '@prisma/client';
 
 	export let data: PageData;
 
@@ -30,12 +29,13 @@
 		tableData = data.sequences;
 	} else {
 		tableData = data.sequences.filter((sequence) => {
-			return sequence.status !== 'Done' || sequence.toDelete !== false;
+			return sequence.status !== 'done' || sequence.toDelete !== false;
 		});
 	}
 
 	let fetchInterval: ReturnType<typeof setInterval> | undefined;
 
+	type Sequence = (typeof data.sequences)[number];
 	async function onDelete(sequence: Sequence) {
 		const response = prompt(
 			`Are you sure you want to delete ${sequence.name}? Type 'I understand' to confirm deletion.`

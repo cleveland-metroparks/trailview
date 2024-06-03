@@ -25,13 +25,13 @@ export async function refreshGeoJsonData(once = false) {
 					sequenceId: image.sequenceId,
 					groupIds: groupData
 						.filter((g) => {
-							return g.B === image.id;
+							return g.imageId === image.id;
 						})
 						.map((g) => {
-							return g.A;
+							return g.groupId;
 						}),
 					imageID: image.id,
-					visible: image.visibility
+					visible: image.public
 				},
 				geometry: {
 					type: 'Point',
@@ -65,13 +65,13 @@ export async function refreshGeoJsonData(once = false) {
 					sequenceId: image.sequenceId,
 					groupIds: groupData
 						.filter((g) => {
-							return g.B === image.id;
+							return g.imageId === image.id;
 						})
 						.map((g) => {
-							return g.A;
+							return g.groupId;
 						}),
 					imageID: image.id,
-					visible: image.visibility
+					visible: image.public
 				},
 				geometry: {
 					type: 'Point',

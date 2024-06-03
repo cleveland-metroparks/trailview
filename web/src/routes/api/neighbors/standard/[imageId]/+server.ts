@@ -1,7 +1,8 @@
 import { refreshImageData, standardImageData } from '$lib/server/dbcache';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getNeighbors } from '../../common';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
 
 export const GET = (async ({ url, params }) => {
 	const searchParamSequencesFilter = url.searchParams.get('s');

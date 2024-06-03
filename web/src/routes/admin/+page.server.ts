@@ -1,13 +1,17 @@
 import { isSessionValid, redirectIfSessionInvalid } from '$lib/server/auth';
 import { refreshImageData } from '$lib/server/dbcache';
 import { refreshGeoJsonData } from '$lib/server/geojson';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
 import type { Actions, PageServerLoad } from './$types';
+import * as schema from '$db/schema';
+import { count, eq } from 'drizzle-orm';
 
 export const load = (async ({ cookies }) => {
 	await redirectIfSessionInvalid('/login', cookies);
-
-	const groups = (await db.group.findMany({ select: { id: true, name: true } })).sort((a, b) => {
+	const groupsQuery = await db
+		.select({ id: schema.group.id, name: schema.group.name })
+		.from(schema.group);
+	const groups = groupsQuery.toSorted((a, b) => {
 		if (a.name < b.name) {
 			return -1;
 		}
@@ -31,10 +35,10 @@ export const actions = {
 		if (formImageId === null) {
 			return { success: false, message: 'Image Id not specified' };
 		}
-		await db.image.update({
-			where: { id: formImageId.toString() },
-			data: { visibility: formPublic !== null ? true : false }
-		});
+		await db
+			.update(schema.image)
+			.set({ public: formPublic !== null })
+			.where(eq(schema.image.id, formImageId.toString()));
 		await refreshImageData(true);
 		await refreshGeoJsonData(true);
 		return { success: true };
@@ -62,23 +66,22 @@ export const actions = {
 		if (formMapsApiTrailId !== null) {
 			const idStr = formMapsApiTrailId.toString();
 			if (idStr === 'unassigned') {
-				await db.sequence.update({ where: { id: sequenceId }, data: { mapsApiTrailId: null } });
+				await db
+					.update(schema.sequence)
+					.set({ mapsApiTrailId: null })
+					.where(eq(schema.sequence.id, sequenceId));
 			} else if (!isNaN(parseInt(idStr))) {
-				await db.sequence.update({
-					where: { id: sequenceId },
-					data: { mapsApiTrailId: parseInt(idStr) }
-				});
+				await db
+					.update(schema.sequence)
+					.set({ mapsApiTrailId: parseInt(idStr) })
+					.where(eq(schema.sequence.id, sequenceId));
 			}
 		}
 		const pitch = parseFloat(formPitch.toString());
-		await db.image.updateMany({
-			where: { sequenceId: sequenceId },
-			data: {
-				flipped: formFlip !== null ? true : false,
-				pitchCorrection: pitch,
-				visibility: formIsPublic !== null ? true : false
-			}
-		});
+		await db
+			.update(schema.image)
+			.set({ flipped: formFlip !== null, pitchCorrection: pitch, public: formIsPublic !== null })
+			.where(eq(schema.image.sequenceId, sequenceId));
 		await refreshImageData(true);
 		await refreshGeoJsonData(true);
 		return { success: true };
@@ -104,10 +107,15 @@ export const actions = {
 		if (name === '') {
 			return { success: false, message: 'Empty name' };
 		}
-		if ((await db.group.count({ where: { name: name } })) !== 0) {
+		const duplicateQuery = await db
+			.select({ count: count() })
+			.from(schema.group)
+			.where(eq(schema.group.name, name));
+		const duplicateCount = duplicateQuery[0].count;
+		if (duplicateCount !== 0) {
 			return { success: false, message: 'Name already taken' };
 		}
-		await db.group.create({ data: { name: name } });
+		await db.insert(schema.group).values({ name });
 		return { success: true };
 	},
 	'delete-group': async ({ cookies, request }) => {
@@ -124,10 +132,10 @@ export const actions = {
 			return { success: false, message: 'Invalid group id' };
 		}
 		try {
-			await db.$queryRaw`
-				DELETE FROM "_ImageGroupRelation"
-				WHERE "A" = ${groupId};`;
-			await db.group.delete({ where: { id: groupId } });
+			await db
+				.delete(schema.imageGroupRelation)
+				.where(eq(schema.imageGroupRelation.groupId, groupId));
+			await db.delete(schema.group).where(eq(schema.group.id, groupId));
 		} catch (error) {
 			console.error(error);
 			return { success: false, message: 'Database error' };

@@ -1,16 +1,18 @@
 import { redirect, type Cookies } from '@sveltejs/kit';
-import { db } from './prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { and, eq, lt } from 'drizzle-orm';
+import { v4 as uuidv4 } from 'uuid';
 
 export const sessionExpireSeconds = 60 * 60 * 24; // A day
 
 export async function deleteExpiredSessions(userId: number) {
 	const expirationDate = new Date(new Date().valueOf() - 1000 * sessionExpireSeconds);
-	await db.session.deleteMany({
-		where: {
-			AdminAccountId: userId,
-			createdAt: { lt: expirationDate }
-		}
-	});
+	await db
+		.delete(schema.session)
+		.where(
+			and(eq(schema.session.adminAccountId, userId), lt(schema.session.createdAt, expirationDate))
+		);
 }
 
 export async function logout(cookies: Cookies): Promise<boolean> {
@@ -20,7 +22,7 @@ export async function logout(cookies: Cookies): Promise<boolean> {
 	}
 	cookies.delete('session', { path: '/' });
 	try {
-		await db.session.delete({ where: { Id: sessionCookie } });
+		await db.delete(schema.session).where(eq(schema.session.id, sessionCookie));
 	} catch {
 		return false;
 	}
@@ -35,14 +37,25 @@ export async function attemptLogin(
 	if (username === '' || password === '') {
 		return false;
 	}
-	const user = await db.adminAccount.findUnique({ where: { Username: username.toString() } });
-	if (!user) {
+	const userQuery = await db
+		.select({ id: schema.adminAccount.id, password: schema.adminAccount.password })
+		.from(schema.adminAccount)
+		.where(eq(schema.adminAccount.username, username.toString()));
+	const user = userQuery.at(0);
+	if (user === undefined) {
 		return false;
 	}
-	deleteExpiredSessions(user.Id);
-	if (user.Password === password.toString()) {
-		const session = await db.session.create({ data: { AdminAccountId: user.Id } });
-		cookies.set('session', session.Id, {
+	deleteExpiredSessions(user.id);
+	if (user.password === password.toString()) {
+		const sessionQuery = await db
+			.insert(schema.session)
+			.values({ id: uuidv4(), adminAccountId: user.id })
+			.returning();
+		const session = sessionQuery.at(0);
+		if (session === undefined) {
+			return false;
+		}
+		cookies.set('session', session.id, {
 			path: '/',
 			secure: process.env.NODE_ENV === 'development' ? false : true,
 			httpOnly: true,
@@ -55,16 +68,20 @@ export async function attemptLogin(
 }
 
 export async function isSessionValid(cookies: Cookies): Promise<boolean> {
-	const sesssionCookie = cookies.get('session');
-	if (sesssionCookie === undefined) {
+	const sessionCookie = cookies.get('session');
+	if (sessionCookie === undefined) {
 		return false;
 	}
-	const session = await db.session.findUnique({ where: { Id: sesssionCookie } });
-	if (!session) {
+	const sessionQuery = await db
+		.select()
+		.from(schema.session)
+		.where(eq(schema.session.id, sessionCookie));
+	const session = sessionQuery.at(0);
+	if (session === undefined) {
 		return false;
 	}
 	if (new Date().valueOf() - session.createdAt.valueOf() > 1000 * sessionExpireSeconds) {
-		await db.session.delete({ where: { Id: session.Id } });
+		await db.delete(schema.session).where(eq(schema.session.id, session.id));
 		return false;
 	}
 	return true;

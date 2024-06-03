@@ -7,7 +7,7 @@ const config = {
 
 	kit: {
 		alias: {
-			'$db': 'db'
+			$db: 'db'
 		},
 		adapter: adapter(),
 		csp: {

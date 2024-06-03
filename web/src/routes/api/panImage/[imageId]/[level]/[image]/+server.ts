@@ -1,18 +1,34 @@
 import { IMAGES_PATH } from '$env/static/private';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { join } from 'path';
 import { promises as fs } from 'fs';
+import * as schema from '$db/schema';
+import { eq } from 'drizzle-orm';
 
 const imageFileRegex = new RegExp(/^[a-z][0-9]_[0-9]\.jpg$/);
 
 export const GET = (async ({ params }) => {
-	const image = await db.image.findUnique({
-		where: { id: params.imageId },
-		include: { sequence: { select: { name: true } } }
-	});
-	if (image === null) {
+	const sequencesQuery = db
+		.$with('sequence')
+		.as(
+			db
+				.select({ sequenceId: schema.sequence.id, sequenceName: schema.sequence.name })
+				.from(schema.sequence)
+		);
+	const imageQuery = await db
+		.with(sequencesQuery)
+		.select({
+			id: schema.image.id,
+			sequenceId: schema.image.sequenceId,
+			sequenceName: sequencesQuery.sequenceName
+		})
+		.from(schema.image)
+		.where(eq(schema.image.id, params.imageId))
+		.innerJoin(sequencesQuery, eq(sequencesQuery.sequenceId, schema.image.sequenceId));
+	const image = imageQuery.at(0);
+	if (image === undefined) {
 		return json({ success: false, message: 'Image not found' }, { status: 404 });
 	}
 	const level = parseInt(params.level);
@@ -24,7 +40,7 @@ export const GET = (async ({ params }) => {
 	}
 	const filePath = join(
 		IMAGES_PATH,
-		image.sequence.name,
+		image.sequenceName,
 		'img',
 		image.id,
 		level.toString(),

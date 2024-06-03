@@ -1,4 +1,6 @@
-import { db } from './prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { eq } from 'drizzle-orm';
 
 export let standardImageData:
 	| {
@@ -9,7 +11,7 @@ export let standardImageData:
 			bearing: number;
 			flipped: boolean;
 			pitchCorrection: number;
-			visibility: boolean;
+			public: boolean;
 			createdAt: Date;
 	  }[]
 	| undefined;
@@ -22,7 +24,7 @@ export let allImageData:
 			longitude: number;
 			latitude: number;
 			flipped: boolean;
-			visibility: boolean;
+			public: boolean;
 			sequenceId: number;
 			createdAt: Date;
 	  }[]
@@ -30,43 +32,50 @@ export let allImageData:
 
 export let imagePreviews: Map<string, string>;
 
-export let groupData: { A: number; B: string }[] | undefined;
+export let groupData: { groupId: number; imageId: string }[] | undefined;
 
 export async function refreshImageData(once: boolean) {
-	const previews = await db.image.findMany({ select: { id: true, shtHash: true } });
+	const previewsQuery = await db
+		.select({ id: schema.image.id, shtHash: schema.image.shtHash })
+		.from(schema.image);
 	imagePreviews = new Map();
-	previews.forEach((preview) => {
+	previewsQuery.forEach((preview) => {
 		imagePreviews.set(preview.id, preview.shtHash);
 	});
-	allImageData = await db.image.findMany({
-		select: {
-			id: true,
-			sequenceId: true,
-			latitude: true,
-			longitude: true,
-			bearing: true,
-			flipped: true,
-			pitchCorrection: true,
-			visibility: true,
-			createdAt: true
-		}
-	});
-	standardImageData = await db.image.findMany({
-		where: { visibility: true },
-		select: {
-			id: true,
-			sequenceId: true,
-			latitude: true,
-			longitude: true,
-			bearing: true,
-			flipped: true,
-			pitchCorrection: true,
-			visibility: true,
-			createdAt: true
-		}
-	});
+	allImageData = await db
+		.select({
+			id: schema.image.id,
+			sequenceId: schema.image.sequenceId,
+			latitude: schema.image.latitude,
+			longitude: schema.image.longitude,
+			bearing: schema.image.bearing,
+			flipped: schema.image.flipped,
+			pitchCorrection: schema.image.pitchCorrection,
+			public: schema.image.public,
+			createdAt: schema.image.createdAt
+		})
+		.from(schema.image);
+	standardImageData = await db
+		.select({
+			id: schema.image.id,
+			sequenceId: schema.image.sequenceId,
+			latitude: schema.image.latitude,
+			longitude: schema.image.longitude,
+			bearing: schema.image.bearing,
+			flipped: schema.image.flipped,
+			pitchCorrection: schema.image.pitchCorrection,
+			public: schema.image.public,
+			createdAt: schema.image.createdAt
+		})
+		.from(schema.image)
+		.where(eq(schema.image.public, true));
 
-	groupData = await db.$queryRaw`SELECT * FROM "_ImageGroupRelation";`;
+	groupData = await db
+		.select({
+			imageId: schema.imageGroupRelation.imageId,
+			groupId: schema.imageGroupRelation.groupId
+		})
+		.from(schema.imageGroupRelation);
 
 	if (once) {
 		return;
