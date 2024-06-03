@@ -1,0 +1,16 @@
+services:
+  db:
+    image: 'postgres:latest'
+    container_name: 'trailview-postgres'
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: 'trailview'
+      POSTGRES_USER: 'trailview'
+      POSTGRES_PASSWORD: 'metroparks123'
+    ports:
+      - '5432:5432'
+    volumes:
+      - trailview-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  trailview-postgres-data:

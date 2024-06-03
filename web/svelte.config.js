@@ -6,6 +6,9 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+		alias: {
+			'$db': 'db'
+		},
 		adapter: adapter(),
 		csp: {
 			directives: {

@@ -14,3 +14,6 @@ yarn.lock
 
 svelte.config.js
 .eslintrc.cjs
+
+*.config.ts
+/db
