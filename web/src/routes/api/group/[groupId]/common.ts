@@ -1,4 +1,6 @@
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function getGroup(
 	id: number,
@@ -16,18 +18,39 @@ export async function getGroup(
 	if (isNaN(id)) {
 		return new Error('Invalid group id');
 	}
-	const group =
-		includeAll === true
-			? await db.group.findUnique({
-					where: { id: id },
-					include: { images: { select: { id: true } } }
-				})
-			: await db.group.findUnique({
-					where: { id: id },
-					include: { images: { select: { id: true }, where: { visibility: true } } }
-				});
-	if (group === null) {
+
+	const groupQuery = await db
+		.select({ id: schema.group.id, name: schema.group.name })
+		.from(schema.group)
+		.where(eq(schema.group.id, id));
+	const group = groupQuery.at(0);
+	if (group === undefined) {
 		return new Error('Invalid group id');
 	}
-	return group;
+	const groupImageQuery = db
+		.$with('groupImage')
+		.as(
+			db
+				.select({ groupImageId: schema.imageGroupRelation.imageId })
+				.from(schema.imageGroupRelation)
+				.where(eq(schema.imageGroupRelation.groupId, group.id))
+		);
+	const imageQuery =
+		includeAll === true
+			? await db
+					.with(groupImageQuery)
+					.select({ id: schema.image.id })
+					.from(schema.image)
+					.where(eq(schema.image.public, true))
+					.innerJoin(groupImageQuery, eq(groupImageQuery.groupImageId, schema.image.id))
+			: await db
+					.with(groupImageQuery)
+					.select({ id: schema.image.id })
+					.from(schema.image)
+					.innerJoin(groupImageQuery, eq(groupImageQuery.groupImageId, schema.image.id));
+	return {
+		id: group.id,
+		name: group.name,
+		images: imageQuery
+	};
 }

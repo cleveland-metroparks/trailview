@@ -89,6 +89,6 @@ export async function isSessionValid(cookies: Cookies): Promise<boolean> {
 
 export async function redirectIfSessionInvalid(url: string, cookies: Cookies): Promise<void> {
 	if (!(await isSessionValid(cookies))) {
-		throw redirect(301, url);
+		throw redirect(302, url);
 	}
 }

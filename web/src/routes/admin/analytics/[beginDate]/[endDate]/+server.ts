@@ -1,7 +1,8 @@
-import { isSessionValid } from '$lib/server/auth';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { and, eq, gte, lte } from 'drizzle-orm';
 
 export type GetResType =
 	| {
@@ -16,10 +17,7 @@ export type GetResType =
 			message: string;
 	  };
 
-export const GET = (async ({ cookies, params }) => {
-	if ((await isSessionValid(cookies)) !== true) {
-		return json({ success: false, message: 'Invalid session' } as GetResType, { status: 403 });
-	}
+export const GET = (async ({ params }) => {
 	const paramBeginDate = parseInt(params.beginDate);
 	const paramEndDate = parseInt(params.endDate);
 	if (isNaN(paramBeginDate) || isNaN(paramEndDate)) {
@@ -27,17 +25,26 @@ export const GET = (async ({ cookies, params }) => {
 	}
 	const beginDate = new Date(paramBeginDate);
 	const endDate = new Date(paramEndDate);
-	const query = await db.analytics.findMany({
-		where: { date: { gte: beginDate }, AND: { date: { lte: endDate } } },
-		include: { image: { select: { sequence: { select: { name: true } } } } }
-	});
+	const imageQuery = db
+		.$with('image')
+		.as(db.select({ id: schema.image.id, sequenceId: schema.image.sequenceId }).from(schema.image));
+	const sequenceQuery = db
+		.$with('sequence')
+		.as(db.select({ id: schema.sequence.id, name: schema.sequence.name }).from(schema.sequence));
+	const analyticsQuery = await db
+		.with(imageQuery, sequenceQuery)
+		.select({ sequenceName: sequenceQuery.name })
+		.from(schema.analytics)
+		.where(and(gte(schema.analytics.date, beginDate), lte(schema.analytics.date, endDate)))
+		.innerJoin(imageQuery, eq(imageQuery.id, schema.analytics.imageId))
+		.innerJoin(sequenceQuery, eq(sequenceQuery.id, imageQuery.sequenceId));
 	const analyticsMap = new Map<string, number>();
-	for (const a of query) {
-		const count = analyticsMap.get(a.image.sequence.name);
+	for (const a of analyticsQuery) {
+		const count = analyticsMap.get(a.sequenceName);
 		if (count !== undefined) {
-			analyticsMap.set(a.image.sequence.name, count + 1);
+			analyticsMap.set(a.sequenceName, count + 1);
 		} else {
-			analyticsMap.set(a.image.sequence.name, 1);
+			analyticsMap.set(a.sequenceName, 1);
 		}
 	}
 	const dayAnalytics = Array.from(analyticsMap.entries())

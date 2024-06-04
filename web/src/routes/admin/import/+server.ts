@@ -1,16 +1,14 @@
 import type { RequestHandler } from './$types';
-import { isSessionValid } from '$lib/server/auth';
 import fs from 'fs';
 import { json } from '@sveltejs/kit';
 import { join } from 'path';
 import { pascalCase } from 'pascal-case';
 import { IMAGES_PATH } from '$env/static/private';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { eq } from 'drizzle-orm';
 
-export const POST = (async ({ request, cookies }) => {
-	if ((await isSessionValid(cookies)) !== true) {
-		return json({ success: false, message: 'Unauthorized' }, { status: 403 });
-	}
+export const POST = (async ({ request }) => {
 	const formData = await request.formData();
 	const formFile = formData.get('file');
 	const formFileName = formData.get('fileName');
@@ -25,8 +23,12 @@ export const POST = (async ({ request, cookies }) => {
 	}
 	const sequenceName = pascalCase(formSequenceName.toString());
 
-	const sequence = await db.sequence.findUnique({ where: { name: sequenceName } });
-	if (sequence === null || sequence.status !== 'Upload') {
+	const sequenceQuery = await db
+		.select({ status: schema.sequence.status })
+		.from(schema.sequence)
+		.where(eq(schema.sequence.name, sequenceName));
+	const sequence = sequenceQuery.at(0);
+	if (sequence === undefined || sequence.status !== 'upload') {
 		return json({ success: false, message: 'Invalid sequence or sequence has invalid status' });
 	}
 

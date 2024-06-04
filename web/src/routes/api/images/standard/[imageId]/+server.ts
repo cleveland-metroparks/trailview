@@ -10,7 +10,7 @@ export const GET = (async ({ params }) => {
 		return json({ success: false, message: 'Server error' }, { status: 500 });
 	}
 	const image = standardImageData.find((image) => {
-		return image.id === params.imageId && image.visibility === true;
+		return image.id === params.imageId && image.public === true;
 	});
 	if (image === undefined) {
 		return json({ success: false, message: 'Image cannot be found' }, { status: 400 });

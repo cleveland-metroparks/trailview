@@ -103,8 +103,10 @@ export async function refreshGeoJsonData(once = false) {
 }
 
 (async () => {
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		await refreshGeoJsonData();
+	if (process.env.INIT !== undefined) {
+		// eslint-disable-next-line no-constant-condition
+		while (true) {
+			await refreshGeoJsonData();
+		}
 	}
 })();

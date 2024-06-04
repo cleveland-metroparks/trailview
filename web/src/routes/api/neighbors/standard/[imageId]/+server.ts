@@ -3,6 +3,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { getNeighbors } from '../../common';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
+import { sql } from 'drizzle-orm';
 
 export const GET = (async ({ url, params }) => {
 	const searchParamSequencesFilter = url.searchParams.get('s');
@@ -44,11 +45,13 @@ export const GET = (async ({ url, params }) => {
 		0,
 		0
 	);
-	await db.analytics.upsert({
-		where: { imageId_date: { imageId: params.imageId, date: day } },
-		create: { imageId: params.imageId, date: day, count: 1 },
-		update: { count: { increment: 1 } }
-	});
+	await db
+		.insert(schema.analytics)
+		.values({ imageId: params.imageId, date: day, count: 1 })
+		.onConflictDoUpdate({
+			target: [schema.analytics.imageId, schema.analytics.date],
+			set: { count: sql`${schema.analytics.count} + 1` }
+		});
 
 	if (neighbors === undefined) {
 		return json({ success: false, message: 'Invalid image id' }, { status: 404 });

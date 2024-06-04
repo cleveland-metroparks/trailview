@@ -1,4 +1,3 @@
-import { isSessionValid, redirectIfSessionInvalid } from '$lib/server/auth';
 import { refreshImageData } from '$lib/server/dbcache';
 import { refreshGeoJsonData } from '$lib/server/geojson';
 import { db } from '$lib/server/db';
@@ -6,8 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import * as schema from '$db/schema';
 import { count, eq } from 'drizzle-orm';
 
-export const load = (async ({ cookies }) => {
-	await redirectIfSessionInvalid('/login', cookies);
+export const load = (async () => {
 	const groupsQuery = await db
 		.select({ id: schema.group.id, name: schema.group.name })
 		.from(schema.group);
@@ -25,10 +23,7 @@ export const load = (async ({ cookies }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	image: async ({ request, cookies }) => {
-		if ((await isSessionValid(cookies)) !== true) {
-			return { success: false, message: 'Invalid session' };
-		}
+	image: async ({ request }) => {
 		const data = await request.formData();
 		const formImageId = data.get('imageId');
 		const formPublic = data.get('public');
@@ -43,10 +38,7 @@ export const actions = {
 		await refreshGeoJsonData(true);
 		return { success: true };
 	},
-	sequence: async ({ request, cookies }) => {
-		if ((await isSessionValid(cookies)) !== true) {
-			return { success: false, message: 'Invalid session' };
-		}
+	sequence: async ({ request }) => {
 		const data = await request.formData();
 		const formPitch = data.get('pitch');
 		const formSequenceId = data.get('sequenceId');
@@ -86,18 +78,12 @@ export const actions = {
 		await refreshGeoJsonData(true);
 		return { success: true };
 	},
-	refresh: async ({ cookies }) => {
-		if ((await isSessionValid(cookies)) !== true) {
-			return { success: false, message: 'Invalid session' };
-		}
+	refresh: async () => {
 		refreshImageData(true);
 		refreshGeoJsonData(true);
 		return { success: true };
 	},
-	'create-group': async ({ cookies, request }) => {
-		if ((await isSessionValid(cookies)) !== true) {
-			return { success: false, message: 'Invalid session' };
-		}
+	'create-group': async ({ request }) => {
 		const form = await request.formData();
 		const formName = form.get('name');
 		if (formName === null) {
@@ -118,10 +104,7 @@ export const actions = {
 		await db.insert(schema.group).values({ name });
 		return { success: true };
 	},
-	'delete-group': async ({ cookies, request }) => {
-		if ((await isSessionValid(cookies)) !== true) {
-			return { success: false, message: 'Invalid session' };
-		}
+	'delete-group': async ({ request }) => {
 		const form = await request.formData();
 		const formGroupId = form.get('groupId');
 		if (formGroupId === null) {

@@ -1,4 +1,5 @@
-import type { Handle } from '@sveltejs/kit';
+import { isSessionValid } from '$lib/server/auth';
+import { redirect, type Handle } from '@sveltejs/kit';
 
 function appendSecurityHeaders(res: Response) {
 	// Security-related headers
@@ -25,6 +26,11 @@ export const handle = (async ({ event, resolve }) => {
 		res.headers.append('Access-Control-Allow-Headers', '*');
 		appendSecurityHeaders(res);
 		return res;
+	}
+	if (event.url.pathname.startsWith('/admin')) {
+		if ((await isSessionValid(event.cookies)) !== true) {
+			throw redirect(302, '/login');
+		}
 	}
 	const res = await resolve(event);
 	appendSecurityHeaders(res);

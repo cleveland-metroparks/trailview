@@ -1,4 +1,3 @@
-import { isSessionValid } from '$lib/server/auth';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
@@ -11,10 +10,7 @@ const postDataType = z.object({
 	sequenceName: z.string()
 });
 
-export const POST = (async ({ request, cookies }) => {
-	if ((await isSessionValid(cookies)) !== true) {
-		return json({ success: false, message: 'Unauthorized' }, { status: 403 });
-	}
+export const POST = (async ({ request }) => {
 	let postData: unknown;
 	try {
 		postData = await request.json();

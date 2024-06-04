@@ -1,10 +1,11 @@
-import { isSessionValid } from '$lib/server/auth';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
 import { refreshGeoJsonData } from '$lib/server/geojson';
 import { refreshImageData } from '$lib/server/dbcache';
+import { eq } from 'drizzle-orm';
 
 const patchRequestType = z.object({
 	data: z.array(
@@ -19,10 +20,7 @@ const patchRequestType = z.object({
 });
 export type PatchRequestType = z.infer<typeof patchRequestType>;
 
-export const PATCH = (async ({ cookies, request }) => {
-	if ((await isSessionValid(cookies)) !== true) {
-		return json({ success: false, message: 'Invalid session' }, { status: 401 });
-	}
+export const PATCH = (async ({ request }) => {
 	let jsonData: unknown;
 	try {
 		jsonData = await request.json();
@@ -38,10 +36,10 @@ export const PATCH = (async ({ cookies, request }) => {
 	}
 	try {
 		for (const p of patch.data.data) {
-			await db.image.update({
-				where: { id: p.imageId },
-				data: { latitude: p.new.latitude, longitude: p.new.longitude }
-			});
+			await db
+				.update(schema.image)
+				.set({ latitude: p.new.latitude, longitude: p.new.longitude })
+				.where(eq(schema.image.id, p.imageId));
 		}
 	} catch (error) {
 		console.error(error);

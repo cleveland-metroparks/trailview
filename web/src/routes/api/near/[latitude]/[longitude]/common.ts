@@ -9,7 +9,7 @@ interface Image {
 	flipped: boolean;
 	pitchCorrection: number;
 	createdAt: Date;
-	visibility: boolean;
+	public: boolean;
 }
 
 const ruler = new CheapRuler(41, 'meters');

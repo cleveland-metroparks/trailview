@@ -9,7 +9,7 @@ interface Image {
 	bearing: number;
 	flipped: boolean;
 	pitchCorrection: number;
-	visibility: boolean;
+	public: boolean;
 	createdAt: Date;
 }
 
@@ -93,7 +93,7 @@ export function getNeighbors(
 					for (const g of groupsFilter) {
 						if (
 							groupData.findIndex((r) => {
-								return r.A === g && r.B === data[p].id;
+								return r.groupId === g && r.imageId === data[p].id;
 							}) !== -1
 						) {
 							filteredByGroup = false;
@@ -118,7 +118,7 @@ export function getNeighbors(
 						shtHash: imagePreviews.get(data[p].id),
 						pitchCorrection: data[p].pitchCorrection,
 						createdAt: data[p].createdAt,
-						visibility: data[p].visibility
+						public: data[p].public
 					});
 				}
 			}

@@ -1,8 +1,9 @@
-import { isSessionValid } from '$lib/server/auth';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { and, eq } from 'drizzle-orm';
 
 const patchReqType = z.object({
 	action: z.union([z.literal('add'), z.literal('remove')]),
@@ -10,10 +11,7 @@ const patchReqType = z.object({
 });
 export type PatchReqType = z.infer<typeof patchReqType>;
 
-export const PATCH = (async ({ cookies, request, params }) => {
-	if ((await isSessionValid(cookies)) !== true) {
-		return json({ success: false, message: 'Invalid session' }, { status: 403 });
-	}
+export const PATCH = (async ({ request, params }) => {
 	const paramGroupId = parseInt(params.groupId);
 	if (isNaN(paramGroupId)) {
 		return json({ success: false, message: 'Invalid group id' }, { status: 400 });
@@ -28,34 +26,46 @@ export const PATCH = (async ({ cookies, request, params }) => {
 	if (patch.success !== true) {
 		return json({ success: false, message: 'Invalid request' }, { status: 400 });
 	}
-	const group = await db.group.findUnique({ where: { id: paramGroupId } });
-	if (group === null) {
+	const groupQuery = await db
+		.select({})
+		.from(schema.group)
+		.where(eq(schema.group.id, paramGroupId));
+	const group = groupQuery.at(0);
+	if (group === undefined) {
 		return json({ success: false, message: 'Invalid group id' }, { status: 400 });
 	}
-	const sequence = await db.sequence.findUnique({
-		where: { id: patch.data.sequenceId },
-		include: { images: { select: { id: true } } }
-	});
-	if (sequence === null) {
+	const sequenceQuery = await db
+		.select({ id: schema.sequence.id })
+		.from(schema.sequence)
+		.where(eq(schema.sequence.id, patch.data.sequenceId));
+	const sequence = sequenceQuery.at(0);
+	if (sequence === undefined) {
 		return json({ success: false, message: 'Invalid sequence id' }, { status: 400 });
 	}
-
+	const sequenceImagesQuery = await db
+		.select({ id: schema.image.id })
+		.from(schema.image)
+		.where(eq(schema.image.sequenceId, sequence.id));
 	if (patch.data.action === 'add') {
 		const batchSize = 100;
-		const totalBatches = Math.ceil(sequence.images.length / batchSize);
+		const totalBatches = Math.ceil(sequenceImagesQuery.length / batchSize);
 		for (let i = 0; i < totalBatches; i++) {
-			const batchImages = sequence.images.slice(i * batchSize, (i + 1) * batchSize);
-			await db.group.update({
-				where: { id: paramGroupId },
-				data: { images: { connect: batchImages.map((i) => ({ id: i.id })) } }
-			});
+			const batchImages = sequenceImagesQuery.slice(i * batchSize, (i + 1) * batchSize);
+			await db
+				.insert(schema.imageGroupRelation)
+				.values(batchImages.map((image) => ({ imageId: image.id, groupId: paramGroupId })));
 		}
 		return json({ success: true });
 	} else if (patch.data.action === 'remove') {
-		for (const image of sequence.images) {
-			await db.$queryRaw`
-                    DELETE FROM "_ImageGroupRelation"
-                    WHERE "A" = ${paramGroupId} AND "B" = ${image.id}`;
+		for (const image of sequenceImagesQuery) {
+			await db
+				.delete(schema.imageGroupRelation)
+				.where(
+					and(
+						eq(schema.imageGroupRelation.imageId, image.id),
+						eq(schema.imageGroupRelation.groupId, paramGroupId)
+					)
+				);
 		}
 		return json({ success: true });
 	}

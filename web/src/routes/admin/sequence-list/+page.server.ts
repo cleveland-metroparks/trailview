@@ -1,10 +1,8 @@
-import { redirectIfSessionInvalid } from '$lib/server/auth.js';
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import * as schema from '$db/schema';
 
-export const load = (async ({ cookies }) => {
-	await redirectIfSessionInvalid('/login', cookies);
+export const load = (async () => {
 	const sequencesQuery = await db
 		.select({
 			id: schema.sequence.id,

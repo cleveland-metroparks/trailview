@@ -87,8 +87,10 @@ export async function refreshImageData(once: boolean) {
 }
 
 (async () => {
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		await refreshImageData(false);
+	if (process.env.INIT !== undefined) {
+		// eslint-disable-next-line no-constant-condition
+		while (true) {
+			await refreshImageData(false);
+		}
 	}
 })();
