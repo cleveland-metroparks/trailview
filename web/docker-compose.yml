@@ -1,0 +1,13 @@
+services:
+  trailview:
+    build:
+      context: ../
+      dockerfile: ./web/Dockerfile
+    env_file: docker.env
+    ports:
+      - 3000:3000
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    volumes:
+      - /mnt/t/trails:/trails

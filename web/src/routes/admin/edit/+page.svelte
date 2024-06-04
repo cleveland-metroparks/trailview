@@ -2,7 +2,7 @@
 	import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { PUBLIC_MAPBOX_KEY, PUBLIC_MAPS_API } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import type { Image, TrailViewer } from '$lib/trailviewer';
 	import { onDestroy, onMount } from 'svelte';
 	import type { PageData } from './$types';
@@ -22,7 +22,7 @@
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
-		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
+		trailviewerOptions.mapboxKey = env.PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
 		trailviewerOptions.initialImageId =
 			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
@@ -75,11 +75,11 @@
 		if (mapsApiTrailValue === 'unassigned') {
 			return;
 		}
-		if (PUBLIC_MAPS_API === '') {
+		if (env.PUBLIC_MAPS_API === '') {
 			return;
 		}
 		const res = await fetch(
-			urlJoin(PUBLIC_MAPS_API, '/trail_geometries', mapsApiTrailValue.toString())
+			urlJoin(env.PUBLIC_MAPS_API, '/trail_geometries', mapsApiTrailValue.toString())
 		);
 		if (res.status !== 200) {
 			return;

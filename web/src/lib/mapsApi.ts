@@ -1,4 +1,4 @@
-import { PUBLIC_MAPS_API } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import urlJoin from 'url-join';
 import { z } from 'zod';
 
@@ -21,10 +21,10 @@ const trailsResType = z.union([
 export async function fetchTrails(
 	f: typeof fetch = fetch
 ): Promise<{ id: number; name: string; description: string | null }[] | Error> {
-	if (PUBLIC_MAPS_API === '') {
+	if (env.PUBLIC_MAPS_API === '') {
 		return new Error('No Maps API URL specified');
 	}
-	const res = await f(urlJoin(PUBLIC_MAPS_API, '/trails'), { method: 'GET' });
+	const res = await f(urlJoin(env.PUBLIC_MAPS_API, '/trails'), { method: 'GET' });
 	if (res.status !== 200) {
 		return new Error(`${res.status}: ${res.statusText}`);
 	}

@@ -24,7 +24,7 @@
 	import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import { onDestroy, onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import FormAlert from '$lib/FormAlert.svelte';
@@ -324,7 +324,7 @@
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
-		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
+		trailviewerOptions.mapboxKey = env.PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.imageFetchType = 'all';
 		trailviewerOptions.initialImageId =
 			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';

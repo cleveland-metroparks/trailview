@@ -3,7 +3,7 @@ import fs from 'fs';
 import { json } from '@sveltejs/kit';
 import { join } from 'path';
 import { pascalCase } from 'pascal-case';
-import { IMAGES_PATH } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
@@ -34,14 +34,14 @@ export const POST = (async ({ request }) => {
 
 	const file = formFile as File;
 
-	if (!fs.existsSync(join(IMAGES_PATH, sequenceName))) {
-		await fs.promises.mkdir(join(IMAGES_PATH, sequenceName));
-		if (!fs.existsSync(join(IMAGES_PATH, sequenceName, 'img_original'))) {
-			await fs.promises.mkdir(join(IMAGES_PATH, sequenceName, 'img_original'));
+	if (!fs.existsSync(join(env.IMAGES_PATH, sequenceName))) {
+		await fs.promises.mkdir(join(env.IMAGES_PATH, sequenceName));
+		if (!fs.existsSync(join(env.IMAGES_PATH, sequenceName, 'img_original'))) {
+			await fs.promises.mkdir(join(env.IMAGES_PATH, sequenceName, 'img_original'));
 		}
 	}
 	fs.appendFileSync(
-		join(IMAGES_PATH, sequenceName, 'img_original', file.name),
+		join(env.IMAGES_PATH, sequenceName, 'img_original', file.name),
 		Buffer.from(await file.arrayBuffer())
 	);
 	return json({ success: true });

@@ -1,4 +1,4 @@
-import { IMAGES_PATH } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
@@ -31,19 +31,18 @@ export const GET = (async ({ params }) => {
 	if (image === undefined) {
 		return json({ success: false, message: 'Image not found' }, { status: 404 });
 	}
-	const level = parseInt(params.level);
-	if (isNaN(level) || level < 1 || level > 3) {
+	if (params.level !== '1' && params.level !== '2' && params.level !== '3') {
 		return json({ success: false, message: 'Invalid level' }, { status: 400 });
 	}
 	if (imageFileRegex.test(params.image) === false) {
 		return json({ success: false, message: 'Invalid image' }, { status: 400 });
 	}
 	const filePath = join(
-		IMAGES_PATH,
+		env.IMAGES_PATH,
 		image.sequenceName,
 		'img',
 		image.id,
-		level.toString(),
+		params.level,
 		params.image
 	);
 	const file = await fs.readFile(filePath);

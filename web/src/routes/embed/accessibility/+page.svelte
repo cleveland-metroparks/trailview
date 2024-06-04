@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '@cmparks/trailviewer/dist/trailviewer.css';
-	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import { onMount } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import type { PageData } from './$types';
@@ -19,7 +19,7 @@
 		const trailviewerLib = await import('@cmparks/trailviewer');
 		const options = trailviewerLib.defaultOptions;
 		options.initial = data.accessibleTrails[0].initImgId;
-		options.mapboxKey = PUBLIC_MAPBOX_KEY;
+		options.mapboxKey = env.PUBLIC_MAPBOX_KEY;
 		options.target = 'viewer';
 		const sequences: number[] = [];
 		const groups: number[] = [];
