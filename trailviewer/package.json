@@ -31,7 +31,8 @@
     "scripts": {
         "build": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs",
         "format": "prettier --write .",
-        "check": "prettier --check . && eslint .",
+        "lint": "prettier --check . && eslint .",
+        "check": "tsc -noEmit",
         "demo": "http-server .",
         "watch": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs -w"
     },
@@ -43,22 +44,19 @@
         "@rollup/plugin-typescript": "^11.1.6",
         "@types/events": "^3.0.3",
         "@types/mapbox-gl": "^3.1.0",
-        "@types/node": "^20.12.12",
-        "@typescript-eslint/eslint-plugin": "^7.10.0",
-        "@typescript-eslint/parser": "^7.10.0",
-        "copyfiles": "^2.4.1",
+        "@types/node": "^20.14.2",
+        "@typescript-eslint/eslint-plugin": "^7.12.0",
+        "@typescript-eslint/parser": "^7.12.0",
         "eslint": "^8.47.0",
+        "events": "^3.3.0",
         "http-server": "^14.1.1",
-        "prettier": "^3.2.5",
+        "mapbox-gl": "^3.4.0",
+        "prettier": "^3.3.1",
         "rimraf": "^5.0.7",
         "rollup": "^4.18.0",
         "rollup-plugin-import-css": "^3.5.0",
-        "tslib": "^2.6.2",
-        "typescript": "^5.4.5"
-    },
-    "dependencies": {
-        "events": "^3.3.0",
-        "mapbox-gl": "^3.4.0",
+        "tslib": "^2.6.3",
+        "typescript": "^5.4.5",
         "url-join": "^5.0.0"
     }
 }

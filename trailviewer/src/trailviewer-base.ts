@@ -216,9 +216,8 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                         (arrow as HTMLNavArrowElement).yaw,
                     360
                 );
-                (
-                    arrow as HTMLNavArrowElement
-                ).style.transform = `scale(80%) translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
+                (arrow as HTMLNavArrowElement).style.transform =
+                    `scale(80%) translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
             }
             let rot = (this._panViewer.getPitch() + 90) / 2.5;
             if (rot > 80) {
