@@ -5,7 +5,7 @@
 	import { scale } from 'svelte/transition';
 	import type { PageData } from './$types';
 	import type { TrailViewer } from '@cmparks/trailviewer';
-	import InfoModal, { type InfoModalOptions } from './InfoModal.svelte';
+	import InfoModal from './InfoModal.svelte';
 	import InfoPopup from './InfoPopup.svelte';
 	import type { AccessibleTrailName } from './InfoContent.svelte';
 
@@ -73,7 +73,7 @@
 	}
 
 	let infoModal: InfoModal;
-	let infoModalTrail: AccessibleTrailName | null;
+	let infoModalTrail: AccessibleTrailName = 'Woodpecker Way';
 </script>
 
 <InfoPopup />

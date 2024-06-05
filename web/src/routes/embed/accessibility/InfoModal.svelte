@@ -1,15 +1,9 @@
-<script context="module" lang="ts">
-	export interface InfoModalOptions {
-		title: string;
-	}
-</script>
-
 <script lang="ts">
 	import { fly, scale } from 'svelte/transition';
 	import type { AccessibleTrailName } from './InfoContent.svelte';
 	import InfoContent from './InfoContent.svelte';
 
-	export let trail: AccessibleTrailName | null = null;
+	export let trail: AccessibleTrailName;
 
 	let visible = false;
 	export function show() {

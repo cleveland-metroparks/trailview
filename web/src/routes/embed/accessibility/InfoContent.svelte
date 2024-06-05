@@ -11,16 +11,16 @@
 </script>
 
 <script lang="ts">
-	import imgMapAcacia from '$lib/assets/accessibility/maps/acacia.png';
-	import imgMapBedford from '$lib/assets/accessibility/maps/bedford.png';
-	import imgMapBradleyWoods from '$lib/assets/accessibility/maps/bradley-woods.png';
-	import imgMapHuntington from '$lib/assets/accessibility/maps/huntington.png';
-	import imgMapLakefront from '$lib/assets/accessibility/maps/lakefront.png';
-	import imgMapMillStreamRun from '$lib/assets/accessibility/maps/mill-stream-run.png';
-	import imgMapRockyRiver from '$lib/assets/accessibility/maps/rocky-river.png';
-	import imgMapWestCreek from '$lib/assets/accessibility/maps/west-creek.png';
+	import imgMapAcacia from '$lib/assets/accessibility/maps/acacia.jpg';
+	import imgMapBedford from '$lib/assets/accessibility/maps/bedford.jpg';
+	import imgMapBradleyWoods from '$lib/assets/accessibility/maps/bradley-woods.jpg';
+	import imgMapHuntington from '$lib/assets/accessibility/maps/huntington.jpg';
+	import imgMapLakefront from '$lib/assets/accessibility/maps/lakefront.jpg';
+	import imgMapMillStreamRun from '$lib/assets/accessibility/maps/mill-stream-run.jpg';
+	import imgMapRockyRiver from '$lib/assets/accessibility/maps/rocky-river.jpg';
+	import imgMapWestCreek from '$lib/assets/accessibility/maps/west-creek.jpg';
 
-	export let selectedTrail: AccessibleTrailName | null = null;
+	export let selectedTrail: AccessibleTrailName;
 </script>
 
 {#if selectedTrail === 'Bonnie Park Loop'}
