@@ -468,7 +468,7 @@
 					{currentSequence}
 					bind:pitchCorrection
 					bind:flipped
-					mapsApiTrails={data.mapsApi.trails}
+					mapsApiTrails={data.mapsApiTrails}
 					on:should-refresh={refreshEverything}
 				/>
 			{:else if inspectorPage === 'Image'}

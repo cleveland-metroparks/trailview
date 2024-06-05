@@ -7,7 +7,16 @@ module.exports = {
 		'prettier'
 	],
 	rules: {
-		'@typescript-eslint/strict-boolean-expressions': 'error'
+		'@typescript-eslint/no-non-null-assertion': 'error',
+		'@typescript-eslint/strict-boolean-expressions': 'error',
+		'@typescript-eslint/no-unused-vars': [
+			'error',
+			{
+				argsIgnorePattern: '^_',
+				varsIgnorePattern: '^_',
+				caughtErrorsIgnorePattern: '^_'
+			}
+		]
 	},
 	parser: '@typescript-eslint/parser',
 	plugins: ['@typescript-eslint'],

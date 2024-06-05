@@ -325,7 +325,9 @@ export class TrailViewer implements TrailViewerEvents {
 
 		this.map.on('moveend', () => {
 			this._updateEditMarkers();
-			this._emitter.emit('map-move-end', this.map!.getBounds());
+			if (this.map !== undefined) {
+				this._emitter.emit('map-move-end', this.map.getBounds());
+			}
 		});
 
 		this.map.on('mouseenter', 'dots', () => {

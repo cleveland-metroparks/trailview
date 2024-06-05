@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import type { Actions, PageServerLoad } from './$types';
 import * as schema from '$db/schema';
 import { count, eq } from 'drizzle-orm';
+import { fetchTrails } from '$lib/mapsApi';
 
 export const load = (async () => {
 	const groupsQuery = await db
@@ -19,7 +20,32 @@ export const load = (async () => {
 		return 0;
 	});
 
-	return { groups };
+	const sequencesQuery = await db
+		.select({
+			id: schema.sequence.id,
+			name: schema.sequence.name,
+			mapsApiTrailId: schema.sequence.mapsApiTrailId
+		})
+		.from(schema.sequence);
+	const sequences = sequencesQuery.toSorted((a, b) => {
+		if (a.name < b.name) {
+			return -1;
+		}
+		if (a.name > b.name) {
+			return 1;
+		}
+		return 0;
+	});
+
+	const mapsApiTrails = await fetchTrails();
+	if (mapsApiTrails instanceof Error) {
+		console.error(mapsApiTrails.message);
+	}
+	return {
+		groups,
+		sequences: sequences,
+		mapsApiTrails: mapsApiTrails instanceof Error ? null : mapsApiTrails
+	};
 }) satisfies PageServerLoad;
 
 export const actions = {
