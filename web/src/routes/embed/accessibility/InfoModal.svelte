@@ -6,9 +6,10 @@
 
 <script lang="ts">
 	import { fly, scale } from 'svelte/transition';
+	import type { AccessibleTrailName } from './InfoContent.svelte';
+	import InfoContent from './InfoContent.svelte';
 
-	export let options: InfoModalOptions = { title: '' };
-	export let infoHtml = '';
+	export let trail: AccessibleTrailName | null = null;
 
 	let visible = false;
 	export function show() {
@@ -25,13 +26,13 @@
 		<button on:click={hide} type="button" class="green-button close-button"
 			><img src="/icons/close.svg" alt="close icon" /></button
 		>
-		{#key infoHtml}
+		{#key trail}
 			<div in:fly|global={{ x: 100, duration: 500 }}>
-				<h2 class="title">{options.title}</h2>
+				<h2 class="title">{trail}</h2>
 				<hr />
 				<div class="body">
 					<!-- eslint-disable -->
-					{@html infoHtml}
+					<InfoContent selectedTrail={trail} />
 				</div>
 			</div>
 		{/key}

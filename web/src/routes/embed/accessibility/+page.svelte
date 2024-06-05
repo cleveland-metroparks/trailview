@@ -7,6 +7,7 @@
 	import type { TrailViewer } from '@cmparks/trailviewer';
 	import InfoModal, { type InfoModalOptions } from './InfoModal.svelte';
 	import InfoPopup from './InfoPopup.svelte';
+	import type { AccessibleTrailName } from './InfoContent.svelte';
 
 	export let data: PageData;
 
@@ -72,19 +73,14 @@
 	}
 
 	let infoModal: InfoModal;
-	let infoModalOptions: InfoModalOptions = { title: data.accessibleTrails[0].displayName };
-	let infoModalHtml: string = data.accessibleTrails[0].infoHtml;
+	let infoModalTrail: AccessibleTrailName | null;
 </script>
 
 <InfoPopup />
 
 <div class="container">
 	<div class="viewer-container">
-		<InfoModal
-			bind:this={infoModal}
-			bind:options={infoModalOptions}
-			bind:infoHtml={infoModalHtml}
-		/>
+		<InfoModal bind:this={infoModal} bind:trail={infoModalTrail} />
 		<div class="viewer" id="viewer" />
 	</div>
 	<div class="carousel">
@@ -112,8 +108,7 @@
 					on:click={() => {
 						if (trailviewer !== undefined) {
 							trailviewer.goToImageID(trail.initImgId);
-							infoModalOptions.title = trail.displayName;
-							infoModalHtml = trail.infoHtml;
+							infoModalTrail = trail.displayName;
 							infoModal.show();
 						}
 					}}
