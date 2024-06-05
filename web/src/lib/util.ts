@@ -1,4 +1,5 @@
 import type { ZodError } from 'zod';
+import z from 'zod';
 
 export function localDateTimeString(date: Date) {
 	return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
@@ -14,3 +15,5 @@ export function zodErrorToFormMessage(error: ZodError): { success: boolean; mess
 	});
 	return { success: false, message };
 }
+
+export const zodImageId = z.string().length(32);

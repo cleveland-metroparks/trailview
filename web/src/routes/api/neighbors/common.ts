@@ -1,23 +1,11 @@
-import { groupData, imagePreviews, refreshImageData } from '$lib/server/dbcache';
 import CheapRuler from 'cheap-ruler';
+import type { ImageData } from '$api/common';
 
-interface Image {
-	id: string;
-	sequenceId: number;
-	latitude: number;
-	longitude: number;
-	bearing: number;
-	flipped: boolean;
-	pitchCorrection: number;
-	public: boolean;
-	createdAt: Date;
-}
-
-export interface Neighbor extends Image {
+export type Neighbor = ImageData & {
 	distance: number;
 	neighborBearing: number;
 	shtHash: string | undefined;
-}
+};
 
 const ruler = new CheapRuler(41, 'meters');
 const neighborDistCutoff = 10;
@@ -28,25 +16,14 @@ function customMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
 
-export function getNeighbors(
-	data: Image[],
-	imageId: string,
-	sequencesFilter: number[] | undefined = undefined,
-	groupsFilter: number[] | undefined = undefined
-): undefined | Neighbor[] {
-	const image = data.find((image) => {
-		return image.id === imageId;
-	});
-	if (image === undefined) {
-		return undefined;
-	}
+export function getNeighbors(params: {
+	includePrivate: boolean;
+	imageId: string;
+	sequencesFilter: number[] | undefined;
+	groupsFilter: number[] | undefined;
+}): undefined | Neighbor[] {
+	const neighbors: (Neighbor | null)[] = [];
 
-	if (groupData === undefined) {
-		refreshImageData(true);
-		return undefined;
-	}
-
-	const neighbors: (Neighbor | undefined)[] = [];
 	for (let p = 0; p < data.length; p++) {
 		if (data[p].id === image.id) {
 			continue;

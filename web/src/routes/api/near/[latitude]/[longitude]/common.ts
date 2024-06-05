@@ -1,36 +1,29 @@
+import { getCachedImageLocations } from '$lib/server/dbcache';
 import CheapRuler from 'cheap-ruler';
-
-interface Image {
-	id: string;
-	sequenceId: number;
-	latitude: number;
-	longitude: number;
-	bearing: number;
-	flipped: boolean;
-	pitchCorrection: number;
-	createdAt: Date;
-	public: boolean;
-}
 
 const ruler = new CheapRuler(41, 'meters');
 
-export async function getNearestImage(
-	imageData: Image[],
-	latitude: number,
-	longitude: number
-): Promise<(Image & { distance: number }) | undefined> {
+export async function getNearestImageId(params: {
+	includePrivate: boolean;
+	latitude: number;
+	longitude: number;
+}): Promise<{ id: string; distance: number } | null> {
 	let nearestDistance = Number.MAX_VALUE;
-	let nearestImage: Image | null = null;
-	for (let i = 0; i < imageData.length; i++) {
-		const image = imageData[i];
-		const distance = ruler.distance([image.longitude, image.latitude], [longitude, latitude]);
-		if (nearestImage === null || distance < nearestDistance) {
+	let nearestId: string | null = null;
+	const imageLocations = await getCachedImageLocations({ includePrivate: params.includePrivate });
+	for (let i = 0; i < imageLocations.length; i++) {
+		const image = imageLocations[i];
+		const distance = ruler.distance(
+			[image.longitude, image.latitude],
+			[params.longitude, params.latitude]
+		);
+		if (nearestId === null || distance < nearestDistance) {
 			nearestDistance = distance;
-			nearestImage = image;
+			nearestId = image.id;
 		}
 	}
-	if (nearestImage === null) {
-		return undefined;
+	if (nearestId === null) {
+		return null;
 	}
-	return { ...nearestImage, distance: nearestDistance };
+	return { id: nearestId, distance: nearestDistance };
 }

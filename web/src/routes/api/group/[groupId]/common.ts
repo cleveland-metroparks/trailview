@@ -2,23 +2,15 @@ import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function getGroup(
-	id: number,
-	includeAll: boolean
-): Promise<
-	| Error
-	| {
-			id: number;
-			name: string;
-			images: {
-				id: string;
-			}[];
-	  }
-> {
-	if (isNaN(id)) {
-		return new Error('Invalid group id');
-	}
+export type GroupData = {
+	id: number;
+	name: string;
+	images: {
+		id: string;
+	}[];
+};
 
+export async function getGroup(id: number, includeAll: boolean): Promise<Error | GroupData> {
 	const groupQuery = await db
 		.select({ id: schema.group.id, name: schema.group.name })
 		.from(schema.group)

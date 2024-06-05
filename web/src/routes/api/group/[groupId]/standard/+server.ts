@@ -1,24 +1,22 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getGroup } from '../common';
+import { getGroup, type GroupData } from '../common';
+import z from 'zod';
 
-export type GetResType =
-	| { success: false; message: string }
-	| {
-			success: true;
-			data: {
-				id: number;
-				name: string;
-				images: {
-					id: string;
-				}[];
-			};
-	  };
+export type GetResType = { success: false; message: string } | { success: true; data: GroupData };
 
 export const GET = (async ({ params }) => {
-	const data = await getGroup(parseInt(params.groupId), false);
-	if (data instanceof Error) {
-		return json({ success: false, message: data.message } as GetResType);
+	const groupIdParse = z.number().int().safeParse(params.groupId);
+	if (groupIdParse.success !== true) {
+		return json({ success: false, message: 'Invalid group id' } satisfies GetResType, {
+			status: 400
+		});
 	}
-	return json({ success: true, data: data } as GetResType);
+	const groupData = await getGroup(groupIdParse.data, false);
+	if (groupData instanceof Error) {
+		return json({ success: false, message: groupData.message } satisfies GetResType, {
+			status: 400
+		});
+	}
+	return json({ success: true, data: groupData } satisfies GetResType);
 }) satisfies RequestHandler;

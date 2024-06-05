@@ -1,6 +1,9 @@
-import { allImageData, refreshImageData } from '$lib/server/dbcache';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getNeighbors } from '../../common';
+import type { ImageData } from '$api/common';
+import { zodImageId } from '$lib/util';
+
+export type GetResType = { success: false; message: string } | { success: true };
 
 export const GET = (async ({ url, params }) => {
 	const searchParamSequencesFilter = url.searchParams.get('s');
@@ -21,14 +24,9 @@ export const GET = (async ({ url, params }) => {
 		});
 	}
 
-	if (params.imageId === undefined) {
-		return json({ success: false, message: 'No imageId specified' }, { status: 400 });
-	}
-	if (allImageData === undefined) {
-		await refreshImageData(true);
-	}
-	if (allImageData === undefined) {
-		return json({ success: false, message: 'Server error' }, { status: 500 });
+	const imageIdParse = zodImageId.safeParse(params.imageId);
+	if (imageIdParse.success !== true) {
+		return json({ success: false, message: 'Invalid image id' }, { status: 400 });
 	}
 	const neighbors = getNeighbors(allImageData, params.imageId, sequencesFilter, groupsFilter);
 	if (neighbors === undefined) {

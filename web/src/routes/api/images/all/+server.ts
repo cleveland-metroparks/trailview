@@ -1,13 +1,25 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { allImageData, refreshImageData } from '$lib/server/dbcache';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import type { ImageData } from '$api/common';
+
+export type GetResType = { success: false; message: string } | { success: true; data: ImageData[] };
 
 export const GET = (async () => {
-	if (allImageData === undefined) {
-		await refreshImageData(true);
-	}
-	if (allImageData === undefined) {
-		return json({ success: false, message: 'Server error' }, { status: 500 });
-	}
-	return json({ success: true, data: allImageData });
+	const imagesQuery = await db
+		.select({
+			id: schema.image.id,
+			sequenceId: schema.image.sequenceId,
+			latitude: schema.image.latitude,
+			longitude: schema.image.longitude,
+			bearing: schema.image.bearing,
+			flipped: schema.image.flipped,
+			pitchCorrection: schema.image.pitchCorrection,
+			public: schema.image.public,
+			createdAt: schema.image.createdAt,
+			shtHash: schema.image.shtHash
+		})
+		.from(schema.image);
+	return json({ success: true, data: imagesQuery } satisfies GetResType);
 }) satisfies RequestHandler;

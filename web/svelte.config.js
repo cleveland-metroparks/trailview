@@ -7,7 +7,8 @@ const config = {
 
 	kit: {
 		alias: {
-			$db: 'db'
+			$db: 'db',
+			$api: 'src/routes/api'
 		},
 		adapter: adapter(),
 		csp: {
