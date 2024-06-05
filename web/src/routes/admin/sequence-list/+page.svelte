@@ -2,6 +2,8 @@
 	import { onDestroy, onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import FormAlert from '$lib/FormAlert.svelte';
 
 	export let data: PageData;
 
@@ -35,23 +37,6 @@
 
 	let fetchInterval: ReturnType<typeof setInterval> | undefined;
 
-	type Sequence = (typeof data.sequences)[number];
-	async function onDelete(sequence: Sequence) {
-		const response = prompt(
-			`Are you sure you want to delete ${sequence.name}? Type 'I understand' to confirm deletion.`
-		);
-		if (response !== null && response === 'I understand') {
-			const res = await fetch(`/admin/delete/${sequence.id}`, { method: 'DELETE' });
-			const resData = await res.json();
-			if (resData.success !== true) {
-				alert(resData.message ?? 'Unknown error while deleting');
-			} else {
-				alert('Marked for deletion');
-				await invalidateAll();
-			}
-		}
-	}
-
 	onMount(() => {
 		fetchInterval = setInterval(async () => {
 			await invalidateAll();
@@ -68,6 +53,8 @@
 <svelte:head>
 	<title>Sequence List</title>
 </svelte:head>
+
+<FormAlert />
 
 <div class="px-2 w-100 overflow-y-auto">
 	<div class="form-check form-switch">
@@ -98,11 +85,22 @@
 					<td>
 						{#if sequence.toDelete === false}
 							<form
-								on:submit|preventDefault={() => {
-									onDelete(sequence);
-								}}
+								action="?/delete"
 								method="POST"
+								use:enhance={({ cancel }) => {
+									const response = prompt(
+										`Are you sure you want to delete ${sequence.name}? Type 'I understand' to confirm deletion.`
+									);
+									if (response !== null && response === 'I understand') {
+										return async ({ update }) => {
+											await update();
+										};
+									} else {
+										cancel();
+									}
+								}}
 							>
+								<input type="hidden" name="sequenceId" value={sequence.id} />
 								<button type="submit" class="btn btn-sm btn-danger">Delete</button>
 							</form>
 						{/if}
