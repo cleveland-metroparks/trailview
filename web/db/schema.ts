@@ -91,3 +91,14 @@ export const imageGroupRelation = pgTable(
 		uniqueImageIdGroupId: unique().on(table.imageId, table.groupId)
 	})
 );
+
+export const apiRole = pgEnum('apiRole', ['standard', 'admin']);
+
+export const apiKey = pgTable('api_key', {
+	id: serial('id').notNull().primaryKey(),
+	name: varchar('name', { length: 256 }).notNull(),
+	key: uuid('key').notNull(),
+	role: apiRole('role').notNull(),
+	active: boolean('active').notNull(),
+	createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow()
+});

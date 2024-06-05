@@ -11,6 +11,7 @@
 		<a href="/admin/import">Import</a>
 		<a href="/admin/sequence-list">Sequence List</a>
 		<a href="/admin/analytics">Analytics</a>
+		<a href="/admin/api-keys">API Keys</a>
 	</div>
 	<div class="d-flex flex-row-reverse">
 		<button
