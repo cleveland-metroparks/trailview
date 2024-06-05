@@ -2,6 +2,8 @@
 	import { fly, scale } from 'svelte/transition';
 	import type { AccessibleTrailName } from './InfoContent.svelte';
 	import InfoContent from './InfoContent.svelte';
+	import imgClose from '$lib/assets/icons/close.svg';
+	import imgInfo from '$lib/assets/icons/info.svg';
 
 	export let trail: AccessibleTrailName;
 
@@ -18,7 +20,7 @@
 {#if visible}
 	<div transition:fly={{ x: 100, duration: 500 }} class="modal">
 		<button on:click={hide} type="button" class="green-button close-button"
-			><img src="/icons/close.svg" alt="close icon" /></button
+			><img src={imgClose} alt="close icon" /></button
 		>
 		{#key trail}
 			<div in:fly|global={{ x: 100, duration: 500 }}>
@@ -33,7 +35,7 @@
 	</div>
 {:else}
 	<button on:click={show} in:scale={{ delay: 200 }} out:scale class="green-button info-button"
-		><img src="/icons/info.svg" alt="open info icon" /></button
+		><img src={imgInfo} alt="open info icon" /></button
 	>
 {/if}
 

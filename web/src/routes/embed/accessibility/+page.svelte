@@ -8,6 +8,8 @@
 	import InfoModal from './InfoModal.svelte';
 	import InfoPopup from './InfoPopup.svelte';
 	import type { AccessibleTrailName } from './InfoContent.svelte';
+	import imgChevronLeft from '$lib/assets/icons/chevron-left.svg';
+	import imgChevronRight from '$lib/assets/icons/chevron-right.svg';
 
 	export let data: PageData;
 
@@ -89,8 +91,7 @@
 				transition:scale
 				on:click={carouselPrev}
 				type="button"
-				class="carousel-button carousel-prev"
-				><img src="/icons/chevron-left.svg" alt="scroll left" /></button
+				class="carousel-button carousel-prev"><img src={imgChevronLeft} alt="scroll left" /></button
 			>
 		{/if}
 		{#if showNextButton}
@@ -99,7 +100,7 @@
 				on:click={carouselNext}
 				type="button"
 				class="carousel-button carousel-next"
-				><img src="/icons/chevron-right.svg" alt="scroll right" /></button
+				><img src={imgChevronRight} alt="scroll right" /></button
 			>
 		{/if}
 		<div on:scroll={onCarouselScroll} bind:this={carouselContent} class="carousel-content">
