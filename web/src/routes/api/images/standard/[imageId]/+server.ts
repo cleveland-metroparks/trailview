@@ -4,7 +4,7 @@ import { zodImageId } from '$lib/util';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { and, eq } from 'drizzle-orm';
-import type { ImageData } from '$api/common';
+import { imageQuerySelect, type ImageData } from '$api/common';
 
 export type GetResType = { success: false; message: string } | { success: true; data: ImageData };
 
@@ -16,18 +16,7 @@ export const GET = (async ({ params }) => {
 		});
 	}
 	const imageQuery = await db
-		.select({
-			id: schema.image.id,
-			sequenceId: schema.image.sequenceId,
-			latitude: schema.image.latitude,
-			longitude: schema.image.longitude,
-			bearing: schema.image.bearing,
-			flipped: schema.image.flipped,
-			pitchCorrection: schema.image.pitchCorrection,
-			public: schema.image.public,
-			createdAt: schema.image.createdAt,
-			shtHash: schema.image.shtHash
-		})
+		.select(imageQuerySelect)
 		.from(schema.image)
 		.where(and(eq(schema.image.id, imageIdParse.data), eq(schema.image.public, true)));
 	const image = imageQuery.at(0);

@@ -10,7 +10,8 @@ import {
 	real,
 	boolean,
 	pgEnum,
-	index
+	index,
+	geometry
 } from 'drizzle-orm/pg-core';
 
 export const adminAccount = pgTable('admin_account', {
@@ -38,22 +39,31 @@ export const sequence = pgTable('sequence', {
 	mapsApiTrailId: integer('maps_api_trail_id')
 });
 
-export const image = pgTable('image', {
-	id: char('id', { length: 32 }).notNull().primaryKey(),
-	originalLatitude: real('original_latitude').notNull(),
-	originalLongitude: real('original_longitude').notNull(),
-	latitude: real('latitude').notNull(),
-	longitude: real('longitude').notNull(),
-	bearing: real('bearing').notNull(),
-	flipped: boolean('flipped').notNull(),
-	shtHash: char('sht_hash', { length: 74 }).notNull(),
-	pitchCorrection: real('pitch_correction').notNull(),
-	public: boolean('public').notNull(),
-	sequenceId: integer('sequence_id')
-		.notNull()
-		.references(() => sequence.id),
-	createdAt: timestamp('created_at', { mode: 'date' }).notNull()
-});
+export const image = pgTable(
+	'image',
+	{
+		id: char('id', { length: 32 }).notNull().primaryKey(),
+		originalLatitude: real('original_latitude').notNull(),
+		originalLongitude: real('original_longitude').notNull(),
+		latitude: real('latitude').notNull(),
+		longitude: real('longitude').notNull(),
+		bearing: real('bearing').notNull(),
+		flipped: boolean('flipped').notNull(),
+		shtHash: char('sht_hash', { length: 74 }).notNull(),
+		pitchCorrection: real('pitch_correction').notNull(),
+		public: boolean('public').notNull(),
+		sequenceId: integer('sequence_id')
+			.notNull()
+			.references(() => sequence.id),
+		createdAt: timestamp('created_at', { mode: 'date' }).notNull(),
+		coordinates: geometry('coordinates', { type: 'point', srid: 4326 }).notNull()
+	},
+	(table) => {
+		return {
+			coordinatesIndex: index().using('gist', table.coordinates)
+		};
+	}
+);
 
 export const group = pgTable('group', {
 	id: serial('id').notNull().primaryKey(),

@@ -80,7 +80,7 @@
 			role="switch"
 			name="isPublic"
 			checked={(() => {
-				return currentImage?.visibility ?? false;
+				return currentImage?.public ?? false;
 			})()}
 		/>
 		<label class="form-check-label" for="sequence_public_switch">Publicly Visible</label>

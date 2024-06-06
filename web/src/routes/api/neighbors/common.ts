@@ -1,5 +1,8 @@
 import CheapRuler from 'cheap-ruler';
 import type { ImageData } from '$api/common';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { and, eq, not, sql } from 'drizzle-orm';
 
 export type Neighbor = ImageData & {
 	distance: number;
@@ -16,93 +19,127 @@ function customMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
 
-export function getNeighbors(params: {
+async function queryImagesInRadius(params: {
+	coordinates: [number, number];
+	radiusMeters: number;
+	excludeImageId: string;
+}) {
+	return await db
+		.select({
+			id: schema.image.id,
+			coordinates: schema.image.coordinates,
+			sequenceId: schema.image.sequenceId,
+			bearing: schema.image.bearing,
+			flipped: schema.image.flipped,
+			pitchCorrection: schema.image.pitchCorrection,
+			public: schema.image.public,
+			createdAt: schema.image.createdAt,
+			shtHash: schema.image.shtHash,
+			distance: sql<number>`ST_Distance(coordinates::geography, 
+				ST_SETSRID(ST_MakePoint(${params.coordinates[0]}, ${params.coordinates[1]}), 4326)::geography) 
+				AS distance`
+		})
+		.from(schema.image)
+		.where(
+			and(
+				sql`ST_DWithin(coordinates::geography, ST_SetSRID(
+				ST_MakePoint(${params.coordinates[0]}, ${params.coordinates[1]}), 4326)::geography, 
+				${params.radiusMeters})`,
+				not(eq(schema.image.id, params.excludeImageId))
+			)
+		);
+}
+
+export async function getNeighbors(params: {
 	includePrivate: boolean;
 	imageId: string;
 	sequencesFilter: number[] | undefined;
 	groupsFilter: number[] | undefined;
-}): undefined | Neighbor[] {
+}): Promise<null | Neighbor[]> {
 	const neighbors: (Neighbor | null)[] = [];
+	const sourceImageQuery = await db
+		.select({
+			id: schema.image.id,
+			coordinates: schema.image.coordinates,
+			bearing: schema.image.bearing
+		})
+		.from(schema.image)
+		.where(eq(schema.image.id, params.imageId));
+	const sourceImage = sourceImageQuery.at(0);
+	if (sourceImage === undefined) {
+		return null;
+	}
+	const nearbyImages = await queryImagesInRadius({
+		coordinates: sourceImage.coordinates,
+		radiusMeters: neighborDistCutoff,
+		excludeImageId: sourceImage.id
+	});
 
-	for (let p = 0; p < data.length; p++) {
-		if (data[p].id === image.id) {
-			continue;
+	const groupsQuery = await db
+		.select({
+			imageId: schema.imageGroupRelation.imageId,
+			groupId: schema.imageGroupRelation.groupId
+		})
+		.from(schema.imageGroupRelation);
+
+	for (const nearImage of nearbyImages) {
+		let brng = ruler.bearing(sourceImage.coordinates, nearImage.coordinates);
+		if (brng < 0) {
+			brng += 360;
 		}
-
-		const distance = ruler.distance(
-			[image.longitude, image.latitude],
-			[data[p].longitude, data[p].latitude]
-		);
-		if (distance <= neighborDistCutoff) {
-			let brng = ruler.bearing(
-				[image.longitude, image.latitude],
-				[data[p].longitude, data[p].latitude]
-			);
-			if (brng < 0) {
-				brng += 360;
+		const bearing = customMod(customMod(brng - sourceImage.bearing, 360) + 180, 360);
+		let skip = false;
+		for (let n = 0; n < neighbors.length; n++) {
+			const neighbor = neighbors[n];
+			if (neighbor === null) {
+				continue;
 			}
-			const bearing = customMod(customMod(brng - image.bearing, 360) + 180, 360);
-			let skip = false;
-			for (let n = 0; n < neighbors.length; n++) {
-				const neighbor = neighbors[n];
-				if (neighbor === undefined) {
-					continue;
-				}
-				const diff = customMod(neighbor.neighborBearing - bearing + 180, 360) - 180;
-				if (Math.abs(diff) < pruneAngle) {
-					if (Math.abs(optimalDist - distance) < Math.abs(optimalDist - neighbor.distance)) {
-						neighbors[n] = undefined;
-					} else {
-						skip = true;
-					}
-				}
-			}
-			if (skip == false) {
-				let filteredBySeq = false;
-				if (sequencesFilter !== undefined) {
-					if (!sequencesFilter.includes(data[p].sequenceId)) {
-						filteredBySeq = true;
-					}
-				}
-
-				let filteredByGroup = groupsFilter === undefined ? false : true;
-				if (groupsFilter !== undefined) {
-					for (const g of groupsFilter) {
-						if (
-							groupData.findIndex((r) => {
-								return r.groupId === g && r.imageId === data[p].id;
-							}) !== -1
-						) {
-							filteredByGroup = false;
-							break;
-						}
-					}
-				}
+			const diff = customMod(neighbor.neighborBearing - bearing + 180, 360) - 180;
+			if (Math.abs(diff) < pruneAngle) {
 				if (
-					(groupsFilter === undefined && sequencesFilter === undefined) ||
-					(groupsFilter !== undefined && filteredByGroup === false) ||
-					(sequencesFilter !== undefined && filteredBySeq === false)
+					Math.abs(optimalDist - nearImage.distance) < Math.abs(optimalDist - neighbor.distance)
 				) {
-					neighbors.push({
-						sequenceId: data[p].sequenceId,
-						id: data[p].id,
-						bearing: data[p].bearing,
-						neighborBearing: bearing,
-						flipped: data[p].flipped,
-						distance: distance,
-						latitude: data[p].latitude,
-						longitude: data[p].longitude,
-						shtHash: imagePreviews.get(data[p].id),
-						pitchCorrection: data[p].pitchCorrection,
-						createdAt: data[p].createdAt,
-						public: data[p].public
-					});
+					neighbors[n] = null;
+				} else {
+					skip = true;
 				}
+			}
+		}
+		if (skip == false) {
+			let filteredBySeq = false;
+			if (params.sequencesFilter !== undefined) {
+				if (!params.sequencesFilter.includes(nearImage.sequenceId)) {
+					filteredBySeq = true;
+				}
+			}
+
+			let filteredByGroup = params.groupsFilter === undefined ? false : true;
+			if (params.groupsFilter !== undefined) {
+				for (const g of params.groupsFilter) {
+					if (
+						groupsQuery.findIndex((r) => {
+							return r.groupId === g && r.imageId === nearImage.id;
+						}) !== -1
+					) {
+						filteredByGroup = false;
+						break;
+					}
+				}
+			}
+			if (
+				(params.groupsFilter === undefined && params.sequencesFilter === undefined) ||
+				(params.groupsFilter !== undefined && filteredByGroup === false) ||
+				(params.sequencesFilter !== undefined && filteredBySeq === false)
+			) {
+				neighbors.push({
+					...nearImage,
+					neighborBearing: bearing
+				});
 			}
 		}
 	}
 	const filteredNeighbors = neighbors.filter((neighbor) => {
-		return neighbor !== undefined;
+		return neighbor !== null;
 	}) as Neighbor[];
 	return filteredNeighbors;
 }

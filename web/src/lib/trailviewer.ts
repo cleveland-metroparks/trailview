@@ -125,18 +125,17 @@ function customMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
 
-export interface Image {
+export type Image = {
 	id: string;
 	sequenceId: number;
-	latitude: number;
-	longitude: number;
+	coordinates: [number, number];
 	bearing: number;
 	flipped: boolean;
 	pitchCorrection: number;
-	visibility: boolean;
+	public: boolean;
 	createdAt: Date;
 	shtHash: string | undefined;
-}
+};
 
 export interface Neighbor extends Image {
 	distance: number;
@@ -149,16 +148,15 @@ interface NavArrowInfo {
 	yaw: number;
 }
 
-interface ImageData {
+type ImageData = {
 	id: string;
 	pitchCorrection: number;
 	bearing: number;
-	longitude: number;
-	latitude: number;
+	coordinates: [number, number];
 	flipped: boolean;
-	visibility: boolean;
+	public: boolean;
 	sequenceId: number;
-}
+};
 
 export interface TrailViewerEvents {
 	on(event: 'image-change', listener: (image: Image) => void): void;
@@ -262,7 +260,7 @@ export class TrailViewer implements TrailViewerEvents {
 			type: 'circle',
 			paint: {
 				'circle-radius': 10,
-				'circle-color': ['case', ['==', ['get', 'visible'], true], '#00a108', '#db8904']
+				'circle-color': ['case', ['==', ['get', 'public'], true], '#00a108', '#db8904']
 			}
 		});
 		this.map.setPaintProperty('dots', 'circle-radius', [
@@ -385,7 +383,7 @@ export class TrailViewer implements TrailViewerEvents {
 		if (this.map.getZoom() >= 17) {
 			const bounds = this.map.getBounds();
 			for (const image of this.allImageData) {
-				if (!bounds.contains([image.longitude, image.latitude])) {
+				if (!bounds.contains(image.coordinates)) {
 					if (
 						this.editList.find((e) => {
 							return e.imageId === image.id && bounds.contains([e.new.longitude, e.new.latitude]);
@@ -396,13 +394,13 @@ export class TrailViewer implements TrailViewerEvents {
 				}
 				const element = document.createElement('div');
 				element.classList.add('trailview-draggable');
-				if (image.visibility === false) {
+				if (image.public === false) {
 					element.classList.add('trailview-draggable-private');
 				}
 				element.addEventListener('click', () => {
 					this.goToImageID(image.id);
 				});
-				let markerLoc: [number, number] = [image.longitude, image.latitude];
+				let markerLoc: [number, number] = image.coordinates;
 				const lastEdit = this.editList.findLast((e) => {
 					return e.imageId === image.id;
 				});
@@ -673,7 +671,7 @@ export class TrailViewer implements TrailViewerEvents {
 		);
 		const data = await res.json();
 		if (data.success !== true) {
-			throw new Error('Failed to retrieve neighbors');
+			throw new Error('Failed to fetch neighbors');
 		}
 		return data.data;
 	}
@@ -794,8 +792,8 @@ export class TrailViewer implements TrailViewerEvents {
 			throw new Error('Current image is undefined');
 		}
 
-		this._geo.latitude = this._currImg.latitude;
-		this._geo.longitude = this._currImg.longitude;
+		this._geo.latitude = this._currImg.coordinates[1];
+		this._geo.longitude = this._currImg.coordinates[0];
 
 		if (this.map !== undefined && this._mapMarker !== undefined) {
 			let markerLoc: [number, number] = [this._geo.longitude, this._geo.latitude];

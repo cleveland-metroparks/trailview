@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
-import { refreshImageData } from '$lib/server/dbcache';
 import { refreshGeoJsonData } from '$lib/server/geojson';
 import { inArray } from 'drizzle-orm';
 
@@ -31,7 +30,6 @@ export const PATCH = (async ({ request }) => {
 		console.error(error);
 		return json({ success: false, message: 'Database error' }, { status: 500 });
 	}
-	await refreshImageData(true);
-	await refreshGeoJsonData(true);
+	await refreshGeoJsonData();
 	return json({ success: true });
 }) satisfies RequestHandler;

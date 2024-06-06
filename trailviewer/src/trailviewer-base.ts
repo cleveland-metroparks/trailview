@@ -465,7 +465,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
         const res = await fetch(neighborsUrl);
         const data = await res.json();
         if (data.success !== true) {
-            throw new Error('Failed to retrieve neighbors');
+            throw new Error('Failed to fetch neighbors');
         }
         return data.data;
     }

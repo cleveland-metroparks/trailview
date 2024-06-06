@@ -50,7 +50,7 @@
 		const bounds = trailviewer.map.getBounds();
 		const imageIdList: string[] = [];
 		for (const image of trailviewer.allImageData) {
-			if (bounds.contains([image.longitude, image.latitude])) {
+			if (bounds.contains(image.coordinates)) {
 				imageIdList.push(image.id);
 			}
 		}
@@ -106,7 +106,7 @@
 	<div class="mt-2 form-check form-switch">
 		<input
 			checked={(() => {
-				return currentImage?.visibility ?? false;
+				return currentImage?.public ?? false;
 			})()}
 			name="public"
 			id="image_public_switch"

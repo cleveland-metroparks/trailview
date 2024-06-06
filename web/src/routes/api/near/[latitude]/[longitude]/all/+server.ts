@@ -1,12 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getNearestImageId } from '../common';
 import z from 'zod';
-import { db } from '$lib/server/db';
-import * as schema from '$db/schema';
 import type { ImageData } from '$api/common';
+import { queryNearestImage } from '../common';
 
-export type GetResType = { success: false; message: string } | { success: true; data: ImageData };
+export type GetResType =
+	| { success: false; message: string }
+	| { success: true; data: ImageData & { distance: number } };
 
 export const GET = (async ({ params }) => {
 	const latitudeParse = z.number().safeParse(params.latitude);
@@ -16,35 +16,14 @@ export const GET = (async ({ params }) => {
 			status: 400
 		});
 	}
-	const nearestImageId = await getNearestImageId({
+	const nearestImage = await queryNearestImage({
 		includePrivate: true,
-		latitude: latitudeParse.data,
-		longitude: longitudeParse.data
+		coordinates: [longitudeParse.data, latitudeParse.data]
 	});
-	if (nearestImageId === null) {
+	if (nearestImage === null) {
 		return json({ success: false, message: 'No image found' } satisfies GetResType, {
 			status: 404
 		});
 	}
-	const imageQuery = await db
-		.select({
-			id: schema.image.id,
-			sequenceId: schema.image.sequenceId,
-			latitude: schema.image.latitude,
-			longitude: schema.image.longitude,
-			bearing: schema.image.bearing,
-			flipped: schema.image.flipped,
-			pitchCorrection: schema.image.pitchCorrection,
-			public: schema.image.public,
-			createdAt: schema.image.createdAt,
-			shtHash: schema.image.shtHash
-		})
-		.from(schema.image);
-	const image = imageQuery.at(0);
-	if (image === undefined) {
-		return json({ success: false, message: 'Image not found' } satisfies GetResType, {
-			status: 404
-		});
-	}
-	return json({ success: true, data: image } satisfies GetResType);
+	return json({ success: true, data: nearestImage } satisfies GetResType);
 }) satisfies RequestHandler;

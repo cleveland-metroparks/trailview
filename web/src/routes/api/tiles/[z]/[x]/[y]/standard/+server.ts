@@ -11,7 +11,7 @@ export const GET = (async ({ params }) => {
 		return json({ success: false, message: 'Invalid parameters' }, { status: 400 });
 	}
 	if (standardTileIndex === undefined) {
-		await refreshGeoJsonData(true);
+		await refreshGeoJsonData();
 	}
 	if (standardTileIndex === undefined) {
 		return json({ success: false, message: 'Server error' }, { status: 500 });

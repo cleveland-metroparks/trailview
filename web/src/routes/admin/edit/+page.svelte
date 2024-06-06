@@ -174,10 +174,7 @@
 				console.warn('Unable to find image Id');
 				continue;
 			}
-			geoJsonData.coordinates.push([
-				[image.longitude, image.latitude],
-				[edit.new.longitude, edit.new.latitude]
-			]);
+			geoJsonData.coordinates.push([image.coordinates, [edit.new.longitude, edit.new.latitude]]);
 		}
 
 		if (mapHasEditLayer === true) {
@@ -216,13 +213,13 @@
 		}
 		const mapBounds = trailviewer.map.getBounds();
 		const imagesInBounds = trailviewer.allImageData.filter((i) => {
-			return mapBounds.contains([i.longitude, i.latitude]);
+			return mapBounds.contains(i.coordinates);
 		});
 		for (const image of imagesInBounds) {
 			let dir = degreeToVector(image.bearing);
 			dir = { x: -dir.y, y: dir.x };
 			const correction = closestIntersection(
-				{ x: image.latitude, y: image.longitude },
+				{ x: image.coordinates[1], y: image.coordinates[0] },
 				dir,
 				currentApiTrailGeoJson,
 				rangeLimit

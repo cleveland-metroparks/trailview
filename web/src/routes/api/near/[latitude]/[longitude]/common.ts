@@ -1,29 +1,25 @@
-import { getCachedImageLocations } from '$lib/server/dbcache';
-import CheapRuler from 'cheap-ruler';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { sql } from 'drizzle-orm';
+import { imageQuerySelect, type ImageData } from '$api/common';
 
-const ruler = new CheapRuler(41, 'meters');
-
-export async function getNearestImageId(params: {
+export async function queryNearestImage(params: {
 	includePrivate: boolean;
-	latitude: number;
-	longitude: number;
-}): Promise<{ id: string; distance: number } | null> {
-	let nearestDistance = Number.MAX_VALUE;
-	let nearestId: string | null = null;
-	const imageLocations = await getCachedImageLocations({ includePrivate: params.includePrivate });
-	for (let i = 0; i < imageLocations.length; i++) {
-		const image = imageLocations[i];
-		const distance = ruler.distance(
-			[image.longitude, image.latitude],
-			[params.longitude, params.latitude]
-		);
-		if (nearestId === null || distance < nearestDistance) {
-			nearestDistance = distance;
-			nearestId = image.id;
-		}
-	}
-	if (nearestId === null) {
+	coordinates: [number, number];
+}): Promise<(ImageData & { distance: number }) | null> {
+	const imageQuery = await db
+		.select({
+			...imageQuerySelect,
+			distance: sql<number>`ST_Distance(coordinates::geography,
+				ST_SETSRID(ST_MakePoint(${params.coordinates[0]}, ${params.coordinates[1]}),4326)::geography) 
+				AS distance`
+		})
+		.from(schema.image)
+		.orderBy(sql`distance`)
+		.limit(1);
+	const image = imageQuery.at(0);
+	if (image === undefined) {
 		return null;
 	}
-	return { id: nearestId, distance: nearestDistance };
+	return image;
 }

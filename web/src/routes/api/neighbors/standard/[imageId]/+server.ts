@@ -1,9 +1,11 @@
-import { refreshImageData, standardImageData } from '$lib/server/dbcache';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { getNeighbors } from '../../common';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { sql } from 'drizzle-orm';
+import { getNeighbors, type Neighbor } from '$api/neighbors/common';
+import { zodImageId } from '$lib/util';
+
+export type GetResType = { success: false; message: string } | { success: true; data: Neighbor[] };
 
 export const GET = (async ({ url, params }) => {
 	const searchParamSequencesFilter = url.searchParams.get('s');
@@ -25,15 +27,10 @@ export const GET = (async ({ url, params }) => {
 	}
 
 	if (params.imageId === undefined) {
-		return json({ success: false, message: 'No imageId specified' }, { status: 400 });
+		return json({ success: false, message: 'No imageId specified' } satisfies GetResType, {
+			status: 400
+		});
 	}
-	if (standardImageData === undefined) {
-		await refreshImageData(true);
-	}
-	if (standardImageData === undefined) {
-		return json({ success: false, message: 'Server error' }, { status: 500 });
-	}
-	const neighbors = getNeighbors(standardImageData, params.imageId, sequencesFilter, groupsFilter);
 
 	// Analytics
 	const current = new Date();
@@ -45,6 +42,7 @@ export const GET = (async ({ url, params }) => {
 		0,
 		0
 	);
+
 	await db
 		.insert(schema.analytics)
 		.values({ imageId: params.imageId, date: day, count: 1 })
@@ -53,8 +51,22 @@ export const GET = (async ({ url, params }) => {
 			set: { count: sql`${schema.analytics.count} + 1` }
 		});
 
-	if (neighbors === undefined) {
-		return json({ success: false, message: 'Invalid image id' }, { status: 404 });
+	const imageIdParse = zodImageId.safeParse(params.imageId);
+	if (imageIdParse.success !== true) {
+		return json({ success: false, message: 'Invalid image id' } satisfies GetResType, {
+			status: 400
+		});
 	}
-	return json({ success: true, data: neighbors });
+	const neighbors = await getNeighbors({
+		imageId: imageIdParse.data,
+		includePrivate: false,
+		groupsFilter,
+		sequencesFilter
+	});
+	if (neighbors === null) {
+		return json({ success: false, message: 'Invalid image id' } satisfies GetResType, {
+			status: 404
+		});
+	}
+	return json({ success: true, data: neighbors } satisfies GetResType);
 }) satisfies RequestHandler;

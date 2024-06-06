@@ -146,7 +146,7 @@
 					type: 'Feature',
 					geometry: {
 						type: 'Point',
-						coordinates: [i.longitude, i.latitude]
+						coordinates: i.coordinates
 					},
 					properties: {}
 				};
@@ -266,7 +266,7 @@
 						type: 'Feature',
 						geometry: {
 							type: 'Point',
-							coordinates: [i.longitude, i.latitude]
+							coordinates: i.coordinates
 						},
 						properties: {}
 					};

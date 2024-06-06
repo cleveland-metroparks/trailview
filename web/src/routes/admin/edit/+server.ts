@@ -4,13 +4,12 @@ import { z } from 'zod';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { refreshGeoJsonData } from '$lib/server/geojson';
-import { refreshImageData } from '$lib/server/dbcache';
 import { eq } from 'drizzle-orm';
 
 const patchRequestType = z.object({
 	data: z.array(
 		z.object({
-			imageId: z.string().nonempty(),
+			imageId: z.string().min(1),
 			new: z.object({
 				latitude: z.number(),
 				longitude: z.number()
@@ -43,11 +42,9 @@ export const PATCH = (async ({ request }) => {
 		}
 	} catch (error) {
 		console.error(error);
-		await refreshGeoJsonData(true);
-		await refreshImageData(true);
+		await refreshGeoJsonData();
 		return json({ success: false, message: 'Database error' }, { status: 500 });
 	}
-	await refreshGeoJsonData(true);
-	await refreshImageData(true);
+	await refreshGeoJsonData();
 	return json({ success: true });
 }) satisfies RequestHandler;

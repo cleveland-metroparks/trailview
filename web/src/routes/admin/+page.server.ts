@@ -1,4 +1,3 @@
-import { refreshImageData } from '$lib/server/dbcache';
 import { refreshGeoJsonData } from '$lib/server/geojson';
 import { db } from '$lib/server/db';
 import type { Actions, PageServerLoad } from './$types';
@@ -60,8 +59,7 @@ export const actions = {
 			.update(schema.image)
 			.set({ public: formPublic !== null })
 			.where(eq(schema.image.id, formImageId.toString()));
-		await refreshImageData(true);
-		await refreshGeoJsonData(true);
+		await refreshGeoJsonData();
 		return { success: true };
 	},
 	sequence: async ({ request }) => {
@@ -100,13 +98,11 @@ export const actions = {
 			.update(schema.image)
 			.set({ flipped: formFlip !== null, pitchCorrection: pitch, public: formIsPublic !== null })
 			.where(eq(schema.image.sequenceId, sequenceId));
-		await refreshImageData(true);
-		await refreshGeoJsonData(true);
+		await refreshGeoJsonData();
 		return { success: true };
 	},
 	refresh: async () => {
-		refreshImageData(true);
-		refreshGeoJsonData(true);
+		refreshGeoJsonData();
 		return { success: true };
 	},
 	'create-group': async ({ request }) => {
