@@ -37,8 +37,8 @@
         "watch": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs -w"
     },
     "devDependencies": {
-        "@cmparks/pannellum": "^2.6.0",
-        "@rollup/plugin-commonjs": "^25.0.8",
+        "@cmparks/pannellum": "^2.7.0",
+        "@rollup/plugin-commonjs": "^26.0.1",
         "@rollup/plugin-node-resolve": "^15.2.3",
         "@rollup/plugin-terser": "^0.4.4",
         "@rollup/plugin-typescript": "^11.1.6",
