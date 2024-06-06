@@ -23,7 +23,7 @@
 
 		trailviewerOptions.baseUrl = $page.url.origin;
 		trailviewerOptions.mapboxKey = env.PUBLIC_MAPBOX_KEY;
-		trailviewerOptions.imageFetchType = 'all';
+		trailviewerOptions.fetchPrivate = true;
 		trailviewerOptions.initialImageId =
 			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
 		trailviewer = new trailview.TrailViewer();

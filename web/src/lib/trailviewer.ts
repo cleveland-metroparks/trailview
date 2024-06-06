@@ -87,7 +87,7 @@ export interface TrailViewerOptions {
 	mapboxKey: string | undefined;
 	navArrowMinAngle: number;
 	navArrowMaxAngle: number;
-	imageFetchType: 'standard' | 'all';
+	fetchPrivate: boolean;
 }
 
 export const defaultOptions: TrailViewerOptions = {
@@ -98,7 +98,7 @@ export const defaultOptions: TrailViewerOptions = {
 	mapboxKey: undefined,
 	navArrowMinAngle: -25,
 	navArrowMaxAngle: -20,
-	imageFetchType: 'standard'
+	fetchPrivate: false
 };
 
 interface HTMLNavArrowElement extends HTMLImageElement {
@@ -215,7 +215,7 @@ export class TrailViewer implements TrailViewerEvents {
 	}
 
 	async fetchAllImageData() {
-		const res = await fetch('/api/images/all', { method: 'GET' });
+		const res = await fetch('/api/images/private', { method: 'GET' });
 		const imagesData = await res.json();
 		if (imagesData.success !== true) {
 			throw new Error('Unable to fetch all image data');
@@ -247,7 +247,11 @@ export class TrailViewer implements TrailViewerEvents {
 			type: 'vector',
 			format: 'pbf',
 			tiles: [
-				urlJoin(this._options.baseUrl, `/api/tiles/{z}/{x}/{y}/${this._options.imageFetchType}`)
+				urlJoin(
+					this._options.baseUrl,
+					`/api/tiles/{z}/{x}/{y}`,
+					this._options.fetchPrivate ? 'private' : ''
+				)
 			]
 		};
 
@@ -555,7 +559,12 @@ export class TrailViewer implements TrailViewerEvents {
 			northOffset: scene['bearing'],
 			type: 'multires',
 			multiRes: {
-				basePath: urlJoin(this._options.baseUrl, '/api/panImage', `/${scene.id}`),
+				basePath: urlJoin(
+					this._options.baseUrl,
+					'/api/panImage',
+					`/${scene.id}`,
+					this._options.fetchPrivate ? 'private' : ''
+				),
 				path: '/%l/%s%y_%x',
 				extension: 'jpg',
 				tileResolution: 512,
@@ -596,7 +605,12 @@ export class TrailViewer implements TrailViewerEvents {
 			northOffset: bearing,
 			type: 'multires',
 			multiRes: {
-				basePath: urlJoin(this._options.baseUrl, '/api/panImage', `/${image.id}`),
+				basePath: urlJoin(
+					this._options.baseUrl,
+					'/api/panImage',
+					`/${image.id}`,
+					this._options.fetchPrivate ? 'private' : ''
+				),
 				path: '/%l/%s%y_%x',
 				fallbackPath: '/fallback/%s',
 				extension: 'jpg',
@@ -667,7 +681,12 @@ export class TrailViewer implements TrailViewerEvents {
 
 	private async _getNeighbors(image: Image): Promise<Neighbor[]> {
 		const res = await fetch(
-			urlJoin(this._options.baseUrl, '/api/neighbors', this._options.imageFetchType, image.id)
+			urlJoin(
+				this._options.baseUrl,
+				'/api/neighbors',
+				image.id,
+				this._options.fetchPrivate ? 'private' : ''
+			)
 		);
 		const data = await res.json();
 		if (data.success !== true) {
@@ -682,7 +701,12 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 		let config = this._createViewerConfig(initImageId);
 		const res = await fetch(
-			urlJoin(this._options.baseUrl, '/api/images', this._options.imageFetchType, initImageId)
+			urlJoin(
+				this._options.baseUrl,
+				'/api/images',
+				initImageId,
+				this._options.fetchPrivate ? 'private' : ''
+			)
 		);
 		const data = await res.json();
 		if (data.success !== true) {
@@ -729,8 +753,8 @@ export class TrailViewer implements TrailViewerEvents {
 	}
 
 	private async _fetchData(): Promise<Image[]> {
-		if (this._options.imageFetchType == 'standard') {
-			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images/standard'), {
+		if (this._options.fetchPrivate === false) {
+			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images'), {
 				method: 'GET'
 			});
 			const data = await res.json();
@@ -740,7 +764,7 @@ export class TrailViewer implements TrailViewerEvents {
 				throw new Error('Fetching image data unsuccessful');
 			}
 		} else {
-			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images/all'), {
+			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images/private'), {
 				method: 'GET'
 			});
 			const data = await res.json();
@@ -974,7 +998,12 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 		if (image === undefined) {
 			const res = await fetch(
-				urlJoin(this._options.baseUrl, '/api/images', this._options.imageFetchType, imageId)
+				urlJoin(
+					this._options.baseUrl,
+					'/api/images',
+					imageId,
+					this._options.fetchPrivate ? 'private' : ''
+				)
 			);
 			const data = await res.json();
 			if (data.success !== true) {

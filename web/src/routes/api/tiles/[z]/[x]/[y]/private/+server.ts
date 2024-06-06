@@ -2,8 +2,12 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { refreshGeoJsonData, allTileIndex } from '$lib/server/geojson';
 import * as vtpbf from 'vt-pbf';
+import { isApiAdmin } from '$api/common';
 
-export const GET = (async ({ params }) => {
+export const GET = (async ({ params, cookies, request }) => {
+	if (!(await isApiAdmin(cookies, request.headers))) {
+		return json({ success: false, message: 'Unauthorized' }, { status: 403 });
+	}
 	const z = parseFloat(params.z);
 	const x = parseFloat(params.x);
 	const y = parseFloat(params.y);

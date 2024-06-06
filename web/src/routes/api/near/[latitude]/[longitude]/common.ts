@@ -3,6 +3,10 @@ import * as schema from '$db/schema';
 import { sql } from 'drizzle-orm';
 import { imageQuerySelect, type ImageData } from '$api/common';
 
+export type GetResType =
+	| { success: false; message: string }
+	| { success: true; data: ImageData & { distance: number } };
+
 export async function queryNearestImage(params: {
 	includePrivate: boolean;
 	coordinates: [number, number];

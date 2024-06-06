@@ -1,12 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import z from 'zod';
-import type { ImageData } from '$api/common';
-import { queryNearestImage } from '../common';
-
-export type GetResType =
-	| { success: false; message: string }
-	| { success: true; data: ImageData & { distance: number } };
+import { queryNearestImage, type GetResType } from './common';
 
 export const GET = (async ({ params }) => {
 	const latitudeParse = z.number().safeParse(params.latitude);

@@ -3,10 +3,9 @@ import type { RequestHandler } from './$types';
 import { zodImageId } from '$lib/util';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
-import { eq } from 'drizzle-orm';
-import { imageQuerySelect, type ImageData } from '$api/common';
-
-export type GetResType = { success: false; message: string } | { success: true; data: ImageData };
+import { and, eq } from 'drizzle-orm';
+import { imageQuerySelect } from '$api/common';
+import type { GetResType } from './common';
 
 export const GET = (async ({ params }) => {
 	const imageIdParse = zodImageId.safeParse(params.imageId);
@@ -18,12 +17,12 @@ export const GET = (async ({ params }) => {
 	const imageQuery = await db
 		.select(imageQuerySelect)
 		.from(schema.image)
-		.where(eq(schema.image.id, imageIdParse.data));
+		.where(and(eq(schema.image.id, imageIdParse.data), eq(schema.image.public, true)));
 	const image = imageQuery.at(0);
 	if (image === undefined) {
 		return json({ success: false, message: 'Image not found' } satisfies GetResType, {
 			status: 404
 		});
 	}
-	return json({ success: true, data: image } as GetResType);
+	return json({ success: true, data: image } satisfies GetResType);
 }) satisfies RequestHandler;

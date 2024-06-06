@@ -25,7 +25,7 @@
 			.optional()
 			.nullable(),
 		baseUrl: z.string(),
-		imageFetchType: z.enum(['standard', 'all']),
+		imageFetchType: z.enum(['normal', 'private']),
 		filterSequences: z.array(z.number()).optional().nullable()
 	});
 

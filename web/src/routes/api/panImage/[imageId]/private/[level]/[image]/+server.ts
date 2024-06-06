@@ -5,11 +5,15 @@ import type { RequestHandler } from './$types';
 import { join } from 'path';
 import { promises as fs } from 'fs';
 import * as schema from '$db/schema';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { isApiAdmin } from '$api/common';
 
 const imageFileRegex = new RegExp(/^[a-z][0-9]_[0-9]\.jpg$/);
 
-export const GET = (async ({ params }) => {
+export const GET = (async ({ params, cookies, request }) => {
+	if (!(await isApiAdmin(cookies, request.headers))) {
+		return json({ success: false, message: 'Unauthorized' }, { status: 403 });
+	}
 	const sequencesQuery = db
 		.$with('sequence')
 		.as(
@@ -25,7 +29,7 @@ export const GET = (async ({ params }) => {
 			sequenceName: sequencesQuery.sequenceName
 		})
 		.from(schema.image)
-		.where(and(eq(schema.image.id, params.imageId), eq(schema.image.public, true)))
+		.where(eq(schema.image.id, params.imageId))
 		.innerJoin(sequencesQuery, eq(sequencesQuery.sequenceId, schema.image.sequenceId));
 	const image = imageQuery.at(0);
 	if (image === undefined) {

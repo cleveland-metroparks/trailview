@@ -35,7 +35,7 @@
 	import InspectorMove from './InspectorMove.svelte';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import type { PageData } from './$types';
-	import type { GetResType as GroupGetResType } from '../api/group/[groupId]/all/+server';
+	import type { GetResType as GroupGetResType } from '$api/group/[groupId]/common';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
 	import { scale } from 'svelte/transition';
@@ -109,7 +109,7 @@
 	}
 
 	async function goToGroup(groupId: number) {
-		const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
+		const res = await fetch(`/api/group/${groupId}/private`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === true) {
 			const image = resData.data.images.at(0);
@@ -130,7 +130,7 @@
 		) {
 			return;
 		}
-		const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
+		const res = await fetch(`/api/group/${groupId}/private`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === false) {
 			formAlert.popup(resData);
@@ -325,7 +325,7 @@
 
 		trailviewerOptions.baseUrl = $page.url.origin;
 		trailviewerOptions.mapboxKey = env.PUBLIC_MAPBOX_KEY;
-		trailviewerOptions.imageFetchType = 'all';
+		trailviewerOptions.fetchPrivate = true;
 		trailviewerOptions.initialImageId =
 			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
 		trailviewer = new trailview.TrailViewer();

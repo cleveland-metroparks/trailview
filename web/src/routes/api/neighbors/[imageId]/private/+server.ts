@@ -1,10 +1,12 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { getNeighbors, type Neighbor } from '$api/neighbors/common';
 import { zodImageId } from '$lib/util';
+import { getNeighbors, type GetResType } from '../common';
+import { isApiAdmin } from '$api/common';
 
-export type GetResType = { success: false; message: string } | { success: true; data: Neighbor[] };
-
-export const GET = (async ({ url, params }) => {
+export const GET = (async ({ url, params, cookies, request }) => {
+	if (!(await isApiAdmin(cookies, request.headers))) {
+		return json({ success: false, message: 'Unauthorized' } satisfies GetResType, { status: 403 });
+	}
 	const searchParamSequencesFilter = url.searchParams.get('s');
 	let sequencesFilter: number[] | undefined = undefined;
 	if (searchParamSequencesFilter !== null) {

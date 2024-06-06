@@ -2,10 +2,8 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { sql } from 'drizzle-orm';
-import { getNeighbors, type Neighbor } from '$api/neighbors/common';
 import { zodImageId } from '$lib/util';
-
-export type GetResType = { success: false; message: string } | { success: true; data: Neighbor[] };
+import { getNeighbors, type GetResType } from './common';
 
 export const GET = (async ({ url, params }) => {
 	const searchParamSequencesFilter = url.searchParams.get('s');

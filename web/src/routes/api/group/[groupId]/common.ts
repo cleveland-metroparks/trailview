@@ -2,6 +2,8 @@ import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
 
+export type GetResType = { success: false; message: string } | { success: true; data: GroupData };
+
 export type GroupData = {
 	id: number;
 	name: string;
@@ -10,14 +12,17 @@ export type GroupData = {
 	}[];
 };
 
-export async function getGroup(id: number, includeAll: boolean): Promise<Error | GroupData> {
+export async function queryGroup(params: {
+	groupId: number;
+	includePrivate: boolean;
+}): Promise<null | GroupData> {
 	const groupQuery = await db
 		.select({ id: schema.group.id, name: schema.group.name })
 		.from(schema.group)
-		.where(eq(schema.group.id, id));
+		.where(eq(schema.group.id, params.groupId));
 	const group = groupQuery.at(0);
 	if (group === undefined) {
-		return new Error('Invalid group id');
+		return null;
 	}
 	const groupImageQuery = db
 		.$with('groupImage')
@@ -28,17 +33,17 @@ export async function getGroup(id: number, includeAll: boolean): Promise<Error |
 				.where(eq(schema.imageGroupRelation.groupId, group.id))
 		);
 	const imageQuery =
-		includeAll === true
+		params.includePrivate === true
 			? await db
 					.with(groupImageQuery)
 					.select({ id: schema.image.id })
 					.from(schema.image)
-					.where(eq(schema.image.public, true))
 					.innerJoin(groupImageQuery, eq(groupImageQuery.groupImageId, schema.image.id))
 			: await db
 					.with(groupImageQuery)
 					.select({ id: schema.image.id })
 					.from(schema.image)
+					.where(eq(schema.image.public, true))
 					.innerJoin(groupImageQuery, eq(groupImageQuery.groupImageId, schema.image.id));
 	return {
 		id: group.id,

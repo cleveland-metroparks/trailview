@@ -10,6 +10,8 @@ export type Neighbor = ImageData & {
 	shtHash: string | undefined;
 };
 
+export type GetResType = { success: false; message: string } | { success: true; data: Neighbor[] };
+
 const ruler = new CheapRuler(41, 'meters');
 const neighborDistCutoff = 10;
 const pruneAngle = 25;
