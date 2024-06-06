@@ -26,6 +26,7 @@
     <script>
         const options = trailviewer.defaultBaseOptions;
         // options.initial = '6f8e4bab8c924b56b0c1e35fbb64c095';
+        options.baseUrl = 'http://localhost:4173';
         options.initial = { latitude: 41.413972, longitude: -81.958963 };
         options.target = 'viewer';
         const viewer = new trailviewer.TrailViewerBase(options);

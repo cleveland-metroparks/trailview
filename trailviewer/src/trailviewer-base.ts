@@ -87,7 +87,7 @@ export interface TrailViewerBaseOptions {
     baseUrl: string;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
-    imageFetchType: 'standard' | 'all';
+    fetchPrivate: boolean;
     filterSequences: number[] | undefined;
     filterGroups: number[] | undefined;
 }
@@ -98,7 +98,7 @@ export const defaultBaseOptions: TrailViewerBaseOptions = {
     baseUrl: 'https://trailview.cmparks.net',
     navArrowMinAngle: -25,
     navArrowMaxAngle: -20,
-    imageFetchType: 'standard',
+    fetchPrivate: false,
     filterSequences: undefined,
     filterGroups: undefined,
 };
@@ -130,8 +130,7 @@ function customMod(a: number, b: number): number {
 export interface Image {
     id: string;
     sequenceId: number;
-    latitude: number;
-    longitude: number;
+    coordinates: [number, number],
     bearing: number;
     flipped: boolean;
     pitchCorrection: number;
@@ -438,8 +437,8 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             urlJoin(
                 this._options.baseUrl,
                 '/api/neighbors',
-                this._options.imageFetchType,
-                image.id
+                image.id,
+                this._options.fetchPrivate ? 'private' : ''
             )
         );
         if (this._options.filterSequences !== undefined) {
@@ -483,7 +482,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                     'api/near/',
                     initial.latitude.toString(),
                     initial.longitude.toString(),
-                    this._options.imageFetchType
+                    this._options.fetchPrivate ? 'private' : ''
                 )
             );
             const resData = await nearRes.json();
@@ -497,8 +496,8 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             urlJoin(
                 this._options.baseUrl,
                 '/api/images',
-                this._options.imageFetchType,
-                initImageId
+                initImageId,
+                this._options.fetchPrivate ? 'private' : ''
             )
         );
         const data = await res.json();
@@ -583,8 +582,8 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             throw new Error('Current image is undefined');
         }
 
-        this._geo.latitude = this._currImg.latitude;
-        this._geo.longitude = this._currImg.longitude;
+        this._geo.latitude = this._currImg.coordinates[1];
+        this._geo.longitude = this._currImg.coordinates[0];
 
         if (this._prevImg !== undefined) {
             for (let i = 0; i < this._hotSpotList.length; i++) {
@@ -660,8 +659,8 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                 urlJoin(
                     this._options.baseUrl,
                     '/api/images',
-                    this._options.imageFetchType,
-                    imageId
+                    imageId,
+                    this._options.fetchPrivate ? 'private' : ''
                 )
             );
             const data = await res.json();

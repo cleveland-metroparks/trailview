@@ -4,8 +4,8 @@ import z from 'zod';
 import { queryNearestImage, type GetResType } from './common';
 
 export const GET = (async ({ params }) => {
-	const latitudeParse = z.number().safeParse(params.latitude);
-	const longitudeParse = z.number().safeParse(params.longitude);
+	const latitudeParse = z.coerce.number().safeParse(params.latitude);
+	const longitudeParse = z.coerce.number().safeParse(params.longitude);
 	if (latitudeParse.success !== true || longitudeParse.success !== true) {
 		return json({ success: false, message: 'Invalid latitude/longitude' } satisfies GetResType, {
 			status: 400

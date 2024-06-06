@@ -8,8 +8,8 @@ export const GET = (async ({ params, cookies, request }) => {
 	if (!(await isApiAdmin(cookies, request.headers))) {
 		return json({ success: false, message: 'Unauthorized' } satisfies GetResType, { status: 403 });
 	}
-	const latitudeParse = z.number().safeParse(params.latitude);
-	const longitudeParse = z.number().safeParse(params.longitude);
+	const latitudeParse = z.coerce.number().safeParse(params.latitude);
+	const longitudeParse = z.coerce.number().safeParse(params.longitude);
 	if (latitudeParse.success !== true || longitudeParse.success !== true) {
 		return json({ success: false, message: 'Invalid latitude/longitude' } satisfies GetResType, {
 			status: 400
