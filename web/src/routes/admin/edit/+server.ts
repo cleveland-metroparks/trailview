@@ -37,7 +37,7 @@ export const PATCH = (async ({ request }) => {
 		for (const p of patch.data.data) {
 			await db
 				.update(schema.image)
-				.set({ latitude: p.new.latitude, longitude: p.new.longitude })
+				.set({ coordinates: [p.new.longitude, p.new.latitude] })
 				.where(eq(schema.image.id, p.imageId));
 		}
 	} catch (error) {

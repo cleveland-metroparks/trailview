@@ -45,8 +45,6 @@ export const image = pgTable(
 		id: char('id', { length: 32 }).notNull().primaryKey(),
 		originalLatitude: real('original_latitude').notNull(),
 		originalLongitude: real('original_longitude').notNull(),
-		latitude: real('latitude').notNull(),
-		longitude: real('longitude').notNull(),
 		bearing: real('bearing').notNull(),
 		flipped: boolean('flipped').notNull(),
 		shtHash: char('sht_hash', { length: 74 }).notNull(),
