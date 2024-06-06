@@ -7,11 +7,12 @@
 	import ConfirmModal from '$lib/ConfirmModal.svelte';
 	import { enhance } from '$app/forms';
 	import EditModal from './EditModal.svelte';
+	import { browser } from '$app/environment';
 
 	export let data: PageData;
 	export let form: ActionData;
 
-	$: if (form !== undefined) {
+	$: if (form && browser) {
 		createModal.hide();
 		editModal.hide();
 	}
@@ -89,6 +90,7 @@
 								action="?/delete"
 								method="POST"
 								use:enhance={async ({ cancel }) => {
+									cancel();
 									const res = await confirmModal.prompt(
 										`Are you sure you want to delete this API key (${apiKey.name})?`,
 										'Confirm Delete API Key'
