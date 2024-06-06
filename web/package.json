@@ -41,7 +41,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@cmparks/pannellum": "^2.6.0",
+		"@cmparks/pannellum": "^2.7.0",
 		"@cmparks/trailviewer": "file:../trailviewer",
 		"apexcharts": "^3.49.1",
 		"bootstrap": "^5.3.3",
