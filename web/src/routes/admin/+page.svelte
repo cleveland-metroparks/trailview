@@ -391,7 +391,7 @@
 		</select>
 		{#if currentSequence !== undefined && currentSequence.id !== highlightedSequenceId}
 			<button
-				transition:scale
+				in:scale
 				on:click={() => {
 					if (currentSequence !== undefined) {
 						highlightSequence(currentSequence.id);
@@ -403,7 +403,7 @@
 		{/if}
 		{#if highlightedSequenceId !== undefined}
 			<button
-				transition:scale
+				in:scale
 				on:click={() => {
 					trailviewer?.map?.removeLayer('sequenceLayer');
 					trailviewer?.map?.removeSource('sequenceSource');
@@ -428,7 +428,7 @@
 			}}
 		>
 			<button class="btn btn-sm btn-info"
-				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if} Refresh DB Cache</button
+				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if} Refresh Map Tiles</button
 			>
 		</form>
 	</div>
