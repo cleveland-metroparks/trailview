@@ -25,8 +25,10 @@ export const handle = (async ({ event, resolve }) => {
 				}
 			});
 		}
-		if ((await isApiAuth(event.cookies, event.request.headers)) === false) {
-			throw error(403, 'Unauthorized');
+		if (!event.url.pathname.startsWith('/api/panImage') && !event.url.pathname.startsWith('/api/tiles')) {
+			if ((await isApiAuth(event.cookies, event.request.headers)) === false) {
+				throw error(403, 'Unauthorized');
+			}
 		}
 		const res = await resolve(event);
 		res.headers.append('Access-Control-Allow-Origin', '*');
