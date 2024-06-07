@@ -12,9 +12,6 @@ function appendSecurityHeaders(res: Response) {
 }
 
 export const handle = (async ({ event, resolve }) => {
-	if (event.cookies.getAll().length !== 0) {
-		console.log(event.cookies.getAll());
-	}
 	if (event.url.pathname.startsWith('/api')) {
 		if (event.request.method === 'OPTIONS') {
 			return new Response(null, {

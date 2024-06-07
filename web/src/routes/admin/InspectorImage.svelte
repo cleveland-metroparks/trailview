@@ -19,10 +19,6 @@
 	let showPrivateViewSpinner = false;
 	let showPublicViewSpinner = false;
 
-	$: if (currentImage !== undefined) {
-		console.log(currentImage.createdAt);
-	}
-
 	async function setViewVisibility(visible: boolean) {
 		if (
 			trailviewer === undefined ||
