@@ -1,5 +1,6 @@
+import { isApiAuth } from '$api/common';
 import { isSessionValid } from '$lib/server/auth';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { error, redirect, type Handle } from '@sveltejs/kit';
 
 function appendSecurityHeaders(res: Response) {
 	// Security-related headers
@@ -11,6 +12,9 @@ function appendSecurityHeaders(res: Response) {
 }
 
 export const handle = (async ({ event, resolve }) => {
+	if (event.cookies.getAll().length !== 0) {
+		console.log(event.cookies.getAll());
+	}
 	if (event.url.pathname.startsWith('/api')) {
 		if (event.request.method === 'OPTIONS') {
 			return new Response(null, {
@@ -20,6 +24,9 @@ export const handle = (async ({ event, resolve }) => {
 					'Access-Control-Allow-Headers': '*'
 				}
 			});
+		}
+		if ((await isApiAuth(event.cookies, event.request.headers)) === false) {
+			throw error(403, 'Unauthorized');
 		}
 		const res = await resolve(event);
 		res.headers.append('Access-Control-Allow-Origin', '*');
