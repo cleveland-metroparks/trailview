@@ -1,2 +1,2 @@
 #!/bin/bash
-INIT=true node build
+node build

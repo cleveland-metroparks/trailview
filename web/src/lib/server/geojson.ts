@@ -4,6 +4,7 @@ import cron from 'node-cron';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
+import { building } from '$app/environment';
 
 export let allTileIndex: ReturnType<typeof geojsonvt> | undefined;
 export let standardTileIndex: ReturnType<typeof geojsonvt> | undefined;
@@ -91,7 +92,7 @@ export async function refreshGeoJsonData() {
 }
 
 (async () => {
-	if (process.env.INIT !== undefined) {
+	if (building === false) {
 		await refreshGeoJsonData();
 		cron.schedule('0 * * * *', async () => {
 			await refreshGeoJsonData();
