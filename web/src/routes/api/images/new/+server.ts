@@ -28,7 +28,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	});
 	const bodyParse = bodySchema.safeParse(await request.json());
 	if (bodyParse.success !== true) {
-		console.log(bodyParse.error);
 		return json({ success: false, message: 'Invalid request' } satisfies GetResType, {
 			status: 400
 		});
