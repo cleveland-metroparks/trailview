@@ -24,7 +24,7 @@ export const session = pgTable('session', {
 	id: uuid('id').notNull().primaryKey(),
 	adminAccountId: integer('admin_account_id')
 		.notNull()
-		.references(() => adminAccount.id),
+		.references(() => adminAccount.id, { onDelete: 'cascade' }),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });
 
@@ -52,9 +52,9 @@ export const image = pgTable(
 		public: boolean('public').notNull(),
 		sequenceId: integer('sequence_id')
 			.notNull()
-			.references(() => sequence.id),
+			.references(() => sequence.id, { onDelete: 'cascade' }),
 		createdAt: timestamp('created_at', { mode: 'date' }).notNull(),
-		coordinates: geometry('coordinates', { type: 'point', srid: 4326 }).notNull()
+		coordinates: geometry('coordinates', { type: 'point', mode: 'tuple', srid: 4326 }).notNull()
 	},
 	(table) => {
 		return {
@@ -74,7 +74,7 @@ export const analytics = pgTable(
 		id: serial('id').notNull().primaryKey(),
 		imageId: char('image_id', { length: 32 })
 			.notNull()
-			.references(() => image.id),
+			.references(() => image.id, { onDelete: 'cascade' }),
 		date: timestamp('date', { mode: 'date' }).notNull(),
 		count: integer('count').notNull()
 	},
@@ -90,10 +90,10 @@ export const imageGroupRelation = pgTable(
 		id: serial('id').notNull().primaryKey(),
 		imageId: char('image_id', { length: 32 })
 			.notNull()
-			.references(() => image.id),
+			.references(() => image.id, { onDelete: 'cascade' }),
 		groupId: integer('group_id')
 			.notNull()
-			.references(() => group.id)
+			.references(() => group.id, { onDelete: 'cascade' })
 	},
 	(table) => ({
 		uniqueImageIdGroupId: unique().on(table.imageId, table.groupId)

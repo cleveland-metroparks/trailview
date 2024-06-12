@@ -320,14 +320,16 @@
 	}
 
 	async function createTrailViewer() {
+		if (data.initialImageId === null) {
+			return;
+		}
 		const trailview = await import('$lib/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
 		trailviewerOptions.mapboxKey = env.PUBLIC_MAPBOX_KEY;
 		trailviewerOptions.fetchPrivate = true;
-		trailviewerOptions.initialImageId =
-			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
+		trailviewerOptions.initialImageId = $page.url.searchParams.get('i') ?? data.initialImageId;
 		trailviewer = new trailview.TrailViewer();
 		trailviewer.on('image-change', (image: Image) => {
 			if ($page.url.searchParams.get('i') !== image.id) {

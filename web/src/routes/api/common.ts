@@ -3,6 +3,7 @@ import * as schema from '$db/schema';
 import { and, eq } from 'drizzle-orm';
 import { isSessionValid } from '$lib/server/auth';
 import type { Cookies } from '@sveltejs/kit';
+import z from 'zod';
 
 export type ImageData = {
 	id: string;
@@ -34,6 +35,10 @@ export async function isApiAuth(cookies: Cookies, headers: Headers): Promise<boo
 	const headerValue = headers.get(apiHeaderKey);
 	if (headerValue === null) {
 		return await isSessionValid(cookies);
+	}
+	const keyParse = z.string().uuid().safeParse(headerValue);
+	if (keyParse.success !== true) {
+		return false;
 	}
 	const apiKeyQuery = await db
 		.select({})

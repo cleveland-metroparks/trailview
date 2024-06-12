@@ -40,7 +40,16 @@ export const load = (async () => {
 	if (mapsApiTrails instanceof Error) {
 		console.error(mapsApiTrails.message);
 	}
+
+	const imageQuery = await db
+		.select({ id: schema.image.id })
+		.from(schema.image)
+		.orderBy(schema.image.id)
+		.limit(1);
+	const initialImageId = imageQuery.at(0)?.id ?? null;
+
 	return {
+		initialImageId,
 		groups,
 		sequences: sequences,
 		mapsApiTrails: mapsApiTrails instanceof Error ? null : mapsApiTrails

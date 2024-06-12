@@ -22,7 +22,10 @@ export const handle = (async ({ event, resolve }) => {
 				}
 			});
 		}
-		if (!event.url.pathname.startsWith('/api/panImage') && !event.url.pathname.startsWith('/api/tiles')) {
+		if (
+			!event.url.pathname.startsWith('/api/panImage') &&
+			!event.url.pathname.startsWith('/api/tiles')
+		) {
 			if ((await isApiAuth(event.cookies, event.request.headers)) === false) {
 				throw error(403, 'Unauthorized');
 			}
