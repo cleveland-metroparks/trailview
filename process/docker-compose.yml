@@ -5,10 +5,9 @@ services:
       - IMAGES_PATH=/trails
       - WEB_URL=${WEB_URL}
       - WEB_API_KEY=${WEB_API_KEY}
-    ports:
-      - 3000:3000
     restart: unless-stopped
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
       - /home/mjo1/test-trails:/trails
+      - ./docker/logs:/app/logs

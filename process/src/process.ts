@@ -16,7 +16,6 @@ import {
 export async function processSequence(sequence: Sequence) {
     const sequencePath = join(imagesPath, sequence.name);
     await new Promise<void>((resolve) => {
-        console.log('=== Start Sequencing Process ===');
         const python = spawn('python', [
             'scripts/process_sequence_new.py',
             sequencePath,
@@ -32,9 +31,8 @@ export async function processSequence(sequence: Sequence) {
             resolve();
         });
     });
-    console.log('=== End Sequencing Process ===');
     await new Promise<void>((resolve) => {
-        console.log('=== Start Data Process ===');
+        console.log('Processing data...');
         const python = spawn('python', ['scripts/process_data.py', imagesPath]);
         python.stdout.on('data', (data) => {
             console.log(`${data}`);
@@ -46,8 +44,8 @@ export async function processSequence(sequence: Sequence) {
             resolve();
         });
     });
-    console.log('=== End Data Process ===');
-    console.log('=== Start Updating DB ===');
+    console.log('Done processing data');
+    console.log('Updating database...');
 
     const localDataJsonSchema = z.object({
         data: z.array(
@@ -112,8 +110,8 @@ export async function processSequence(sequence: Sequence) {
             return;
         }
     }
-    console.log('=== End Updating DB ===');
     await patchSequenceStatus({ sequenceId: sequence.id, status: 'done' });
+    console.log('Done updating database');
 }
 
 export async function processTile(sequence: Sequence) {
@@ -134,7 +132,6 @@ export async function processTile(sequence: Sequence) {
         }
     }
     await new Promise<void>((resolve) => {
-        console.log('=== Start Tiling Process ===');
         const python = spawn('python', [
             'scripts/process_imgs_new.py',
             join(sequencePath),
@@ -151,7 +148,6 @@ export async function processTile(sequence: Sequence) {
             resolve();
         });
     });
-    console.log('=== End Tiling Process ===');
 }
 
 export async function processBlur(sequence: Sequence) {
@@ -172,7 +168,6 @@ export async function processBlur(sequence: Sequence) {
         }
     }
     await new Promise<void>((resolve) => {
-        console.log('=== Start Blurring Process ===');
         const blurProcess = spawn(
             'scripts/blur360/build/src/equirect-blur-image',
             [
@@ -192,15 +187,10 @@ export async function processBlur(sequence: Sequence) {
             resolve();
         });
     });
-    console.log('=== End Blurring Process ===');
 }
 
 export async function processDelete(sequence: Sequence) {
     const sequencePath = join(imagesPath, sequence.name);
-    console.log('=== Start Deleting ===');
-
     await fs.remove(sequencePath);
     await deleteSequence(sequence.id);
-
-    console.log('=== End Deleting ===');
 }
