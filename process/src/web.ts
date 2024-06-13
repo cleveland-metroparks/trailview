@@ -223,7 +223,7 @@ export type ImagePostType = {
 };
 
 export async function postNewImage(newImage: ImagePostType): Promise<boolean> {
-    const res = await fetch('http://localhost:5173/api/images/new', {
+    const res = await fetch(urlJoin(webUrl, '/api/images/new'), {
         method: 'POST',
         headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify(newImage),

@@ -50,8 +50,16 @@ async function loop() {
 
 console.log('Starting');
 (async () => {
-    await loop();
-    cron.schedule('* * * * *', async () => {
+    try {
         await loop();
+    } catch (e) {
+        console.error(e);
+    }
+    cron.schedule('* * * * *', async () => {
+        try {
+            await loop();
+        } catch (e) {
+            console.error(e);
+        }
     });
 })();
