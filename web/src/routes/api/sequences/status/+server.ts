@@ -11,7 +11,7 @@ type GetResType =
 			data: {
 				id: number;
 				name: string;
-				status: 'sequence' | 'upload' | 'blur' | 'tile' | 'done';
+				status: 'manifest' | 'upload' | 'blur' | 'tile' | 'done';
 				toDelete: boolean;
 			}[];
 	  };

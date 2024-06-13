@@ -28,7 +28,7 @@ export const session = pgTable('session', {
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });
 
-export const status = pgEnum('status', ['upload', 'blur', 'tile', 'sequence', 'done']);
+export const status = pgEnum('status', ['upload', 'blur', 'tile', 'manifest', 'done']);
 
 export const sequence = pgTable('sequence', {
 	id: serial('id').notNull().primaryKey(),

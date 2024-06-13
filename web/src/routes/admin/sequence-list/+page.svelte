@@ -10,17 +10,17 @@
 	let showDone = true;
 	let tableData = data.sequences;
 
-	function statusColor(status: string) {
-		switch (status) {
-			case 'Done':
+	function statusColor(value: PageData['sequences'][number]['status']) {
+		switch (value) {
+			case 'done':
 				return 'success';
-			case 'Upload':
+			case 'upload':
 				return 'info';
-			case 'Blur':
+			case 'blur':
 				return 'primary';
-			case 'Tile':
+			case 'tile':
 				return 'warning';
-			case 'Sequence':
+			case 'manifest':
 				return 'secondary';
 			default:
 				return 'secondary';

@@ -82,7 +82,7 @@ const zodSequenceStatus = z.enum([
     'upload',
     'blur',
     'tile',
-    'sequence',
+    'manifest',
     'done',
 ]);
 export type SequenceStatus = z.infer<typeof zodSequenceStatus>;

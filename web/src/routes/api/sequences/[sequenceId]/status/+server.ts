@@ -21,7 +21,7 @@ export const PATCH: RequestHandler = async ({ request, cookies, params }) => {
 		});
 	}
 	const bodySchema = z.object({
-		status: z.enum(['upload', 'blur', 'tile', 'sequence', 'done'])
+		status: z.enum(['upload', 'blur', 'tile', 'manifest', 'done'])
 	});
 	const bodyParse = bodySchema.safeParse(await request.json());
 	if (bodyParse.success !== true) {

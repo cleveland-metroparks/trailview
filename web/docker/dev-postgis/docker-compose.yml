@@ -10,8 +10,8 @@ services:
     ports:
       - '5432:5432'
     volumes:
-#      - trailview-postgis-data:/var/lib/postgresql/data
-       - trailview-postgis-data-test:/var/lib/postgresql/data
+      #      - trailview-postgis-data:/var/lib/postgresql/data
+      - trailview-postgis-data-test:/var/lib/postgresql/data
 volumes:
-#  trailview-postgis-data:
+  #  trailview-postgis-data:
   trailview-postgis-data-test:

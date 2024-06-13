@@ -3,7 +3,7 @@ import { fetchSequenceStatuses } from './web.js';
 import {
     processBlur,
     processDelete,
-    processSequence,
+    processManifest,
     processTile,
 } from './process.js';
 
@@ -46,12 +46,10 @@ async function loop() {
             await processTile(sequence);
             console.log(`==== End Tiling Process: "${sequence.name}" ====`);
             return;
-        } else if (sequence.status === 'sequence') {
-            console.log(
-                `==== Start Sequencing Process: "${sequence.name}" ====`
-            );
-            await processSequence(sequence);
-            console.log(`==== End Sequencing Process: ${sequence.name} ====`);
+        } else if (sequence.status === 'manifest') {
+            console.log(`==== Start Manifest Process: "${sequence.name}" ====`);
+            await processManifest(sequence);
+            console.log(`==== End Manifest Process: ${sequence.name} ====`);
             return;
         }
     }
@@ -66,6 +64,7 @@ console.log('Starting');
             await loop();
         } catch (e) {
             console.error(e);
+            await new Promise((resolve) => setTimeout(resolve, 30 * 1000));
         }
     }
 })();

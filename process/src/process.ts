@@ -13,7 +13,7 @@ import {
     postNewImage,
 } from './web.js';
 
-export async function processSequence(sequence: Sequence) {
+export async function processManifest(sequence: Sequence) {
     const sequencePath = join(imagesPath, sequence.name);
     await new Promise<void>((resolve) => {
         const python = spawn('python', [
@@ -123,7 +123,7 @@ export async function processTile(sequence: Sequence) {
         if (originalCount === processedCount) {
             await patchSequenceStatus({
                 sequenceId: sequence.id,
-                status: 'sequence',
+                status: 'manifest',
             });
             const blurPath = join(sequencePath, 'img_blur');
             if (fs.existsSync(blurPath) === true) {
