@@ -116,7 +116,8 @@ export async function processSequence(sequence: Sequence) {
 
 export async function processTile(sequence: Sequence) {
     const sequencePath = join(imagesPath, sequence.name);
-    if (fs.existsSync(join(sequencePath, 'img'))) {
+
+    async function checkToSequence(): Promise<boolean> {
         const originalCount = await jpgsInDir(join(sequencePath, 'img_blur'));
         const processedCount = await jsonFilesInDir(join(sequencePath, 'img'));
         if (originalCount === processedCount) {
@@ -128,6 +129,12 @@ export async function processTile(sequence: Sequence) {
             if (fs.existsSync(blurPath) === true) {
                 await fs.remove(blurPath);
             }
+            return true;
+        }
+        return false;
+    }
+    if (fs.existsSync(join(sequencePath, 'img'))) {
+        if ((await checkToSequence()) === true) {
             return;
         }
     }
@@ -148,13 +155,13 @@ export async function processTile(sequence: Sequence) {
             resolve();
         });
     });
+    await checkToSequence();
 }
 
 export async function processBlur(sequence: Sequence) {
     const sequencePath = join(imagesPath, sequence.name);
-    if (!fs.existsSync(join(sequencePath, 'img_blur'))) {
-        await fs.mkdir(join(sequencePath, 'img_blur'));
-    } else {
+
+    async function checkToTile(): Promise<boolean> {
         const originalCount = await jpgsInDir(
             join(sequencePath, 'img_original')
         );
@@ -164,6 +171,15 @@ export async function processBlur(sequence: Sequence) {
                 sequenceId: sequence.id,
                 status: 'tile',
             });
+            return true;
+        }
+        return false;
+    }
+
+    if (!fs.existsSync(join(sequencePath, 'img_blur'))) {
+        await fs.mkdir(join(sequencePath, 'img_blur'));
+    } else {
+        if ((await checkToTile()) === true) {
             return;
         }
     }
@@ -187,6 +203,7 @@ export async function processBlur(sequence: Sequence) {
             resolve();
         });
     });
+    await checkToTile();
 }
 
 export async function processDelete(sequence: Sequence) {

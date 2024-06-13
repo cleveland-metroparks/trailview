@@ -6,7 +6,6 @@ import {
     processSequence,
     processTile,
 } from './process.js';
-import cron from 'node-cron';
 
 dotEnv.config();
 
@@ -37,39 +36,36 @@ async function loop() {
             console.log(`=== End Deleting: "${sequence.name}" ===`);
             return;
         }
-        if (sequence.status === 'sequence') {
-            console.log(
-                `==== Start Sequencing Process: "${sequence.name}" ====`
-            );
-            await processSequence(sequence);
-            console.log(`==== End Sequencing Process: ${sequence.name} ====`);
+        if (sequence.status === 'blur') {
+            console.log(`==== Start Blurring Process: "${sequence.name}" ====`);
+            await processBlur(sequence);
+            console.log(`==== End Blurring Process: "${sequence.name}" ====`);
             return;
         } else if (sequence.status === 'tile') {
             console.log(`==== Start Tiling Process: "${sequence.name}" ====`);
             await processTile(sequence);
             console.log(`==== End Tiling Process: "${sequence.name}" ====`);
             return;
-        } else if (sequence.status === 'blur') {
-            console.log(`==== Start Blurring Process: "${sequence.name}" ====`);
-            await processBlur(sequence);
-            console.log(`==== End Blurring Process: "${sequence.name}" ====`);
+        } else if (sequence.status === 'sequence') {
+            console.log(
+                `==== Start Sequencing Process: "${sequence.name}" ====`
+            );
+            await processSequence(sequence);
+            console.log(`==== End Sequencing Process: ${sequence.name} ====`);
             return;
         }
     }
+    await new Promise((resolve) => setTimeout(resolve, 30 * 1000));
 }
 
 console.log('Starting');
 (async () => {
-    try {
-        await loop();
-    } catch (e) {
-        console.error(e);
-    }
-    cron.schedule('* * * * *', async () => {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
         try {
             await loop();
         } catch (e) {
             console.error(e);
         }
-    });
+    }
 })();

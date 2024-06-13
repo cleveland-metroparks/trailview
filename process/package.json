@@ -14,19 +14,15 @@
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",
         "@types/node": "^20.14.2",
-        "@types/node-cron": "^3.0.11",
         "@typescript-eslint/eslint-plugin": "^7.13.0",
         "@typescript-eslint/parser": "^7.13.0",
         "dotenv": "^16.4.5",
         "esbuild": "^0.21.5",
         "eslint": "^8.46.0",
         "fs-extra": "^11.2.0",
-        "node-cron": "^3.0.3",
         "prettier": "^3.3.2",
         "typescript": "^5.4.5",
+        "url-join": "^5.0.0",
         "zod": "^3.23.8"
-    },
-    "dependencies": {
-        "url-join": "^5.0.0"
     }
 }
