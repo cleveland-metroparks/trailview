@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 WORKDIR /setup
 RUN apt update && apt upgrade -y
-RUN apt install -y python3 python3-venv build-essential meson curl libopencv-dev hugin-tools moreutils
+RUN apt install -y python3 python3-venv build-essential meson curl libopencv-dev hugin-tools moreutils daemontools
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh
 RUN bash nodesource_setup.sh
 RUN apt install -y nodejs
