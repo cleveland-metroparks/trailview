@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 
-# Requires Python 3.2+, the Python Pillow and NumPy packages, and
+# Requires Python 3.3+, the Python Pillow and NumPy packages, and
 # nona (from Hugin). The Python pyshtools package is also needed for creating
 # spherical-harmonic-transform previews (which are recommended).
 
 # generate.py - A multires tile set generator for Pannellum
 # Extensions to cylindrical input and partial panoramas by David von Oheimb
-# Copyright (c) 2014-2022 Matthew Petroff
-#
+# Copyright (c) 2014-2024 Matthew Petroff
+# 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-#
+# 
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-#
+# 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,8 +34,7 @@ import os
 import sys
 import math
 import ast
-# from distutils.spawn import find_executable
-import shutil
+from shutil import which as find_executable
 import subprocess
 import base64
 import io
@@ -47,20 +46,28 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Find external programs
 try:
-    nona = shutil.which('nona')  # find_executable('nona')
+    nona = find_executable('nona')
 except KeyError:
     # Handle case of PATH not being set
     nona = None
 
+# Handle Pillow deprecation
+ANTIALIAS = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.ANTIALIAS
 
 genPreview = False
 try:
     import pyshtools as pysh
     genPreview = True
 except:
-    sys.stderr.write(
-        "Unable to import pyshtools. Not generating SHT preview.\n")
+    sys.stderr.write("Unable to import pyshtools. Not generating SHT preview.\n")
 
+b83chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~"
+def b83encode(vals, length):
+    result = ""
+    for val in vals:
+        for i in range(1, length + 1):
+            result += b83chars[int(val // (83 ** (length - i))) % 83]
+    return result
 
 def img2shtHash(img, lmax=5):
     '''
@@ -75,15 +82,6 @@ def img2shtHash(img, lmax=5):
         quantB = encodeFloat(b / maxVal, 9)
         return quantR * 19 ** 2 + quantG * 19 + quantB
 
-    b83chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~"
-
-    def b83encode(vals, length):
-        result = ""
-        for val in vals:
-            for i in range(1, length + 1):
-                result += b83chars[int(val // (83 ** (length - i))) % 83]
-        return result
-
     # Calculate SHT coefficients
     r = pysh.expand.SHExpandDH(img[..., 0], sampling=2, lmax_calc=lmax)
     g = pysh.expand.SHExpandDH(img[..., 1], sampling=2, lmax_calc=lmax)
@@ -92,12 +90,9 @@ def img2shtHash(img, lmax=5):
     # Remove values above diagonal for both sine and cosine components
     # Also remove first row and column for sine component
     # These values are always zero
-    r = np.append(r[0][np.tril_indices(lmax + 1)],
-                  r[1, 1:, 1:][np.tril_indices(lmax)])
-    g = np.append(g[0][np.tril_indices(lmax + 1)],
-                  g[1, 1:, 1:][np.tril_indices(lmax)])
-    b = np.append(b[0][np.tril_indices(lmax + 1)],
-                  b[1, 1:, 1:][np.tril_indices(lmax)])
+    r = np.append(r[0][np.tril_indices(lmax + 1)], r[1, 1:, 1:][np.tril_indices(lmax)])
+    g = np.append(g[0][np.tril_indices(lmax + 1)], g[1, 1:, 1:][np.tril_indices(lmax)])
+    b = np.append(b[0][np.tril_indices(lmax + 1)], b[1, 1:, 1:][np.tril_indices(lmax)])
 
     # Encode as string
     maxVal = np.max([np.max(r), np.max(b), np.max(g)])
@@ -116,7 +111,6 @@ class GenParser(argparse.ArgumentParser):
            with -n, since it was not found on the PATH!\n\n''')
         super(GenParser, self).error(message)
 
-
 # Parse input
 parser = GenParser(description='Generate a Pannellum multires tile set from a full or partial equirectangular or cylindrical panorama.',
                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -129,7 +123,7 @@ parser.add_argument('-H', '--haov', dest='haov', default=-1, type=float,
 parser.add_argument('-F', '--hfov', dest='hfov', default=100.0, type=float,
                     help='starting horizontal field of view (defaults to 100.0)')
 parser.add_argument('-V', '--vaov', dest='vaov', default=-1, type=float,
-                    help='vertical angle of view (defaults to 180.0 for full panorama)')
+                    help='vertical angle of view (defaults to 180.0 for full panorama)') 
 parser.add_argument('-O', '--voffset', dest='vOffset', default=0.0, type=float,
                     help='starting pitch position (defaults to 0.0)')
 parser.add_argument('-e', '--horizon', dest='horizon', default=0.0, type=int,
@@ -203,7 +197,7 @@ else:
     cubeSize = 8 * int((360 / haov) * origWidth / math.pi / 8)
 tileSize = min(args.tileSize, cubeSize)
 levels = int(math.ceil(math.log(float(cubeSize) / tileSize, 2))) + 1
-if round(cubeSize / 2**(levels - 2)) == tileSize:
+if int(cubeSize / 2**(levels - 2)) == tileSize:
     levels -= 1  # Handle edge case
 origHeight = str(origHeight)
 origWidth = str(origWidth)
@@ -213,13 +207,16 @@ if args.png:
     extension = '.png'
 partialPano = True if args.haov != -1 and args.vaov != -1 else False
 colorList = ast.literal_eval(args.backgroundColor)
-colorTuple = (int(colorList[0]*255),
-              int(colorList[1]*255), int(colorList[2]*255))
+colorTuple = (int(colorList[0]*255), int(colorList[1]*255), int(colorList[2]*255))
+
+# Don't generate preview for partial panoramas
+if haov < 360 or vaov < 180:
+    genPreview = False
 
 if args.debug:
-    print('maxLevel: ' + str(levels))
-    print('tileResolution: ' + str(tileSize))
-    print('cubeResolution: ' + str(cubeSize))
+    print('maxLevel: '+ str(levels))
+    print('tileResolution: '+ str(tileSize))
+    print('cubeResolution: '+ str(cubeSize))
 
 # Generate PTO file for nona to generate cube faces
 # Face order: front, back, up, down, left, right
@@ -227,17 +224,15 @@ faceLetters = ['f', 'b', 'u', 'd', 'l', 'r']
 projection = "f1" if args.cylindrical else "f4"
 pitch = 0
 text = []
-facestr = 'i a0 b0 c0 d0 e' + str(args.horizon) + ' ' + projection + ' h' + \
-    origHeight + ' w' + origWidth + ' n"' + origFilename + '" r0 v' + str(haov)
-text.append('p E0 R0 f0 h' + str(cubeSize) + ' w' +
-            str(cubeSize) + ' n"TIFF_m" u0 v90')
+facestr = 'i a0 b0 c0 d0 e'+ str(args.horizon) +' '+ projection + ' h' + origHeight +' w'+ origWidth +' n"'+ origFilename +'" r0 v' + str(haov)
+text.append('p E0 R0 f0 h' + str(cubeSize) + ' w' + str(cubeSize) + ' n"TIFF_m" u0 v90')
 text.append('m g1 i0 m2 p0.00784314')
-text.append(facestr + ' p' + str(pitch + 0) + ' y0')
-text.append(facestr + ' p' + str(pitch + 0) + ' y180')
-text.append(facestr + ' p' + str(pitch-90) + ' y0')
-text.append(facestr + ' p' + str(pitch+90) + ' y0')
-text.append(facestr + ' p' + str(pitch + 0) + ' y90')
-text.append(facestr + ' p' + str(pitch + 0) + ' y-90')
+text.append(facestr +' p' + str(pitch+ 0) +' y0'  )
+text.append(facestr +' p' + str(pitch+ 0) +' y180')
+text.append(facestr +' p' + str(pitch-90) +' y0'  )
+text.append(facestr +' p' + str(pitch+90) +' y0'  )
+text.append(facestr +' p' + str(pitch+ 0) +' y90' )
+text.append(facestr +' p' + str(pitch+ 0) +' y-90')
 text.append('v')
 text.append('*')
 text = '\n'.join(text)
@@ -246,13 +241,12 @@ with open(os.path.join(args.output, 'cubic.pto'), 'w') as f:
 
 # Create cube faces
 print('Generating cube faces...')
-subprocess.check_call([args.nona, ('-g' if args.gpu else '-d'), '-o',
-                      os.path.join(args.output, 'face'), os.path.join(args.output, 'cubic.pto')])
-faces = ['face0000.tif', 'face0001.tif', 'face0002.tif',
-         'face0003.tif', 'face0004.tif', 'face0005.tif']
+subprocess.check_call([args.nona, ('-g' if args.gpu else '-d') , '-o', os.path.join(args.output, 'face'), os.path.join(args.output, 'cubic.pto')])
+faces = ['face0000.tif', 'face0001.tif', 'face0002.tif', 'face0003.tif', 'face0004.tif', 'face0005.tif']
 
 # Generate tiles
 print('Generating tiles...')
+missingTiles = []
 for f in range(0, 6):
     size = cubeSize
     faceExists = os.path.exists(os.path.join(args.output, faces[f]))
@@ -263,33 +257,62 @@ for f in range(0, 6):
                 os.makedirs(os.path.join(args.output, str(level)))
             tiles = int(math.ceil(float(size) / tileSize))
             if (level < levels):
-                face = face.resize(
-                    [size, size], resample=Image.Resampling.LANCZOS)
+                face = face.resize([size, size], ANTIALIAS)
             for i in range(0, tiles):
                 for j in range(0, tiles):
                     left = j * tileSize
                     upper = i * tileSize
-                    right = min(j * args.tileSize + args.tileSize,
-                                size)  # min(...) not really needed
-                    lower = min(i * args.tileSize + args.tileSize,
-                                size)  # min(...) not really needed
+                    right = min(j * args.tileSize + args.tileSize, size) # min(...) not really needed
+                    lower = min(i * args.tileSize + args.tileSize, size) # min(...) not really needed
                     tile = face.crop([left, upper, right, lower])
                     if args.debug:
-                        print('level: ' + str(level) + ' tiles: ' + str(tiles) +
-                              ' tileSize: ' + str(tileSize) + ' size: ' + str(size))
-                        print('left: ' + str(left) + ' upper: ' + str(upper) +
-                              ' right: ' + str(right) + ' lower: ' + str(lower))
+                        print('level: '+ str(level) + ' tiles: '+ str(tiles) + ' tileSize: ' + str(tileSize) + ' size: '+ str(size))
+                        print('left: '+ str(left) + ' upper: '+ str(upper) + ' right: '+ str(right) + ' lower: '+ str(lower))
                     colors = tile.getcolors(1)
                     if not partialPano or colors == None or colors[0][1] != colorTuple:
                         # More than just one color (the background), i.e., non-empty tile
                         if tile.mode in ('RGBA', 'LA'):
-                            background = Image.new(
-                                tile.mode[:-1], tile.size, colorTuple)
+                            background = Image.new(tile.mode[:-1], tile.size, colorTuple)
                             background.paste(tile, tile.split()[-1])
                             tile = background
-                        tile.save(os.path.join(args.output, str(
-                            level), faceLetters[f] + str(i) + '_' + str(j) + extension), quality=args.quality)
+                        colors = tile.getcolors(1)
+                        if not genPreview and colors is not None and colors[0][1] == colorTuple:
+                            missingTiles.append((f, level, j, i))
+                        else:
+                            tile.save(os.path.join(args.output, str(level), faceLetters[f] + str(i) + '_' + str(j) + extension), quality=args.quality)
+                    else:
+                        missingTiles.append((f, level, j, i))
             size = int(size / 2)
+    else:
+        missingTiles.append((f, level, 0, 0))
+
+# Tell viewer not to load missing tiles
+if len(missingTiles) > 0:
+    # Remove children of missing tiles, since they won't be loaded anyway
+    tilesToRemove = []
+    for t in missingTiles:
+        tilesToRemove.append((t[0], t[1] + 1, t[2] * 2, t[3] * 2))
+        tilesToRemove.append((t[0], t[1] + 1, t[2] * 2, t[3] * 2 + 1))
+        tilesToRemove.append((t[0], t[1] + 1, t[2] * 2 + 1, t[3] * 2))
+        tilesToRemove.append((t[0], t[1] + 1, t[2] * 2 + 1, t[3] * 2 + 1))
+    for t in tilesToRemove:
+        if t in missingTiles:
+            missingTiles.pop(missingTiles.index(t))
+    # Encode missing tile list as string
+    missingTilesStr = ''
+    prevFace = prevLevel = None
+    for missingTile in sorted(missingTiles):
+        face = missingTile[0]
+        level = missingTile[1]
+        if face != prevFace:
+            missingTilesStr += '!' + faceLetters[face]
+        if level != prevLevel:
+            missingTilesStr += '>' + b83encode([level], 1)
+            maxTileNum = math.ceil(cubeSize / 2**(levels - level) / tileSize) - 1
+            numTileDigits = math.ceil(math.log(maxTileNum + 1, 83))
+        missingTilesStr += b83encode(missingTile[2:], numTileDigits)
+        prevFace = face
+        prevLevel = level
 
 # Generate fallback tiles
 if args.fallbackSize > 0:
@@ -303,10 +326,8 @@ if args.fallbackSize > 0:
                 background = Image.new(face.mode[:-1], face.size, colorTuple)
                 background.paste(face, face.split()[-1])
                 face = background
-            face = face.resize(
-                [args.fallbackSize, args.fallbackSize], resample=Image.Resampling.LANCZOS)
-            face.save(os.path.join(args.output, 'fallback',
-                      faceLetters[f] + extension), quality=args.quality)
+            face = face.resize([args.fallbackSize, args.fallbackSize], ANTIALIAS)
+            face.save(os.path.join(args.output, 'fallback', faceLetters[f] + extension), quality = args.quality)
 
 # Clean up temporary files
 if not args.debug:
@@ -316,12 +337,9 @@ if not args.debug:
             os.remove(os.path.join(args.output, face))
 
 # Generate preview (but not for partial panoramas)
-if haov < 360 or vaov < 180:
-    genPreview = False
 if genPreview:
     # Generate SHT-hash preview
-    shtHash = img2shtHash(
-        np.array(Image.open(args.inputFile).resize((1024, 512))))
+    shtHash = img2shtHash(np.array(Image.open(args.inputFile).resize((1024, 512))))
 if args.thumbnailSize > 0:
     # Create low-resolution base64-encoded equirectangular preview image
     img = Image.open(args.inputFile)
@@ -335,20 +353,20 @@ if args.thumbnailSize > 0:
 # Generate config file
 text = []
 text.append('{')
-text.append('    "hfov": ' + str(args.hfov) + ',')
+text.append('    "hfov": ' + str(args.hfov)+ ',')
 if haov < 360:
-    text.append('    "haov": ' + str(haov) + ',')
-    text.append('    "minYaw": ' + str(-haov/2+0) + ',')
-    text.append('       "yaw": ' + str(-haov/2+args.hfov/2) + ',')
-    text.append('    "maxYaw": ' + str(+haov/2+0) + ',')
+    text.append('    "haov": ' + str(haov)+ ',')
+    text.append('    "minYaw": ' + str(-haov/2+0)+ ',')
+    text.append('       "yaw": ' + str(-haov/2+args.hfov/2)+ ',')
+    text.append('    "maxYaw": ' + str(+haov/2+0)+ ',')
 if vaov < 180:
-    text.append('    "vaov": ' + str(vaov) + ',')
-    text.append('    "vOffset": ' + str(args.vOffset) + ',')
-    text.append('    "minPitch": ' + str(-vaov/2+args.vOffset) + ',')
-    text.append('       "pitch": ' + str(args.vOffset) + ',')
-    text.append('    "maxPitch": ' + str(+vaov/2+args.vOffset) + ',')
+    text.append('    "vaov": '    + str(vaov)+ ',')
+    text.append('    "vOffset": ' + str(args.vOffset)+ ',')
+    text.append('    "minPitch": ' + str(-vaov/2+args.vOffset)+ ',')
+    text.append('       "pitch": ' + str(        args.vOffset)+ ',')
+    text.append('    "maxPitch": ' + str(+vaov/2+args.vOffset)+ ',')
 if colorTuple != (0, 0, 0):
-    text.append('    "backgroundColor": "' + args.backgroundColor + '",')
+    text.append('    "backgroundColor": ' + args.backgroundColor+ ',')
 if args.avoidbackground and (haov < 360 or vaov < 180):
     text.append('    "avoidShowingBackground": true,')
 if args.autoload:
@@ -359,6 +377,8 @@ if genPreview:
     text.append('        "shtHash": "' + shtHash + '",')
 if args.thumbnailSize > 0:
     text.append('        "equirectangularThumbnail": "' + equiPreview + '",')
+if len(missingTiles) > 0:
+    text.append('        "missingTiles": "' + missingTilesStr + '",')
 text.append('        "path": "/%l/%s%y_%x",')
 if args.fallbackSize > 0:
     text.append('        "fallbackPath": "/fallback/%s",')
