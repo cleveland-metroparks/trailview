@@ -17,7 +17,7 @@ export async function processManifest(sequence: Sequence) {
     const sequencePath = join(imagesPath, sequence.name);
     await new Promise<void>((resolve) => {
         const python = spawn('python', [
-            'scripts/process_sequence_new.py',
+            'scripts/process_manifest.py',
             sequencePath,
             '--no-flip',
         ]);
@@ -31,24 +31,10 @@ export async function processManifest(sequence: Sequence) {
             resolve();
         });
     });
-    await new Promise<void>((resolve) => {
-        console.log('Processing data...');
-        const python = spawn('python', ['scripts/process_data.py', imagesPath]);
-        python.stdout.on('data', (data) => {
-            console.log(`${data}`);
-        });
-        python.stderr.on('data', (data) => {
-            console.log(`${data}`);
-        });
-        python.on('close', () => {
-            resolve();
-        });
-    });
-    console.log('Done processing data');
-    console.log('Updating database...');
 
-    const localDataJsonSchema = z.object({
-        data: z.array(
+    console.log('Posting sequence...');
+    const manifestSchema = z.object({
+        sequence: z.array(
             z.object({
                 id: z.string().length(32),
                 sequence: z.string().min(1),
@@ -56,21 +42,22 @@ export async function processManifest(sequence: Sequence) {
                 longitude: z.number(),
                 bearing: z.number(),
                 flipped: z.boolean(),
-                shtHash: z.string().length(74),
                 creationDate: z.string().transform((d) => parseDataJsonDate(d)),
+                shtHash: z.string().length(74),
             })
         ),
     });
 
-    const localDataStr = JSON.parse(
-        (await fs.readFile(join(imagesPath, 'data.json'))).toString()
+    const manifestFile = await fs.readFile(
+        join(imagesPath, sequence.name, 'manifest.json')
     );
-    const localDataParse = localDataJsonSchema.safeParse(localDataStr);
-    if (localDataParse.success !== true) {
-        console.error(localDataParse.error);
+    const manifestJson = JSON.parse(manifestFile.toString());
+    const manifestParse = manifestSchema.safeParse(manifestJson);
+    if (manifestParse.success !== true) {
+        console.error(manifestParse.error);
         throw new Error('Unable to parse global data.json');
     }
-    const localData = localDataParse.data;
+    const manifestData = manifestParse.data;
 
     const webSequences = await fetchSequences();
     const webImageIds = new Set(await fetchImageIds());
@@ -80,28 +67,26 @@ export async function processManifest(sequence: Sequence) {
         return;
     }
 
-    for (const localImage of localData.data) {
-        if (webImageIds.has(localImage.id) === true) {
+    for (const image of manifestData.sequence) {
+        if (webImageIds.has(image.id) === true) {
             continue;
         }
-        const sequence = webSequences.find(
-            (s) => s.name === localImage.sequence
-        );
+        const sequence = webSequences.find((s) => s.name === image.sequence);
         if (sequence === undefined) {
             console.error(
-                `Failed to find sequence: ${localImage.sequence}, skipping image...`
+                `Failed to find sequence: ${image.sequence}, skipping image...`
             );
             continue;
         }
         const success = await postNewImage({
-            id: localImage.id,
-            latitude: localImage.latitude,
-            longitude: localImage.longitude,
-            bearing: localImage.bearing,
-            flipped: localImage.flipped,
-            shtHash: localImage.shtHash,
+            id: image.id,
+            latitude: image.latitude,
+            longitude: image.longitude,
+            bearing: image.bearing,
+            flipped: image.flipped,
+            shtHash: image.shtHash,
             pitchCorrection: 0,
-            createdAt: localImage.creationDate,
+            createdAt: image.creationDate,
             public: false,
             sequenceId: sequence.id,
         });
@@ -111,7 +96,7 @@ export async function processManifest(sequence: Sequence) {
         }
     }
     await patchSequenceStatus({ sequenceId: sequence.id, status: 'done' });
-    console.log('Done updating database');
+    console.log('Done posting sequence');
 }
 
 export async function processTile(sequence: Sequence) {
@@ -140,7 +125,7 @@ export async function processTile(sequence: Sequence) {
     }
     await new Promise<void>((resolve) => {
         const python = spawn('python', [
-            'scripts/process_imgs_new.py',
+            'scripts/process_tiles.py',
             join(sequencePath),
             '--useblurred',
             'True',

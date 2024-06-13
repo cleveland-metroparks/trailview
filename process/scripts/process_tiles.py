@@ -20,16 +20,12 @@ This script creates image tiles
 '''
 
 # Get creation date from picture
-
-
 def get_exif_date(img: Image) -> datetime.datetime:
     exif = img.getexif()
     creation_date_str: str = str(exif.get(306))
     return datetime.datetime.strptime(creation_date_str, "%Y:%m:%d %H:%M:%S")
 
 # Get latitude and longitude from picture
-
-
 def get_exif_geo(img: Image) -> tuple[float, float]:
     exif_table = {}
     info = img._getexif()

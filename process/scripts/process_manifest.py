@@ -11,12 +11,12 @@ from math import radians, degrees   # for angle calculations
 Author: Matthew Oros
 Email: mjo1@clevelandmetroparks.com
 
-This script creates a sequence.json which contains some image metadata that
+This script creates a manifest.json which contains image metadata that
 eventually gets combined into a master data.json file
 '''
 
 # Process console arguments
-parser = argparse.ArgumentParser(description="Create sequence_new.json")
+parser = argparse.ArgumentParser(description="Create manifest.json")
 parser.add_argument('dir', type=str, help='The sequence directory')
 parser.add_argument('--flip', action=argparse.BooleanOptionalAction,
                     help='The sequence will be flipped 180*')
@@ -34,14 +34,11 @@ sequence_json = {
 }
 
 # Returns mean of list of angles in degrees
-
-
 def mean_angle(deg: list[float]) -> float:
     return degrees(phase(sum(rect(1, radians(d)) for d in deg)/len(deg))) % 360
 
+
 # Create dictionary from img json files
-
-
 def get_all_images(dir: str) -> list:
     # Format of images list
     # [{'id', 'date', 'latitude', 'longitude'}, ...]
@@ -159,9 +156,6 @@ img_data_list.sort(key=lambda x: x['creationDate'])
 # create geo_sequence.json
 prev_data = None
 for img_data in img_data_list:
-    # if prev_data != None:
-    #     info = Geodesic.WGS84.Inverse(img_data['latitude'], img_data['longitude'], prev_data['latitude'], prev_data['longitude'])
-    #     if info['s12'] >= 10:
     if not img_data['id'] in img_bearing_dict:
         continue
     sequence_json['sequence'].append({
@@ -175,15 +169,6 @@ for img_data in img_data_list:
         'shtHash': sht_dict[img_data['id']]
     })
 
-    # prev_data = img_data
-    # else:
-    #     geo_json['geo_sequence'].append({
-    #         'id': img_data['id'],
-    #         'latitude': img_data['latitude'],
-    #         'longitude': img_data['longitude']
-    #     })
-    #     prev_data = img_data
-
 # Write json file
-with open(os.path.join(seq_dir, "sequence_new.json"), "w") as outfile:
+with open(os.path.join(seq_dir, "manifest.json"), "w") as outfile:
     json.dump(sequence_json, outfile)
