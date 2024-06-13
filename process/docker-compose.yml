@@ -11,4 +11,4 @@ services:
       - host.docker.internal:host-gateway
     volumes:
       - /home/mjo1/test-trails:/trails
-      - ./docker/logs:/app/logs
+      - ./logs:/app/logs

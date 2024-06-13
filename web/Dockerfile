@@ -1,4 +1,11 @@
-FROM node:20
+FROM ubuntu:24.04
+
+WORKDIR /setup
+RUN apt update && apt upgrade -y
+RUN apt install -y curl moreutils daemontools
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh
+RUN bash nodesource_setup.sh
+RUN apt install -y nodejs
 
 # setup trailviewer package
 WORKDIR /app
@@ -16,8 +23,10 @@ COPY ./web/package*.json ./
 RUN npm ci
 COPY ./web/ .
 RUN npm run build
+RUN mkdir logs
 
 # env
+ENV BODY_SIZE_LIMIT=Infinity
 ENV PORT=3000
 EXPOSE 3000
 

@@ -28,6 +28,7 @@ COPY package*.json .
 RUN npm ci
 COPY . .
 RUN npm run build
+RUN mkdir logs
 
 RUN chmod +x ./docker/start.sh
 CMD ["./docker/start.sh"]

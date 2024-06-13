@@ -3,11 +3,18 @@ services:
     build:
       context: ../
       dockerfile: ./web/Dockerfile
-    env_file: docker.env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - PUBLIC_MAPBOX_KEY=${PUBLIC_MAPBOX_KEY}
+      - ORIGIN=${ORIGIN}
+      - PUBLIC_MAPS_API=${PUBLIC_MAPS_API}
+      - IMAGES_PATH=/trails
+      - PORT=3000
     ports:
       - 3000:3000
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
     volumes:
-      - /mnt/t/trails:/trails
+      - /home/mjo1/test-trails:/trails
+      - ./logs:/app/web/logs
