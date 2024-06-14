@@ -306,7 +306,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             multiRes: {
                 basePath: urlJoin(
                     this._options.baseUrl,
-                    '/api/panImage',
+                    '/api/pan-image',
                     `/${scene.id}`
                 ),
                 path: '/%l/%s%y_%x',
@@ -353,7 +353,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             multiRes: {
                 basePath: urlJoin(
                     this._options.baseUrl,
-                    '/api/panImage',
+                    '/api/pan-image',
                     `/${image.id}`
                 ),
                 path: '/%l/%s%y_%x',

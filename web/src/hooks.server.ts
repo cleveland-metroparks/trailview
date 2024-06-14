@@ -23,7 +23,7 @@ export const handle = (async ({ event, resolve }) => {
 			});
 		}
 		if (
-			!event.url.pathname.startsWith('/api/panImage') &&
+			!event.url.pathname.startsWith('/api/pan-image') &&
 			!event.url.pathname.startsWith('/api/tiles')
 		) {
 			if ((await isApiAuth(event.cookies, event.request.headers)) === false) {
