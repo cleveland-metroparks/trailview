@@ -38,7 +38,7 @@
 	import type { GetResType as GroupGetResType } from '$api/group/[groupId]/common';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
-	import { scale } from 'svelte/transition';
+	import { scale, slide } from 'svelte/transition';
 
 	export let data: PageData;
 
@@ -348,7 +348,12 @@
 		trailviewer.on('edit', () => {
 			inspectorPage = 'Move';
 		});
+		trailviewer.on('edit-change', (enabled) => {
+			editEnabled = enabled;
+		});
 	}
+
+	let editEnabled = false;
 
 	function toggleLayout() {
 		layout = layout === 'map' ? 'viewer' : 'map';
@@ -356,6 +361,10 @@
 
 	function onGroupSequenceSelect(event: CustomEvent<{ sequenceId: number }>) {
 		goToSequence(event.detail.sequenceId);
+	}
+
+	function onEditEnabledChange(event: CustomEvent<boolean>) {
+		trailviewer?.setEditOnZoom(event.detail);
 	}
 </script>
 
@@ -368,7 +377,7 @@
 <ConfirmModal bind:this={confirmModal} />
 
 <div class="d-flex flex-row py-1 px-2 justify-content-between">
-	<div class="d-flex flex-row gap-1">
+	<div class="d-flex flex-row gap-2 align-items-center">
 		<select
 			id="goToSequenceSelect"
 			on:change={onSequenceSelectChange}
@@ -439,6 +448,9 @@
 
 <div class="d-flex flex-row flex-grow-1">
 	<div class="col position-relative">
+		{#if editEnabled}
+			<div transition:slide class="edit-indicator">Edit Mode Enabled</div>
+		{/if}
 		<div id="trailview_map" class={layout === 'map' ? 'main-container' : 'small-container'} />
 		<div
 			id="trailview_panorama"
@@ -496,13 +508,31 @@
 					on:sequence-select={onGroupSequenceSelect}
 				/>
 			{:else if inspectorPage === 'Move'}
-				<InspectorMove {trailviewer} on:should-refresh={refreshEverything} />
+				<InspectorMove
+					{trailviewer}
+					on:should-refresh={refreshEverything}
+					on:edit-enabled={onEditEnabledChange}
+				/>
 			{/if}
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
+	.edit-indicator {
+		position: absolute;
+		background-color: red;
+		padding: 5px;
+		font-size: 18px;
+		border-radius: 10px;
+		font-weight: bold;
+		color: white;
+		top: 5px;
+		right: 5px;
+		z-index: 10;
+		box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+	}
+
 	.main-container {
 		width: 100%;
 		height: 100%;

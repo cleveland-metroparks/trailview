@@ -113,14 +113,6 @@ function angle180to360(angle: number): number {
 	return angle;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function angle360to180(angle: number): number {
-	if (angle > 180) {
-		angle = -(360 - angle);
-	}
-	return angle;
-}
-
 function customMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
@@ -164,6 +156,7 @@ export interface TrailViewerEvents {
 	on(event: 'edit', listener: () => void): void;
 	on(event: 'map-move-end', listener: (bounds: mapboxgl.LngLatBounds) => void): void;
 	on(event: 'map-load', listener: () => void): void;
+	on(event: 'edit-change', listener: (enabled: boolean) => void): void;
 }
 
 export class TrailViewer implements TrailViewerEvents {
@@ -190,6 +183,7 @@ export class TrailViewer implements TrailViewerEvents {
 		imageId: string;
 		new: { latitude: number; longitude: number };
 	}[] = [];
+	private _editOnZoom: boolean = false;
 
 	public allImageData: ImageData[] | undefined;
 
@@ -301,7 +295,9 @@ export class TrailViewer implements TrailViewerEvents {
 			20,
 			1
 		]);
-		this.map.setLayerZoomRange('dots', 0, 17);
+		if (this._editOnZoom === true) {
+			this.map.setLayerZoomRange('dots', 0, 17);
+		}
 	}
 
 	private _startMap() {
@@ -364,7 +360,7 @@ export class TrailViewer implements TrailViewerEvents {
 
 		this.map.on('click', 'dots', (event) => {
 			if (event.features === undefined || event.features[0].properties === null) {
-				console.warn('Features is undefiend or properties are null');
+				console.warn('Features is undefined or properties are null');
 				return;
 			}
 			this.goToImageID(event.features[0].properties.imageID);
@@ -377,6 +373,23 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 	}
 
+	public setEditOnZoom(enabled: boolean) {
+		if (this.map === undefined) {
+			this._editOnZoom = enabled;
+			return;
+		}
+		if (enabled === true) {
+			this.map.setLayerZoomRange('dots', 0, 17);
+			this._updateEditMarkers();
+			this.map.zoomTo(17);
+		} else {
+			this.map.setLayerZoomRange('dots', 0, 22);
+			this._updateEditMarkers();
+			this.map.zoomTo(17);
+		}
+		this._editOnZoom = enabled;
+	}
+
 	public _updateEditMarkers() {
 		if (this.map === undefined || this.allImageData === undefined) {
 			return;
@@ -384,7 +397,8 @@ export class TrailViewer implements TrailViewerEvents {
 		for (const marker of this._editMarkers) {
 			marker.remove();
 		}
-		if (this.map.getZoom() >= 17) {
+		if (this._editOnZoom === true && this.map.getZoom() >= 17) {
+			this._emitter.emit('edit-change', true);
 			const bounds = this.map.getBounds();
 			for (const image of this.allImageData) {
 				if (!bounds.contains(image.coordinates)) {
@@ -427,6 +441,8 @@ export class TrailViewer implements TrailViewerEvents {
 				});
 				this._editMarkers.push(marker);
 			}
+		} else {
+			this._emitter.emit('edit-change', false);
 		}
 	}
 
@@ -675,10 +691,6 @@ export class TrailViewer implements TrailViewerEvents {
 		this._createNavArrows();
 	}
 
-	private _customMod(a: number, b: number): number {
-		return a - Math.floor(a / b) * b;
-	}
-
 	private async _getNeighbors(image: Image): Promise<Neighbor[]> {
 		const res = await fetch(
 			urlJoin(
@@ -776,27 +788,6 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 	}
 
-	// Returns nearest hotspot from yaw angle
-	// Returns nearest hotspot config
-	// private _getNearestHotspot(yaw: number): any {
-	// 	const config = this._panViewer.getConfig();
-	// 	const hotspots = config['hotSpots'];
-	// 	if (!hotspots) {
-	// 		return null;
-	// 	}
-	// 	let nearest = hotspots[0];
-	// 	let nearestDiff;
-	// 	for (let i = 0; i < hotspots.length; i++) {
-	// 		const diff = Math.abs(this._customMod(angle180to360(hotspots[i].yaw) - yaw + 180, 360) - 180);
-	// 		nearestDiff = Math.abs(this._customMod(angle180to360(nearest.yaw) - yaw + 180, 360) - 180);
-	// 		if (diff < nearestDiff) {
-	// 			nearest = hotspots[i];
-	// 			nearestDiff = diff;
-	// 		}
-	// 	}
-	// 	return nearest;
-	// }
-
 	private async _onImageChange(img: string | undefined) {
 		if (img === undefined) {
 			return;
@@ -859,29 +850,6 @@ export class TrailViewer implements TrailViewerEvents {
 		this._emitter.emit('image-change', this._currImg);
 	}
 
-	// public getNearestImageId(lat: number, lng: number, distCutoff = 10): string | undefined {
-	// 	const ruler = new CheapRuler(41, 'meters');
-	// 	let minDist = Number.MAX_SAFE_INTEGER;
-	// 	let minId: string | undefined;
-	// 	if (this._dataArr === undefined) {
-	// 		console.warn('Cannot get nearest image id as dataArr is undefined');
-	// 		return undefined;
-	// 	}
-	// 	for (let i = 0; i < this._dataArr.length; i++) {
-	// 		const dist = ruler.distance(
-	// 			[lng, lat],
-	// 			[this._dataArr[i].longitude, this._dataArr[i].latitude]
-	// 		);
-	// 		if (dist < distCutoff) {
-	// 			if (dist < minDist) {
-	// 				minId = this._dataArr[i].id;
-	// 				minDist = dist;
-	// 			}
-	// 		}
-	// 	}
-	// 	return minId;
-	// }
-
 	public undoEdit() {
 		if (this.map !== undefined && this.map.getZoom() > 17) {
 			if (this.editList.length !== 0) {
@@ -889,6 +857,15 @@ export class TrailViewer implements TrailViewerEvents {
 			}
 			this._updateEditMarkers();
 		}
+		this._emitter.emit('edit');
+	}
+
+	public discardEdits() {
+		if (this.map === undefined) {
+			return;
+		}
+		this.editList = [];
+		this._updateEditMarkers();
 		this._emitter.emit('edit');
 	}
 
@@ -938,46 +915,6 @@ export class TrailViewer implements TrailViewerEvents {
 			return (this._panViewer.getNorthOffset() + this._panViewer.getYaw() + 180) % 360;
 		} else {
 			return undefined;
-		}
-	}
-
-	// Creates info in viewer
-	// private _createLocalInfo(infoJson: any) {
-	// 	if (this._infoJson != null) {
-	// 		for (let i = 0; i < this._infoJson['ImgInfo'].length; i++) {
-	// 			if (this._panViewer != null) {
-	// 				this._panViewer.removeHotSpot(
-	// 					this._infoJson['ImgInfo'][i]['ID'],
-	// 					this._infoJson['ImgInfo'][i]['ImageID']
-	// 				);
-	// 			}
-	// 		}
-	// 	}
-	// 	this._infoJson = infoJson;
-	// 	for (let i = 0; i < infoJson['ImgInfo'].length; i++) {
-	// 		const info = infoJson['ImgInfo'][i];
-	// 		if (this._panViewer != null) {
-	// 			this._panViewer.addHotSpot(
-	// 				{
-	// 					id: info['ID'],
-	// 					pitch: info['Pitch'],
-	// 					yaw: info['Yaw'],
-	// 					type: 'info',
-	// 					text: info['HoverText'],
-	// 					clickHandlerFunc: this._onHotSpotClicked,
-	// 					clickHandlerArgs: [this, info['ID']]
-	// 				},
-	// 				info['ImageID']
-	// 			);
-	// 		}
-	// 	}
-	// }
-
-	// Called when info is clicked
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private _onHotSpotClicked(evt: Event, info: any) {
-		if ('onHotSpotClickFunc' in info[0]._options) {
-			info[0]._options.onHotSpotClickFunc(info[1]);
 		}
 	}
 
