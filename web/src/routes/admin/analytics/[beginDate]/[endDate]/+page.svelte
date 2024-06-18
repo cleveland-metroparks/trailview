@@ -19,6 +19,9 @@
 	let showLoadingSpinner = false;
 
 	afterNavigate(() => {
+		if (lineChart !== null) {
+			updateLineChart();
+		}
 		if (barChart !== null) {
 			updateBarChart();
 		}
@@ -28,7 +31,6 @@
 		await createLineChart();
 		lineChart?.zoomX(data.selectedMinDate.valueOf(), data.selectedMaxDate.valueOf());
 		await createBarChart();
-		// await onRangeUpdate();
 	});
 
 	onDestroy(() => {
@@ -53,6 +55,9 @@
 				}
 			],
 			chart: {
+				animations: {
+					enabled: false
+				},
 				type: 'area',
 				stacked: false,
 				height: 250,
@@ -117,27 +122,6 @@
 		lineChart.render();
 	}
 
-	// 	lineChart?.zoomX(selectedRange.min.valueOf(), selectedRange.max.valueOf());
-	// 	showLoadingSpinner = true;
-	// 	const res = await fetch(
-	// 		`/admin/analytics/${selectedRange.min.valueOf()}/${selectedRange.max.valueOf()}`,
-	// 		{
-	// 			method: 'GET',
-	// 			credentials: 'same-origin'
-	// 		}
-	// 	);
-	// 	const resData = await res.json();
-	// 	if (resData.success === true) {
-	// 		if (barChart === null) {
-	// 			await createBarChart(resData.data);
-	// 		} else {
-	// 			await updateBarChart(resData.data);
-	// 		}
-	// 		showLoadingSpinner = false;
-	// 	}
-	// 	showLoadingSpinner = false;
-	// }
-
 	async function createBarChart() {
 		const ApexCharts = await import('apexcharts');
 		var options: ApexOptions = {
@@ -175,6 +159,19 @@
 
 		barChart = new ApexCharts.default(barChartContainer, options);
 		barChart.render();
+	}
+
+	async function updateLineChart() {
+		if (lineChart === null) {
+			console.warn('Unable to update null line chart');
+			return;
+		}
+		lineChart.updateSeries([
+			{
+				name: 'Image Hits',
+				data: data.lineChartData
+			}
+		]);
 	}
 
 	async function updateBarChart() {
@@ -226,7 +223,9 @@
 		const now = new Date();
 		switch (range) {
 			case 'Max':
-				updateRange({ min: data.minDate, max: data.maxDate });
+				if (data.minDate !== null && data.maxDate !== null) {
+					updateRange({ min: data.minDate, max: data.maxDate });
+				}
 				break;
 			case 'Year':
 				updateRange({ min: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000), max: now });
@@ -234,17 +233,17 @@
 			case '6-Month':
 				updateRange({
 					min: new Date(now.getTime() - 183 * 24 * 60 * 60 * 1000),
-					max: data.maxDate
+					max: now
 				});
 				break;
 			case 'Month':
-				updateRange({ min: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), max: data.maxDate });
+				updateRange({ min: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), max: now });
 				break;
 			case 'Week':
-				updateRange({ min: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), max: data.maxDate });
+				updateRange({ min: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), max: now });
 				break;
 			case 'Day':
-				updateRange({ min: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), max: data.maxDate });
+				updateRange({ min: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), max: now });
 				break;
 		}
 	}
