@@ -3,7 +3,7 @@ import * as schema from '$db/schema';
 import type { PageServerLoad } from './$types';
 import { z } from 'zod';
 import { error } from '@sveltejs/kit';
-import { and, asc, desc, eq, gte, lte, max, min, sum } from 'drizzle-orm';
+import { and, asc, eq, gte, lte, sum } from 'drizzle-orm';
 
 const dateParamSchema = z
 	.string()
@@ -24,12 +24,6 @@ export const load = (async ({ params }) => {
 	const sequencesQuery = db
 		.$with('sequences')
 		.as(db.select({ id: schema.sequence.id, name: schema.sequence.name }).from(schema.sequence));
-	const analyticsQueryRange = await db
-		.select({
-			minDate: min(schema.analytics.date),
-			maxDate: max(schema.analytics.date)
-		})
-		.from(schema.analytics);
 	const analyticsQueryLineChart = await db
 		.select({ date: schema.analytics.date, hits: sum(schema.analytics.count).mapWith(Number) })
 		.from(schema.analytics)
@@ -45,21 +39,15 @@ export const load = (async ({ params }) => {
 		.where(and(gte(schema.analytics.date, beginDate), lte(schema.analytics.date, endDate)))
 		.innerJoin(imagesQuery, eq(imagesQuery.id, schema.analytics.imageId))
 		.innerJoin(sequencesQuery, eq(sequencesQuery.id, imagesQuery.sequenceId))
-		.groupBy(sequencesQuery.name)
-		.orderBy(desc(sum(schema.analytics.count).mapWith(Number)));
-	const minDate = analyticsQueryRange[0].minDate;
-	const maxDate = analyticsQueryRange[0].maxDate;
-	if (minDate === null || maxDate === null) {
-		throw error(500);
-	}
+		.groupBy(sequencesQuery.name);
 	return {
-		minDate,
-		maxDate,
+		minDate: analyticsQueryLineChart[0].date,
+		maxDate: analyticsQueryLineChart[analyticsQueryLineChart.length - 1]?.date,
 		selectedMinDate: beginDate,
 		selectedMaxDate: endDate,
 		lineChartData: analyticsQueryLineChart.map((d) => {
 			return [d.date.valueOf(), d.hits];
 		}),
-		barChartData: analyticsQueryBarChart
+		barChartData: analyticsQueryBarChart.sort((a, b) => b.hits - a.hits)
 	};
 }) satisfies PageServerLoad;
