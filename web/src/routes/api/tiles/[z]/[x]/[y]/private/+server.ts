@@ -22,7 +22,7 @@ export const GET = (async ({ params, cookies, request }) => {
 	}
 	const tile = allTileIndex.getTile(z, x, y);
 
-	if (tile) {
+	if (tile !== null) {
 		const layer = new vtpbf.GeoJSONWrapper(tile.features);
 		layer.name = 'geojsonLayer';
 		layer.version = 2;
@@ -42,6 +42,6 @@ export const GET = (async ({ params, cookies, request }) => {
 			headers: { 'Content-Type': 'application/vnd.mapbox-vector-tile' }
 		});
 	} else {
-		return new Response(null, { status: 404 });
+		return new Response(null);
 	}
 }) satisfies RequestHandler;
