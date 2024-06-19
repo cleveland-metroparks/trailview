@@ -42,6 +42,7 @@
 	onDestroy(() => {
 		lineChart?.destroy();
 		barChart?.destroy();
+		heatmap?.remove();
 	});
 
 	type DateRange = { min: Date; max: Date };
