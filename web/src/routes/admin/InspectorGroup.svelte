@@ -144,7 +144,7 @@
 		>
 	</div>
 	<hr />
-	<h5>From Sequence</h5>
+	<h5>Add from Sequence</h5>
 	<select
 		on:change={onSequenceChange}
 		bind:value={groupSequenceSelectValue}

@@ -44,7 +44,7 @@
 
 	let selectedGroupId: number | undefined = undefined;
 
-	let inspectorPages = ['Sequence', 'Image', 'Group', 'Move'] as const;
+	let inspectorPages = ['Sequence', 'Image(s)', 'Group', 'Move'] as const;
 	let inspectorPage: (typeof inspectorPages)[number] = 'Sequence';
 
 	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
@@ -104,7 +104,7 @@
 			const groupId = parseInt(selectValue.split('_')[1]);
 			selectedGroupId = groupId;
 			await goToGroup(groupId);
-			await drawGroup(groupId);
+			await highlightGroup(groupId);
 		}
 	}
 
@@ -122,7 +122,7 @@
 		}
 	}
 
-	async function drawGroup(groupId: number) {
+	async function highlightGroup(groupId: number) {
 		if (
 			trailviewer === undefined ||
 			trailviewer.allImageData === undefined ||
@@ -197,6 +197,12 @@
 			(trailviewer.map.getSource('groupSource') as GeoJSONSource).setData(geoJsonData);
 		}
 		goToGroup(groupId);
+	}
+
+	function removeGroupHighlight() {
+		trailviewer?.map?.removeLayer('groupLayer');
+		trailviewer?.map?.removeSource('groupSource');
+		selectedGroupId = undefined;
 	}
 
 	function onSequenceSelectChange(event: Event) {
@@ -409,7 +415,7 @@
 					}
 				}}
 				type="button"
-				class="btn btn-sm btn-outline-warning">Highlight current sequence</button
+				class="btn btn-sm btn-outline-warning">Highlight image sequence</button
 			>
 		{/if}
 		{#if highlightedSequenceId !== undefined}
@@ -421,7 +427,17 @@
 					highlightedSequenceId = undefined;
 				}}
 				type="button"
-				class="btn btn-sm btn-outline-secondary">Remove Sequence Highlight</button
+				class="btn btn-sm btn-outline-warning">Remove sequence highlight</button
+			>
+		{/if}
+		{#if selectedGroupId !== undefined}
+			<button
+				on:click={removeGroupHighlight}
+				transition:scale
+				type="button"
+				class="btn btn-sm btn-outline-info"
+			>
+				Remove group highlight</button
 			>
 		{/if}
 	</div>
@@ -460,7 +476,7 @@
 			><i class="bi bi-arrows-angle-expand"></i></button
 		>
 	</div>
-	<div style="width:350px">
+	<div style="width:370px">
 		<div class="mt-1 mx-2">
 			<FormAlert bind:this={formAlert} />
 			<ul class="nav nav-tabs mb-2">
@@ -485,7 +501,7 @@
 					mapsApiTrails={data.mapsApiTrails}
 					on:should-refresh={refreshEverything}
 				/>
-			{:else if inspectorPage === 'Image'}
+			{:else if inspectorPage === 'Image(s)'}
 				<InspectorImage
 					{confirmModal}
 					{formAlert}
@@ -502,7 +518,7 @@
 					sequenceData={data.sequences}
 					bind:selectedGroupId
 					on:draw-group={(e) => {
-						drawGroup(e.detail.groupId);
+						highlightGroup(e.detail.groupId);
 					}}
 					on:should-refresh={refreshEverything}
 					on:sequence-select={onGroupSequenceSelect}
