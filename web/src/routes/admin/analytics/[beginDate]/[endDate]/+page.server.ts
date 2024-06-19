@@ -19,9 +19,15 @@ export const load = (async ({ params }) => {
 	}
 	const beginDate = beginDateParse.data;
 	const endDate = endDateParse.data;
-	const imagesQuery = db
-		.$with('images')
-		.as(db.select({ id: schema.image.id, sequenceId: schema.image.sequenceId }).from(schema.image));
+	const imagesQuery = db.$with('images').as(
+		db
+			.select({
+				id: schema.image.id,
+				sequenceId: schema.image.sequenceId,
+				coordinates: schema.image.coordinates
+			})
+			.from(schema.image)
+	);
 	const sequencesQuery = db
 		.$with('sequences')
 		.as(db.select({ id: schema.sequence.id, name: schema.sequence.name }).from(schema.sequence));
@@ -45,6 +51,29 @@ export const load = (async ({ params }) => {
 		.innerJoin(imagesQuery, eq(imagesQuery.id, schema.analytics.imageId))
 		.innerJoin(sequencesQuery, eq(sequencesQuery.id, imagesQuery.sequenceId))
 		.groupBy(sequencesQuery.name);
+	const analyticsHeatMapQuery = await db
+		.with(imagesQuery)
+		.select({
+			coordinates: imagesQuery.coordinates,
+			hits: sum(schema.analytics.count).mapWith(Number)
+		})
+		.from(schema.analytics)
+		.where(and(gte(schema.analytics.date, beginDate), lte(schema.analytics.date, endDate)))
+		.innerJoin(imagesQuery, eq(imagesQuery.id, schema.analytics.imageId))
+		.groupBy(imagesQuery.coordinates);
+	const heatmapGeoJson = {
+		type: 'FeatureCollection',
+		features: analyticsHeatMapQuery.map((f) => ({
+			type: 'Feature',
+			properties: {
+				hits: f.hits
+			},
+			geometry: {
+				type: 'Point',
+				coordinates: f.coordinates
+			}
+		}))
+	} satisfies GeoJSON.FeatureCollection<GeoJSON.Geometry>;
 	const lineChartPoints = simplify(
 		analyticsQueryLineChart.map((d) => {
 			return { x: d.date.valueOf(), y: d.hits };
@@ -58,6 +87,7 @@ export const load = (async ({ params }) => {
 		selectedMinDate: beginDate,
 		selectedMaxDate: endDate,
 		lineChartData: lineChartPoints,
-		barChartData: analyticsQueryBarChart.sort((a, b) => b.hits - a.hits)
+		barChartData: analyticsQueryBarChart.sort((a, b) => b.hits - a.hits),
+		heatmapGeoJson
 	};
 }) satisfies PageServerLoad;

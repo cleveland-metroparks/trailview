@@ -7,6 +7,10 @@
 	import { localDateTimeString } from '$lib/util';
 	import { afterNavigate, goto } from '$app/navigation';
 	import urlJoin from 'url-join';
+	import mapboxgl from 'mapbox-gl';
+	import 'mapbox-gl/dist/mapbox-gl.css';
+	import { env } from '$env/dynamic/public';
+	import { page } from '$app/stores';
 
 	export let data: PageData;
 
@@ -25,12 +29,14 @@
 		if (barChart !== null) {
 			updateBarChart();
 		}
+		updateHeatmap();
 	});
 
 	onMount(async () => {
 		await createLineChart();
 		lineChart?.zoomX(data.selectedMinDate.valueOf(), data.selectedMaxDate.valueOf());
 		await createBarChart();
+		createHeatmap();
 	});
 
 	onDestroy(() => {
@@ -204,13 +210,24 @@
 		);
 	}
 
+	let currentRange: DateRange = {
+		min: new Date($page.params.beginDate),
+		max: new Date($page.params.endDate)
+	};
 	function gotoRange(range: DateRange) {
+		console.log(currentRange, range);
+		if (
+			range.min.valueOf() === currentRange.min.valueOf() &&
+			range.max.valueOf() === currentRange.max.valueOf()
+		) {
+			return;
+		}
+		currentRange = range;
 		goto(urlJoin('/admin/analytics', range.min.toISOString(), range.max.toISOString()), {
 			replaceState: true,
 			noScroll: true,
 			keepFocus: true
 		});
-		// replaceState(urlJoin('/admin/analytics', range.min.toISOString(), range.max.toISOString()), '');
 	}
 
 	const presetRanges = ['Max', 'Year', '6-Month', 'Month', 'Week', 'Day'] as const;
@@ -247,6 +264,101 @@
 				break;
 		}
 	}
+
+	let mapContainer: HTMLDivElement;
+	let heatmap: mapboxgl.Map | null = null;
+	function createHeatmap() {
+		heatmap = new mapboxgl.Map({
+			accessToken: env.PUBLIC_MAPBOX_KEY,
+			container: mapContainer,
+			style: 'mapbox://styles/cleveland-metroparks/cisvvmgwe00112xlk4jnmrehn?optimize=true',
+			center: [-81.682665, 41.4097766],
+			zoom: 9.5,
+			pitchWithRotate: false,
+			dragRotate: false,
+			touchPitch: false,
+			boxZoom: false
+		});
+		const nav = new mapboxgl.NavigationControl({
+			showCompass: false,
+			showZoom: true,
+			visualizePitch: false
+		});
+		heatmap.addControl(nav, 'bottom-right');
+		heatmap.on('load', () => {
+			addHeatmapLayer();
+			zoomFitHeatmap();
+		});
+	}
+
+	function addHeatmapLayer() {
+		heatmap?.addSource('image_hits_src', {
+			type: 'geojson',
+			data: data.heatmapGeoJson
+		});
+		heatmap?.addLayer({
+			id: 'image_hits',
+			type: 'heatmap',
+			source: 'image_hits_src',
+			paint: {
+				'heatmap-weight': {
+					property: 'hits',
+					type: 'exponential',
+					stops: [
+						[1, 0],
+						[30, 1]
+					]
+				},
+				// increase intensity as zoom level increases
+				'heatmap-intensity': {
+					stops: [
+						[15, 1],
+						[22, 10]
+					]
+				},
+				// assign color values be applied to points depending on their density
+				'heatmap-color': [
+					'interpolate',
+					['linear'],
+					['heatmap-density'],
+					0,
+					'rgba(55,255,0,0)',
+					0.2,
+					'rgb(196,238,71)',
+					0.4,
+					'rgb(250,220,76)',
+					0.6,
+					'rgb(221,110,39)',
+					0.8,
+					'rgb(224,36,55)'
+				],
+				'heatmap-radius': {
+					stops: [
+						[11, 15],
+						[15, 20]
+					]
+				}
+			}
+		});
+	}
+
+	function updateHeatmap() {
+		if (heatmap === null) {
+			return;
+		}
+		heatmap.removeLayer('image_hits');
+		heatmap.removeSource('image_hits_src');
+		addHeatmapLayer();
+		zoomFitHeatmap();
+	}
+
+	function zoomFitHeatmap() {
+		const bounds = new mapboxgl.LngLatBounds();
+		data.heatmapGeoJson.features.forEach((f) => {
+			bounds.extend(f.geometry.coordinates);
+		});
+		heatmap?.fitBounds(bounds, { padding: 20 });
+	}
 </script>
 
 <svelte:head>
@@ -276,7 +388,12 @@
 		)}
 		{#if showLoadingSpinner}<span transition:scale class="spinner-border"></span>{/if}
 	</h2>
-	<div bind:this={barChartContainer} />
+	<div class="d-flex flex-row">
+		<div bind:this={barChartContainer} class="w-50" />
+		<div class="w-50">
+			<div bind:this={mapContainer} style="height:500px" />
+		</div>
+	</div>
 </div>
 
 <style lang="scss">
