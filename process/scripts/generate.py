@@ -279,7 +279,7 @@ for f in range(0, 6):
                         if not genPreview and colors is not None and colors[0][1] == colorTuple:
                             missingTiles.append((f, level, j, i))
                         else:
-                            tile.save(os.path.join(args.output, str(level), faceLetters[f] + str(i) + '_' + str(j) + extension), quality=args.quality)
+                            tile.save(os.path.join(args.output, str(level), faceLetters[f] + str(i) + '_' + str(j) + extension), quality=args.quality, optimize=True)
                     else:
                         missingTiles.append((f, level, j, i))
             size = int(size / 2)
@@ -327,7 +327,7 @@ if args.fallbackSize > 0:
                 background.paste(face, face.split()[-1])
                 face = background
             face = face.resize([args.fallbackSize, args.fallbackSize], ANTIALIAS)
-            face.save(os.path.join(args.output, 'fallback', faceLetters[f] + extension), quality = args.quality)
+            face.save(os.path.join(args.output, 'fallback', faceLetters[f] + extension), quality = args.quality, optimize=True)
 
 # Clean up temporary files
 if not args.debug:
@@ -345,7 +345,7 @@ if args.thumbnailSize > 0:
     img = Image.open(args.inputFile)
     img = img.resize((args.thumbnailSize, args.thumbnailSize // 2))
     buf = io.BytesIO()
-    img.save(buf, format='JPEG', quality=75, optimize=True)
+    img.save(buf, format='JPEG', quality=85, optimize=True)
     equiPreview = bytes('data:image/jpeg;base64,', encoding='utf-8')
     equiPreview += base64.b64encode(buf.getvalue())
     equiPreview = equiPreview.decode()

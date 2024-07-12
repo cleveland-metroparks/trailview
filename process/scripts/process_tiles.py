@@ -125,7 +125,7 @@ for filename in os.listdir(original_path):
         # Generate image tiles
         sys.stdout.flush()
         subprocess.run("python " + os.path.join(os.path.dirname(os.path.realpath(__file__)), 'generate.py') +
-                       " --haov 360.0 --fallbacksize 0 --vaov 180.0 \"" + str(img_file) + "\" -q 70 -o \"" + directory + "/img/" + image_id + "\"", shell=True)
+                       " --haov 360.0 --fallbacksize 0 --vaov 180.0 \"" + str(img_file) + "\" -q 85 -o \"" + directory + "/img/" + image_id + "\"", shell=True)
         sys.stdout.flush()
         count += 1
         if count > 50:
