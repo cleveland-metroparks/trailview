@@ -97,7 +97,7 @@ file_total = len(os.listdir(original_path))
 for filename in os.listdir(original_path):
     file_path = os.path.join(original_path, filename)
     if os.path.isfile(file_path):
-        if not file_path.lower().endswith(".jpg"):
+        if not file_path.lower().endswith(".png"):
             continue
         file_count += 1
         if (filename in done_imgs):

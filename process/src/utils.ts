@@ -20,6 +20,14 @@ export async function jpgsInDir(dir: string) {
     return jpgs.length;
 }
 
+export async function pngsInDir(dir: string) {
+    const files = await fs.readdir(dir);
+    const pngs = files.filter((file) => {
+        return file.toLowerCase().endsWith('.png');
+    });
+    return pngs.length;
+}
+
 export async function jsonFilesInDir(dir: string) {
     const files = await fs.readdir(dir);
     const jsonFiles = files.filter((file) => {

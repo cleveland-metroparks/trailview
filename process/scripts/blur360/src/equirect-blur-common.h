@@ -1,20 +1,20 @@
-#include <math.h>
-#include <opencv2/opencv.hpp>
+#pragma once
+
 #include "PCN.h"
+#include <opencv2/opencv.hpp>
 
 /* Step around the sphere in overlapping ranges. Bands of 90deg vert (45deg at a time),
  * 360deg horizontal (180deg at a time) */
-#define X_APERTURE ((float)(2.0f*M_PI))
-#define Y_APERTURE ((float)(2.0*M_PI/3.0f))
+#define X_APERTURE ((float)(2.0f * M_PI))
+#define Y_APERTURE ((float)(2.0 * M_PI / 3.0f))
 
-#define X_STEP ((float)(X_APERTURE/2.0f))
-#define Y_STEP ((float)(Y_APERTURE/2.0f))
+#define X_STEP ((float)(X_APERTURE / 2.0f))
+#define Y_STEP ((float)(Y_APERTURE / 2.0f))
 
-struct Projection
-{
+struct Projection {
     cv::Size equ_size;
     /* cropped X/Y aperture */
-    float cropped_aperture[2];
+    float cropped_aperture[2] {};
 
     /* Target phi/lambda rotation for this projection */
     float phi;
@@ -24,9 +24,11 @@ struct Projection
 
     std::vector<cv::Rect> faces; /* ROI rects in the cropped view */
 
-    PCN *detector;
+    PCN* detector;
 
-    Projection(cv::Size &im_size, float cropped_aperture[2], float phi, float lambda, PCN *detector) {
+    Projection(
+        const cv::Size& im_size, const float cropped_aperture[2], const float phi, const float lambda, PCN* detector)
+    {
         this->equ_size = im_size;
         this->cropped_aperture[0] = cropped_aperture[0];
         this->cropped_aperture[1] = cropped_aperture[1];
@@ -39,12 +41,11 @@ struct Projection
 
         this->create_subregion_map();
     }
+
 private:
     void create_subregion_map();
-    cv::Mat eulerYZrotation(double lambda, double phi);
+
+    static cv::Mat eulerYZrotation(double lambda, double phi);
 };
 
-bool equirect_blur_process_frame(
-    cv::Mat &image,
-    std::vector<Projection> &projections,
-    bool draw_over_faces);
+bool equirect_blur_process_frame(cv::Mat& image, std::vector<Projection>& projections, bool draw_over_faces);

@@ -1,26 +1,26 @@
-#ifndef __PCN__
-#define __PCN__
+#pragma once
 
-#include <iostream>
-#include <cstdio>
-#include <string>
-#include <vector>
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <iomanip>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <opencv2/opencv.hpp>
 #include <opencv2/dnn/dnn.hpp>
+#include <opencv2/opencv.hpp>
 
 #ifndef CLAMP
-#define CLAMP(x, l, u)  ((x) < (l) ? (l) : ((x) > (u) ? (u) : (x)))
+#define CLAMP(x, l, u) ((x) < (l) ? (l) : ((x) > (u) ? (u) : (x)))
 #endif
 
 #ifndef M_PI
-#define M_PI  3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 
-#define EPS  1e-5
+#define EPS 1e-5
 
 #define CYAN CV_RGB(0, 255, 255)
 #define BLUE CV_RGB(0, 0, 255)
@@ -28,40 +28,46 @@
 #define RED CV_RGB(255, 0, 0)
 #define PURPLE CV_RGB(139, 0, 255)
 
-struct Window
-{
+struct Window {
     int x, y, width, angle;
     float score;
     std::vector<cv::Point> points14;
-    Window(int x_, int y_, int w_, int a_, float s_, std::vector<cv::Point> p14_)
-        : x(x_), y(y_), width(w_), angle(a_), score(s_), points14(p14_)
-    {}
+    Window(const int x_, const int y_, const int w_, const int a_, const float s_, std::vector<cv::Point> p14_)
+        : x(x_)
+        , y(y_)
+        , width(w_)
+        , angle(a_)
+        , score(s_)
+        , points14(std::move(p14_))
+    {
+    }
 };
 
 cv::Point RotatePoint(float x, float y, float centerX, float centerY, float angle);
-void DrawLine(cv::Mat img, std::vector<cv::Point> pointList);
-void DrawFace(cv::Mat img, Window face);
-void DrawPoints(cv::Mat img, Window face);
-cv::Mat CropFace(cv::Mat img, Window face, int cropSize);
+void DrawLine(cv::Mat img, const std::vector<cv::Point>&& pointList);
+void DrawFace(const cv::Mat& img, const Window& face);
+void DrawPoints(cv::Mat img, const Window& face);
+cv::Mat CropFace(const cv::Mat& img, const Window& face, int cropSize);
 
-class PCN
-{
+class PCN {
 public:
-    PCN(std::string modelDetect, std::string net1, std::string net2, std::string net3,
-        std::string modelTrack, std::string netTrack);
+    PCN(const std::string& modelDetect,
+        const std::string& net1,
+        const std::string& net2,
+        const std::string& net3,
+        const std::string& modelTrack,
+        const std::string& netTrack);
     /// detection
     void SetMinFaceSize(int minFace);
     void SetDetectionThresh(float thresh1, float thresh2, float thresh3);
     void SetImagePyramidScaleFactor(float factor);
-    std::vector<Window> Detect(cv::Mat img);
+    [[nodiscard]] std::vector<Window> Detect(const cv::Mat& img);
     /// tracking
     void SetTrackingPeriod(int period);
     void SetTrackingThresh(float thresh);
     void SetVideoSmooth(bool smooth);
-    std::vector<Window> DetectTrack(cv::Mat img);
+    [[nodiscard]] std::vector<Window> DetectTrack(const cv::Mat& img);
 
 private:
     void* impl_;
 };
-
-#endif

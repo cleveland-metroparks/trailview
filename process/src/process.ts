@@ -3,7 +3,12 @@ import fs from 'fs-extra';
 import { spawn } from 'child_process';
 import { imagesPath } from './index.js';
 import z from 'zod';
-import { jpgsInDir, jsonFilesInDir, parseDataJsonDate } from './utils.js';
+import {
+    jpgsInDir,
+    jsonFilesInDir,
+    parseDataJsonDate,
+    pngsInDir,
+} from './utils.js';
 import {
     Sequence,
     deleteSequence,
@@ -103,7 +108,7 @@ export async function processTile(sequence: Sequence) {
     const sequencePath = join(imagesPath, sequence.name);
 
     async function checkToSequence(): Promise<boolean> {
-        const originalCount = await jpgsInDir(join(sequencePath, 'img_blur'));
+        const originalCount = await pngsInDir(join(sequencePath, 'img_blur'));
         const processedCount = await jsonFilesInDir(join(sequencePath, 'img'));
         if (originalCount === processedCount) {
             await patchSequenceStatus({
@@ -150,7 +155,7 @@ export async function processBlur(sequence: Sequence) {
         const originalCount = await jpgsInDir(
             join(sequencePath, 'img_original')
         );
-        const blurCount = await jpgsInDir(join(sequencePath, 'img_blur'));
+        const blurCount = await pngsInDir(join(sequencePath, 'img_blur'));
         if (originalCount === blurCount) {
             await patchSequenceStatus({
                 sequenceId: sequence.id,
