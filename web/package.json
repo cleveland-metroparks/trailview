@@ -5,12 +5,14 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "svelte-kit sync && vite build",
+		"build-trailviewer": "cd ../trailviewer && npm ci && npm run build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --plugin prettier-plugin-svelte --check . && eslint .",
 		"format": "prettier --plugin prettier-plugin-svelte --write .",
-		"start": "node build"
+		"start": "node build",
+		"pre-commit": "npm run format && npm run lint && npm run check"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.2.0",
