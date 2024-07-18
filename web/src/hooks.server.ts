@@ -1,6 +1,16 @@
 import { isApiAuth } from '$api/common';
+import { building } from '$app/environment';
+import { env } from '$env/dynamic/private';
 import { isSessionValid } from '$lib/server/auth';
+import { db, schema } from '$lib/server/db';
 import { error, redirect, type Handle } from '@sveltejs/kit';
+
+if (!building) {
+	await db
+		.insert(schema.adminAccount)
+		.values({ username: env.TV_ADMIN_USER, password: env.TV_ADMIN_PASSWORD })
+		.onConflictDoNothing();
+}
 
 function appendSecurityHeaders(res: Response) {
 	// Security-related headers
