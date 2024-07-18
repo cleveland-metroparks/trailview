@@ -34,7 +34,7 @@
 		transition:slide|local
 		class={`mt-2 mb-2 alert alert-dismissible alert-${success ? 'success' : 'danger'}`}
 	>
-		{success ? 'Success' : message ?? 'Unknown error'}
+		{success ? 'Success' : (message ?? 'Unknown error')}
 		<button
 			on:click={() => {
 				dismissed = true;

@@ -9,8 +9,9 @@ Development and Deployment are meant to be on a Linux platform, specifically Ubu
 If you are on Windows, please install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) with Ubuntu 22.04
 
 Prerequisites include
- - Docker
- - NodeJS 20.x
+
+- Docker
+- NodeJS 20.x
 
 Install Docker with these [instructions](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository).
 

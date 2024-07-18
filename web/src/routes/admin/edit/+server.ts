@@ -23,7 +23,8 @@ export const PATCH = (async ({ request }) => {
 	let jsonData: unknown;
 	try {
 		jsonData = await request.json();
-	} catch (error) {
+	} catch (e) {
+		console.error(e);
 		return json({ success: false, message: 'Invalid JSON' }, { status: 400 });
 	}
 	const patch = patchRequestType.safeParse(jsonData);

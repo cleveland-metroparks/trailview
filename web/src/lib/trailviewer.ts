@@ -18,13 +18,13 @@ declare class PannellumViewer {
 	removeScene(sceneId: string): boolean;
 	addScene(sceneId: string, config: object): PannellumViewer;
 	addHotSpot(hs: object, sceneId?: string): PannellumViewer;
-	// eslint-disable-next-line @typescript-eslint/ban-types
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	on(type: string, listener: Function): PannellumViewer;
 	getScene(): string;
 	setYaw(
 		yaw: number,
 		animated: boolean | number,
-		// eslint-disable-next-line @typescript-eslint/ban-types
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 		callback?: Function,
 		callbackArgs?: object
 	): PannellumViewer;
@@ -41,7 +41,7 @@ declare class PannellumViewer {
 		yaw?: number,
 		hfov?: number,
 		animated?: boolean | number,
-		// eslint-disable-next-line @typescript-eslint/ban-types
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 		callback?: Function,
 		callbackArgs?: object
 	): PannellumViewer;
@@ -400,6 +400,9 @@ export class TrailViewer implements TrailViewerEvents {
 		if (this._editOnZoom === true && this.map.getZoom() >= 17) {
 			this._emitter.emit('edit-change', true);
 			const bounds = this.map.getBounds();
+			if (bounds === null) {
+				return;
+			}
 			for (const image of this.allImageData) {
 				if (!bounds.contains(image.coordinates)) {
 					if (

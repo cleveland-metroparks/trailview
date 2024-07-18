@@ -312,6 +312,7 @@
 				},
 				// increase intensity as zoom level increases
 				'heatmap-intensity': {
+					type: 'exponential',
 					stops: [
 						[15, 1],
 						[22, 10]

@@ -92,7 +92,7 @@
 			class={`mt-3 alert alert-${error ? 'danger' : complete ? 'success' : 'secondary'}`}
 		>
 			{error
-				? errorMessage ?? 'An error has occured, uploading cancelled'
+				? (errorMessage ?? 'An error has occured, uploading cancelled')
 				: complete
 					? 'Upload complete!'
 					: 'Undefined'}

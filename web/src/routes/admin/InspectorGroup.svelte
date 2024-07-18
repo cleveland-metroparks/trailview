@@ -64,9 +64,11 @@
 		showGroupSpinner = true;
 		const bounds = trailviewer.map.getBounds();
 		const imageIdList: string[] = [];
-		for (const image of trailviewer.allImageData) {
-			if (bounds.contains(image.coordinates)) {
-				imageIdList.push(image.id);
+		if (bounds !== null) {
+			for (const image of trailviewer.allImageData) {
+				if (bounds.contains(image.coordinates)) {
+					imageIdList.push(image.id);
+				}
 			}
 		}
 		const data: GroupPatchReqType = {

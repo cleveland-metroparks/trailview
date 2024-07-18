@@ -14,7 +14,8 @@ export const POST = (async ({ request }) => {
 	let postData: unknown;
 	try {
 		postData = await request.json();
-	} catch (error) {
+	} catch (e) {
+		console.error(e);
 		return json({ success: false, message: 'Invalid JSON' }, { status: 400 });
 	}
 	const data = postDataType.safeParse(postData);

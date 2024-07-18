@@ -212,6 +212,9 @@
 			return;
 		}
 		const mapBounds = trailviewer.map.getBounds();
+		if (mapBounds === null) {
+			return;
+		}
 		const imagesInBounds = trailviewer.allImageData.filter((i) => {
 			return mapBounds.contains(i.coordinates);
 		});
