@@ -2,6 +2,8 @@
 
 ## Modules
 
+![Architecture Diagram](docs/architecture.png)
+
 - `docs` - Documentation
 - `prisma` - Database schema with Prisma ORM
 - `trailviewer` - Frontend client library for viewer
