@@ -36,6 +36,7 @@
 		"eslint": "^8.56.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.40.0",
+		"npm-check-updates": "^16.14.20",
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.4",
 		"sass": "^1.77.6",

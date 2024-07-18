@@ -21,6 +21,7 @@
         "esbuild": "^0.21.5",
         "eslint": "^8.46.0",
         "fs-extra": "^11.2.0",
+        "npm-check-updates": "^16.14.20",
         "prettier": "^3.3.2",
         "typescript": "^5.4.5",
         "url-join": "^5.0.0",

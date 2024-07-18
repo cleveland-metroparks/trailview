@@ -21,3 +21,9 @@ docker compose down
 in the same directory if you lose the terminal.
 
 Every time you make a code change, simply restart the docker container.
+
+Before every commit, I recommend running `npm run pre-commit` to format, lint, and check you code.
+
+### Updating dependencies
+
+Run `npx ncu -i` to interactively select and update dependencies.

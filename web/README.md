@@ -49,3 +49,11 @@ Run `npm run dev` to start the dev server.
 ### Image Uploading
 
 The `web/` component will handle the API and web dashboard but a separate `process` component is needed for image uploading. For this, follow the instructions in the `process/` subdirectory.
+
+### Making changes
+
+Before every commit, I recommend running `npm run pre-commit` to format, lint, and check you code.
+
+### Updating dependencies
+
+Run `npx ncu -i` to interactively select and update dependencies.
