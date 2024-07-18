@@ -1,1 +1,6 @@
 .vscode
+data/**/*
+!data/.gitkeep
+logs/
+*.env
+!.env.example

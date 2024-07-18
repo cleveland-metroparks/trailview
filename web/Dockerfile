@@ -30,6 +30,8 @@ ENV BODY_SIZE_LIMIT=Infinity
 ENV PORT=3000
 EXPOSE 3000
 
+HEALTHCHECK CMD curl --fail http://localhost:3000 || exit 1
+
 # run
 RUN chmod +x ./docker/start.sh
 CMD ["./docker/start.sh"]

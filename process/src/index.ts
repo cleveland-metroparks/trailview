@@ -9,25 +9,24 @@ import {
 
 dotEnv.config();
 
-if (process.env.IMAGES_PATH === undefined) {
+if (process.env.TV_IMAGES_PATH === undefined) {
     console.log('IMAGES_PATH not overridden, using /trails');
 }
-if (process.env.WEB_URL === undefined) {
+if (process.env.TV_WEB_URL === undefined) {
     throw new Error('WEB_URL not specified in env');
 }
-if (process.env.WEB_API_KEY === undefined) {
-    throw new Error('WEB_API_KEY not specified in env');
+if (process.env.TV_PROCESS_WEB_API_KEY === undefined) {
+    throw new Error('TV_WEB_API_KEY not specified in env');
 }
 
-export const imagesPath = process.env.IMAGES_PATH ?? '/trails';
-export const webUrl = process.env.WEB_URL;
-export const apiKey = process.env.WEB_API_KEY;
+export const imagesPath = process.env.TV_IMAGES_PATH ?? '/trails';
+export const webUrl = process.env.TV_WEB_URL;
+export const apiKey = process.env.TV_PROCESS_WEB_API_KEY;
 
 async function loop() {
     const sequences = await fetchSequenceStatuses();
     if (sequences === null) {
-        console.warn('Unable to fetch sequence statuses');
-        return;
+        throw new Error('Unable to fetch sequence statuses');
     }
     for (const sequence of sequences) {
         if (sequence.toDelete === true) {

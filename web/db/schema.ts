@@ -104,7 +104,7 @@ export const apiRole = pgEnum('apiRole', ['standard', 'admin']);
 
 export const apiKey = pgTable('api_key', {
 	id: serial('id').notNull().primaryKey(),
-	name: varchar('name', { length: 256 }).notNull(),
+	name: varchar('name', { length: 256 }).notNull().unique(),
 	key: uuid('key').notNull(),
 	role: apiRole('role').notNull(),
 	active: boolean('active').notNull(),

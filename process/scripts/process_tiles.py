@@ -97,7 +97,7 @@ file_total = len(os.listdir(original_path))
 for filename in os.listdir(original_path):
     file_path = os.path.join(original_path, filename)
     if os.path.isfile(file_path):
-        if not file_path.lower().endswith(".png"):
+        if not file_path.lower().endswith(".jpg"):
             continue
         file_count += 1
         if (filename in done_imgs):
@@ -120,7 +120,8 @@ for filename in os.listdir(original_path):
 
         img_file = file_path
         if use_blurred:
-            img_file = os.path.join(blur_path, filename)
+            base = os.path.splitext(filename)[0]
+            img_file = os.path.join(blur_path, base + ".png")
 
         # Generate image tiles
         sys.stdout.flush()

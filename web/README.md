@@ -45,3 +45,7 @@ To set up the new dev database, you will need to run `npx drizzle-kit push` to p
 ### Run dev server
 
 Run `npm run dev` to start the dev server.
+
+### Image Uploading
+
+The `web/` component will handle the API and web dashboard but a separate `process` component is needed for image uploading. For this, follow the instructions in the `process/` subdirectory.

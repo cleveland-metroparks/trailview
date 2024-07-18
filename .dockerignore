@@ -17,4 +17,5 @@ trailviewer/dist
 *.env
 !.env.example
 
-web/data
+data/
+logs/

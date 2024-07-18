@@ -9,7 +9,8 @@
         "check": "tsc -noEmit",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
-        "start": "node build"
+        "start": "node --env-file=.env build",
+        "pre-commit": "npm run format && npm run lint && npm run check"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",
