@@ -38,7 +38,7 @@ export const GET = (async ({ params }) => {
 		return json({ success: false, message: 'Invalid image' }, { status: 400 });
 	}
 	const filePath = join(
-		env.IMAGES_PATH,
+		env.TV_IMAGES_PATH,
 		image.sequenceName,
 		'img',
 		image.id,

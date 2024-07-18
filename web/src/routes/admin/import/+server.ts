@@ -34,14 +34,14 @@ export const POST = (async ({ request }) => {
 
 	const file = formFile as File;
 
-	if (!fs.existsSync(join(env.IMAGES_PATH, sequenceName))) {
-		await fs.promises.mkdir(join(env.IMAGES_PATH, sequenceName));
-		if (!fs.existsSync(join(env.IMAGES_PATH, sequenceName, 'img_original'))) {
-			await fs.promises.mkdir(join(env.IMAGES_PATH, sequenceName, 'img_original'));
+	if (!fs.existsSync(join(env.TV_IMAGES_PATH, sequenceName))) {
+		await fs.promises.mkdir(join(env.TV_IMAGES_PATH, sequenceName));
+		if (!fs.existsSync(join(env.TV_IMAGES_PATH, sequenceName, 'img_original'))) {
+			await fs.promises.mkdir(join(env.TV_IMAGES_PATH, sequenceName, 'img_original'));
 		}
 	}
 	fs.appendFileSync(
-		join(env.IMAGES_PATH, sequenceName, 'img_original', file.name),
+		join(env.TV_IMAGES_PATH, sequenceName, 'img_original', file.name),
 		Buffer.from(await file.arrayBuffer())
 	);
 	return json({ success: true });

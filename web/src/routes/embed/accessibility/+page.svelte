@@ -22,7 +22,7 @@
 		const trailviewerLib = await import('@cmparks/trailviewer');
 		const options = trailviewerLib.defaultOptions;
 		options.initial = data.accessibleTrails[0].initImgId;
-		options.mapboxKey = env.PUBLIC_MAPBOX_KEY;
+		options.mapboxKey = env.PUBLIC_TV_MAPBOX_KEY;
 		options.target = 'viewer';
 		const sequences: number[] = [];
 		const groups: number[] = [];

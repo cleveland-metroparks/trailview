@@ -1,11 +1,11 @@
 FROM ubuntu:24.04
 
 WORKDIR /setup
-RUN apt update && apt upgrade -y
-RUN apt install -y curl moreutils daemontools
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y curl moreutils daemontools
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
 RUN bash nodesource_setup.sh
-RUN apt install -y nodejs
+RUN apt-get install -y nodejs
 
 # setup trailviewer package
 WORKDIR /app

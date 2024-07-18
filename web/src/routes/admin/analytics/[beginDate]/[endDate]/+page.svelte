@@ -270,7 +270,7 @@
 	let heatmap: mapboxgl.Map | null = null;
 	function createHeatmap() {
 		heatmap = new mapboxgl.Map({
-			accessToken: env.PUBLIC_MAPBOX_KEY,
+			accessToken: env.PUBLIC_TV_MAPBOX_KEY,
 			container: mapContainer,
 			style: 'mapbox://styles/cleveland-metroparks/cisvvmgwe00112xlk4jnmrehn?optimize=true',
 			center: [-81.682665, 41.4097766],

@@ -333,7 +333,7 @@
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
-		trailviewerOptions.mapboxKey = env.PUBLIC_MAPBOX_KEY;
+		trailviewerOptions.mapboxKey = env.PUBLIC_TV_MAPBOX_KEY;
 		trailviewerOptions.fetchPrivate = true;
 		trailviewerOptions.initialImageId = $page.url.searchParams.get('i') ?? data.initialImageId;
 		trailviewer = new trailview.TrailViewer();

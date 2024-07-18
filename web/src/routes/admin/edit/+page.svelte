@@ -22,7 +22,7 @@
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
-		trailviewerOptions.mapboxKey = env.PUBLIC_MAPBOX_KEY;
+		trailviewerOptions.mapboxKey = env.PUBLIC_TV_MAPBOX_KEY;
 		trailviewerOptions.fetchPrivate = true;
 		trailviewerOptions.initialImageId =
 			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
@@ -75,11 +75,11 @@
 		if (mapsApiTrailValue === 'unassigned') {
 			return;
 		}
-		if (env.PUBLIC_MAPS_API === '') {
+		if (env.PUBLIC_TV_MAPS_API === '') {
 			return;
 		}
 		const res = await fetch(
-			urlJoin(env.PUBLIC_MAPS_API, '/trail_geometries', mapsApiTrailValue.toString())
+			urlJoin(env.PUBLIC_TV_MAPS_API, '/trail_geometries', mapsApiTrailValue.toString())
 		);
 		if (res.status !== 200) {
 			return;

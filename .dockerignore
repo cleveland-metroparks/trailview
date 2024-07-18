@@ -16,3 +16,5 @@ trailviewer/dist
 .env.*
 *.env
 !.env.example
+
+web/data
