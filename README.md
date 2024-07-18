@@ -4,9 +4,10 @@
 
 ![Architecture Diagram](docs/architecture.png)
 
+- `data` - Mount point for Docker data
 - `docs` - Documentation
-- `prisma` - Database schema with Prisma ORM
-- `trailviewer` - Frontend client library for viewer
+- `pannellum-metroparks` - [Pannellum](https://pannellum.org/) panorama viewer fork customized for TrailView
+- `trailviewer` - Frontend client library for viewer (also has [NPM package](https://www.npmjs.com/package/@cmparks/trailviewer))
 - `web` - Admin page and API
 
 ## Development Instructions
