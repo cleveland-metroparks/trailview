@@ -220,7 +220,7 @@ export class TrailViewer extends TrailViewerBase {
             this._map.removeLayer('dots');
             this._map.removeSource('dots');
         }
-        const layerData: mapboxgl.AnySourceData = {
+        const layerData: mapboxgl.SourceSpecification = {
             type: 'vector',
             format: 'pbf',
             tiles: [
@@ -234,7 +234,7 @@ export class TrailViewer extends TrailViewerBase {
 
         this._map.addSource('dots', layerData);
 
-        const layer: mapboxgl.AnyLayer = {
+        const layer: mapboxgl.LayerSpecification = {
             id: 'dots',
             'source-layer': 'geojsonLayer',
             source: 'dots',

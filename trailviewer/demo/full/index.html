@@ -30,7 +30,8 @@
         // options.initial = { latitude: 41.413972, longitude: -81.958963 };
         options.target = 'viewer';
         options.baseUrl = 'http://localhost:5173';
-        options.mapboxKey = mapboxKey;
+        options.apiKey = window.apiKey;
+        options.mapboxKey = window.mapboxKey;
         options.filterSequences = [10, 76];
         options.filterGroups = [5];
         const viewer = new trailviewer.TrailViewer(options);
