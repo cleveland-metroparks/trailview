@@ -28,6 +28,10 @@ Copy the `.env.example` to `.env` and then change fields as necessary.
 
 The `web/` component relies on the `trailviewer/` component as a local dependency. Navigate to `trailviewer/` and follow its build instructions then come back here. This will only need to be done once as on Linux, it will create a filesystem link to the build so changes will propagate.
 
+### Install dependencies
+
+Run `npm install`
+
 ### Run dev server
 
 Run `npm run dev` to start the dev server.
