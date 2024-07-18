@@ -57,7 +57,6 @@ async function loop() {
 
 console.log('Starting');
 (async () => {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         try {
             await loop();
