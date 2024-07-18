@@ -4,7 +4,7 @@ Frontend client library for TrailView viewer
 
 ## Build Instructions
 
-```console
+```bash
 npm install
 npm run build
 ```
