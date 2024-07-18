@@ -5,8 +5,9 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "svelte-kit sync && vite build",
-		"post-clone": "npm run build-trailviewer && npm ci",
+		"post-clone": "npm run build-pannellum && npm run build-trailviewer && npm ci",
 		"build-trailviewer": "cd ../trailviewer && npm ci && npm run build",
+		"build-pannellum": "cd ../pannellum-metroparks/utils/build && ./build.sh",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -32,7 +33,6 @@
 		"@types/node": "^20.14.11",
 		"@types/node-cron": "^3.0.11",
 		"@types/uuid": "^10.0.0",
-		"typescript-eslint": "^8.0.0-alpha.45",
 		"drizzle-kit": "^0.23.0",
 		"eslint": "^9.7.0",
 		"eslint-config-prettier": "^9.1.0",
@@ -45,11 +45,12 @@
 		"svelte-check": "^3.8.4",
 		"tslib": "^2.6.3",
 		"typescript": "^5.5.3",
+		"typescript-eslint": "^8.0.0-alpha.45",
 		"vite": "^5.3.4"
 	},
 	"type": "module",
 	"dependencies": {
-		"@cmparks/pannellum": "^2.7.0",
+		"@cmparks/pannellum": "file:../pannellum-metroparks",
 		"@cmparks/trailviewer": "file:../trailviewer",
 		"apexcharts": "^3.50.0",
 		"bootstrap": "^5.3.3",
