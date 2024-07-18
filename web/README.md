@@ -32,6 +32,10 @@ The `web/` component relies on the `trailviewer/` component as a local dependenc
 
 Run `npm install`
 
+### Push Database Schema
+
+To set up the new dev database, you will need to run `npx drizzle-kit push` to push the schema to the database.
+
 ### Run dev server
 
 Run `npm run dev` to start the dev server.
