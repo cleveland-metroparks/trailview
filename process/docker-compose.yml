@@ -2,7 +2,7 @@ services:
     trailview-process:
         build: .
         environment:
-            TV_IMAGES_PATH: '/trails'
+            TV_IMAGES_PATH: /trails
             TV_WEB_URL: ${TV_WEB_URL}
             TV_WEB_API_KEY: ${TV_WEB_API_KEY}
         restart: unless-stopped

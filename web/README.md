@@ -2,7 +2,7 @@
 
 This is the admin site for uploading and editing images
 
-## Dev Instructions
+## Development Instructions
 
 Development and Deployment are meant to be on a Linux platform, specifically Ubuntu.
 
