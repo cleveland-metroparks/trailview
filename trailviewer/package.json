@@ -29,7 +29,9 @@
         }
     },
     "scripts": {
+        "post-clone": "npm run build-pannellum && npm ci",
         "build": "rimraf ./dist && rollup -c rollup.config.js --bundleConfigAsCjs",
+        "build-pannellum": "cd ../pannellum-metroparks/utils/build && ./build.sh",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
         "check": "tsc -noEmit",
@@ -38,7 +40,7 @@
         "pre-commit": "npm run format && npm run lint && npm run check"
     },
     "devDependencies": {
-        "@cmparks/pannellum": "^2.7.0",
+        "@cmparks/pannellum": "file:../pannellum-metroparks",
         "@eslint/js": "^9.7.0",
         "@rollup/plugin-commonjs": "^26.0.1",
         "@rollup/plugin-node-resolve": "^15.2.3",

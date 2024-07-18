@@ -256,6 +256,7 @@ export class TrailViewer extends TrailViewerBase {
             layer.filter = [
                 'in',
                 ['get', 'sequenceId'],
+                // @ts-expect-error: For now since mapboxgl types are messed up
                 ['literal', this._extended_options.filterSequences],
             ];
         } else if (
@@ -264,6 +265,7 @@ export class TrailViewer extends TrailViewerBase {
         ) {
             layer.filter = [
                 'any',
+                // @ts-expect-error: For now since mapboxgl types are messed up
                 ...this._extended_options.filterGroups.map((f) => {
                     return ['in', f, ['get', 'groupIds']];
                 }),
@@ -277,8 +279,10 @@ export class TrailViewer extends TrailViewerBase {
                 [
                     'in',
                     ['get', 'sequenceId'],
+                    // @ts-expect-error: For now since mapboxgl types are messed up
                     ['literal', this._extended_options.filterSequences],
                 ],
+                // @ts-expect-error: For now since mapboxgl types are messed up
                 ...this._extended_options.filterGroups.map((f) => {
                     return ['in', f, ['get', 'groupIds']];
                 }),
