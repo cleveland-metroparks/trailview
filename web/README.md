@@ -4,13 +4,23 @@ This is the admin site for uploading and editing images
 
 ## Dev Instructions
 
-Development and Deployment are meant to be on a Linux platform.
+Development and Deployment are meant to be on a Linux platform, specifically Ubuntu.
+
+If you are on Windows, please install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) with Ubuntu 22.04
+
+Prerequisites include
+ - Docker
+ - NodeJS 20.x
+
+Install Docker with these [instructions](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository).
+
+Install NodeJS 20.x with these [instructions](https://github.com/nodesource/distributions?tab=readme-ov-file#using-ubuntu-nodejs-20).
+
+Verify the correct version of NodeJS is installed by running `node --version` and you should get `v20.x`, this is very important that the right version is installed.
 
 If you are using an IDE or VSCode, open the `web/` subdirectory as the main workspace folder.
 
 ### Set up Development Database
-
-This assumes you have docker installed.
 
 Navigate to `docker/dev-postgis` and run
 
@@ -22,19 +32,15 @@ This will run the database locally on port `5432`
 
 ### Edit `.env` file
 
-Copy the `.env.example` to `.env` and then change fields as necessary.
-
-### Build `trailviewer`
-
-The `web/` component relies on the `trailviewer/` component as a local dependency. Navigate to `trailviewer/` and follow its build instructions then come back here. This will only need to be done once as on Linux, it will create a filesystem link to the build so changes will propagate.
+Copy the `.env.example` to `.env` and then change fields as necessary. The database field will already match the credentials on the dev database so really the only things that need changed is the `TV_IMAGES_PATH` which is the local path where TrailView images are stored when they are uploaded. Make sure to select a path that is empty.
 
 ### Install dependencies
 
-Run `npm install`
+Run `npm run post-clone` which will build the `trailviewer` dependency and then install the rest of the dependencies from npm.
 
 ### Push Database Schema
 
-To set up the new dev database, you will need to run `npx drizzle-kit push` to push the schema to the database.
+To set up the new dev database, you will need to run `npx drizzle-kit push` to push the schema to the database. You will need to run this anytime you edit `db/schema.ts`.
 
 ### Run dev server
 
