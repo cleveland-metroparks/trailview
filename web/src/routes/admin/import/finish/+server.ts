@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { db } from '$lib/server/db';
-import { pascalCase } from 'pascal-case';
+import { pascalCase } from 'change-case';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
 

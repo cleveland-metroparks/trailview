@@ -2,7 +2,7 @@ import type { RequestHandler } from './$types';
 import fs from 'fs';
 import { json } from '@sveltejs/kit';
 import { join } from 'path';
-import { pascalCase } from 'pascal-case';
+import { pascalCase } from 'change-case';
 import { env } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
