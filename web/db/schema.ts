@@ -14,20 +14,6 @@ import {
 	geometry
 } from 'drizzle-orm/pg-core';
 
-export const adminAccount = pgTable('admin_account', {
-	id: serial('id').notNull().primaryKey(),
-	username: varchar('username', { length: 256 }).notNull().unique(),
-	password: varchar('password', { length: 256 }).notNull()
-});
-
-export const session = pgTable('session', {
-	id: uuid('id').notNull().primaryKey(),
-	adminAccountId: integer('admin_account_id')
-		.notNull()
-		.references(() => adminAccount.id, { onDelete: 'cascade' }),
-	createdAt: timestamp('created_at').notNull().defaultNow()
-});
-
 export const status = pgEnum('status', ['upload', 'blur', 'tile', 'manifest', 'done']);
 
 export const sequence = pgTable('sequence', {

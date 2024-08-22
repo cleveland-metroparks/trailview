@@ -1,18 +1,13 @@
 import { isApiAuth } from '$api/common';
-import { building } from '$app/environment';
+import { building, dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
-import { isSessionValid } from '$lib/server/auth';
+import { getAuthUrl, isSessionValid } from '$lib/server/auth-entra';
 import { db, schema } from '$lib/server/db';
 import { error, redirect, type Handle } from '@sveltejs/kit';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
 
 if (!building) {
-	await db
-		.insert(schema.adminAccount)
-		.values({ username: env.TV_ADMIN_USER, password: env.TV_ADMIN_PASSWORD })
-		.onConflictDoUpdate({
-			target: schema.adminAccount.username,
-			set: { password: env.TV_ADMIN_PASSWORD }
-		});
 	if (env.TV_PROCESS_WEB_API_KEY !== undefined) {
 		await db
 			.insert(schema.apiKey)
@@ -32,6 +27,10 @@ function appendSecurityHeaders(res: Response) {
 	res.headers.append('Referrer-Policy', 'same-origin');
 	res.headers.append('X-XSS-Protection', '1; mode=block');
 }
+
+const accessTokenSchema = z.object({
+	name: z.string()
+});
 
 export const handle = (async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/api')) {
@@ -59,9 +58,27 @@ export const handle = (async ({ event, resolve }) => {
 		return res;
 	}
 	if (event.url.pathname.startsWith('/admin')) {
-		if ((await isSessionValid(event.cookies)) !== true) {
-			throw redirect(302, '/login');
+		const accessToken = event.cookies.get('accessToken');
+		if (accessToken !== undefined && (await isSessionValid(event.cookies)) === true) {
+			event.locals.accessToken = accessToken;
+			const decoded = jwt.decode(accessToken);
+			const accessTokenParse = accessTokenSchema.safeParse(decoded);
+			if (accessTokenParse.success === true) {
+				event.locals.entraName = accessTokenParse.data.name;
+			} else {
+				console.error('Failed to parse Entra accessToken name');
+			}
+			const response = await resolve(event);
+			return response;
 		}
+		const auth = await getAuthUrl();
+		event.cookies.set('state', auth.state, { path: '/', httpOnly: true, secure: !dev });
+		event.cookies.set('codeVerifier', auth.codeVerifier, {
+			path: '/',
+			httpOnly: true,
+			secure: !dev
+		});
+		throw redirect(303, auth.url);
 	}
 	const res = await resolve(event);
 	appendSecurityHeaders(res);

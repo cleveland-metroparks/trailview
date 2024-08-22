@@ -1,9 +1,9 @@
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { and, eq } from 'drizzle-orm';
-import { isSessionValid } from '$lib/server/auth';
 import type { Cookies } from '@sveltejs/kit';
 import z from 'zod';
+import { isSessionValid } from '$lib/server/auth-entra';
 
 export type ImageData = {
 	id: string;
