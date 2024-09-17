@@ -1,11 +1,11 @@
-import { isApiAuth } from '$api/common';
 import { building, dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import { getAuthUrl, isSessionValid } from '$lib/server/auth-entra';
 import { db, schema } from '$lib/server/db';
-import { error, redirect, type Handle } from '@sveltejs/kit';
+import { redirect, type Handle } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { env as envPublic } from '$env/dynamic/public';
 
 if (!building) {
 	if (env.TV_PROCESS_WEB_API_KEY !== undefined) {
@@ -43,14 +43,14 @@ export const handle = (async ({ event, resolve }) => {
 				}
 			});
 		}
-		if (
-			!event.url.pathname.startsWith('/api/pan-image') &&
-			!event.url.pathname.startsWith('/api/tiles')
-		) {
-			if ((await isApiAuth(event.cookies, event.request.headers)) === false) {
-				throw error(403, 'Unauthorized');
-			}
-		}
+		// if (
+		// 	!event.url.pathname.startsWith('/api/pan-image') &&
+		// 	!event.url.pathname.startsWith('/api/tiles')
+		// ) {
+		// 	if ((await common.isApiAuth(event.cookies, event.request.headers)) === false) {
+		// 		throw error(403, 'Unauthorized');
+		// 	}
+		// }
 		const res = await resolve(event);
 		res.headers.append('Access-Control-Allow-Origin', '*');
 		res.headers.append('Access-Control-Allow-Headers', '*');

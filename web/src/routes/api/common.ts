@@ -2,7 +2,6 @@ import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { and, eq } from 'drizzle-orm';
 import type { Cookies } from '@sveltejs/kit';
-import z from 'zod';
 import { isSessionValid } from '$lib/server/auth-entra';
 
 export type ImageData = {
@@ -31,25 +30,25 @@ export const imageQuerySelect = {
 
 const apiHeaderKey = 'X-API-Key';
 
-export async function isApiAuth(cookies: Cookies, headers: Headers): Promise<boolean> {
-	const headerValue = headers.get(apiHeaderKey);
-	if (headerValue === null) {
-		return await isSessionValid(cookies);
-	}
-	const keyParse = z.string().uuid().safeParse(headerValue);
-	if (keyParse.success !== true) {
-		return false;
-	}
-	const apiKeyQuery = await db
-		.select({})
-		.from(schema.apiKey)
-		.where(and(eq(schema.apiKey.key, headerValue), eq(schema.apiKey.active, true)));
-	const apiKey = apiKeyQuery.at(0);
-	if (apiKey === undefined) {
-		return false;
-	}
-	return true;
-}
+// export async function isApiAuth(cookies: Cookies, headers: Headers): Promise<boolean> {
+// 	const headerValue = headers.get(apiHeaderKey);
+// 	if (headerValue === null) {
+// 		return await isSessionValid(cookies);
+// 	}
+// 	const keyParse = z.string().uuid().safeParse(headerValue);
+// 	if (keyParse.success !== true) {
+// 		return false;
+// 	}
+// 	const apiKeyQuery = await db
+// 		.select({})
+// 		.from(schema.apiKey)
+// 		.where(and(eq(schema.apiKey.key, headerValue), eq(schema.apiKey.active, true)));
+// 	const apiKey = apiKeyQuery.at(0);
+// 	if (apiKey === undefined) {
+// 		return false;
+// 	}
+// 	return true;
+// }
 
 export async function isApiAdmin(cookies: Cookies, headers: Headers): Promise<boolean> {
 	if ((await isSessionValid(cookies)) === true) {

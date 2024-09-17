@@ -10,6 +10,7 @@
 	import type { AccessibleTrailName } from './InfoContent.svelte';
 	import imgChevronLeft from '$lib/assets/icons/chevron-left.svg';
 	import imgChevronRight from '$lib/assets/icons/chevron-right.svg';
+	import { page } from '$app/stores';
 
 	export let data: PageData;
 
@@ -24,6 +25,7 @@
 		options.initial = data.accessibleTrails[0].initImgId;
 		options.mapboxKey = env.PUBLIC_TV_MAPBOX_KEY;
 		options.target = 'viewer';
+		options.baseUrl = $page.url.origin;
 		const sequences: number[] = [];
 		const groups: number[] = [];
 		for (const t of data.accessibleTrails) {
