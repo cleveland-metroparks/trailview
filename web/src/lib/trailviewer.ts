@@ -5,6 +5,7 @@ import '@cmparks/pannellum/build/pannellum.js';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@cmparks/pannellum/build/pannellum.css';
 import type { PatchRequestType } from '../routes/admin/edit/+server';
+import { env } from '$env/dynamic/private';
 
 declare const pannellum: PannellumViewer;
 
@@ -94,7 +95,7 @@ export const defaultOptions: TrailViewerOptions = {
 	panoramaTarget: 'trailview_panorama',
 	mapTarget: 'trailview_map',
 	initialImageId: undefined,
-	baseUrl: 'https://trailview.cmparks.net',
+	baseUrl: env.ORIGIN,
 	mapboxKey: undefined,
 	navArrowMinAngle: -25,
 	navArrowMaxAngle: -20,
