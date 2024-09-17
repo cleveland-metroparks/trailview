@@ -5,7 +5,6 @@ import { db, schema } from '$lib/server/db';
 import { redirect, type Handle } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { env as envPublic } from '$env/dynamic/public';
 
 if (!building) {
 	if (env.TV_PROCESS_WEB_API_KEY !== undefined) {
