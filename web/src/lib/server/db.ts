@@ -14,7 +14,8 @@ export const db = (
 					password: env.TV_DB_PASSWORD,
 					host: env.TV_DB_HOST,
 					port: parseInt(env.TV_DB_PORT),
-					database: env.TV_DB_DATABASE
+					database: env.TV_DB_DATABASE,
+					max: 2
 				}),
 				{ schema }
 			)
