@@ -29,15 +29,9 @@ export const PATCH: RequestHandler = async ({ request, cookies, params }) => {
 			status: 400
 		});
 	}
-	const updatedSequence = await db
+	await db
 		.update(schema.sequence)
 		.set({ status: bodyParse.data.status })
-		.where(eq(schema.sequence.id, paramSequenceId.data))
-		.returning();
-	if (updatedSequence.length === 0 || updatedSequence.at(0)?.status !== bodyParse.data.status) {
-		return json({ success: false, message: 'Failed to update database' } satisfies PatchResType, {
-			status: 500
-		});
-	}
+		.where(eq(schema.sequence.id, paramSequenceId.data));
 	return json({ success: true } satisfies PatchResType);
 };
