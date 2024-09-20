@@ -40,14 +40,19 @@
 		}
 		for (let i = 0; i < files.length; i++) {
 			let success = false;
-			for (let j = 0; j < 5; ++j) {
+			for (let j = 0; j < 20; ++j) {
 				const file = files[i];
 				const formData = new FormData();
 				formData.append('file', file);
 				formData.append('fileName', file.name);
 				formData.append('sequenceName', sequenceName);
 				progressFileName = file.name;
-				const res = await fetch('/admin/import', { method: 'POST', body: formData });
+				const res = await fetch('/admin/import', {
+					method: 'POST',
+					body: formData,
+					cache: 'no-store',
+					keepalive: false
+				});
 				const data = await res.json();
 				if (data.success !== true) {
 					continue;
