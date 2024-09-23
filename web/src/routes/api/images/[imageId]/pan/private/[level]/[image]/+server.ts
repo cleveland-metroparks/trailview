@@ -3,10 +3,12 @@ import { db } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { join } from 'path';
-import { promises as fs } from 'fs';
+import { promises as fsp } from 'fs';
+import * as fs from 'fs';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
 import { isApiAdmin } from '$api/common';
+import { readableToWebStream } from '$lib/util';
 
 const imageFileRegex = new RegExp(/^[a-z][0-9]_[0-9]\.jpg$/);
 
@@ -49,11 +51,13 @@ export const GET = (async ({ params, cookies, request }) => {
 		params.level,
 		params.image
 	);
-	const file = await fs.readFile(filePath);
-	return new Response(file, {
+	const stats = await fsp.stat(filePath);
+	const readable = fs.createReadStream(filePath);
+	return new Response(readableToWebStream(readable), {
 		headers: {
 			'Content-Type': 'image/jpeg',
-			'Content-Disposition': `inline; filename=${params.image}`
+			'Content-Length': stats.size.toString(),
+			'Content-Disposition': `inline; filename="${params.image}"`
 		}
 	});
 }) satisfies RequestHandler;
