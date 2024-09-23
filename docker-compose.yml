@@ -12,7 +12,7 @@ services:
       TV_IMAGES_PATH: /trails
       TV_ADMIN_USER: ${TV_ADMIN_USER}
       TV_ADMIN_PASSWORD: ${TV_ADMIN_PASSWORD}
-      TV_PROCESS_WEB_API_KEY: ${TV_PROCESS_WEB_API_KEY}
+      TV_WEB_PROCESS_SECRET: ${TV_WEB_PROCESS_SECRET}
       TV_ENTRA_TENANT_ID: ${TV_ENTRA_TENANT_ID}
       TV_ENTRA_CLIENT_ID: ${TV_ENTRA_CLIENT_ID}
       TV_ENTRA_CLIENT_SECRET_VALUE: ${TV_ENTRA_CLIENT_SECRET_VALUE}
@@ -55,7 +55,7 @@ services:
     environment:
       TV_IMAGES_PATH: /trails
       TV_WEB_URL: http://trailview-web:3000
-      TV_PROCESS_WEB_API_KEY: ${TV_PROCESS_WEB_API_KEY}
+      TV_WEB_PROCESS_SECRET: ${TV_WEB_PROCESS_SECRET}
       TZ: ${TZ}
     restart: unless-stopped
     volumes:

@@ -3,6 +3,7 @@ import * as schema from '$db/schema';
 import { and, eq } from 'drizzle-orm';
 import type { Cookies } from '@sveltejs/kit';
 import { isSessionValid } from '$lib/server/auth-entra';
+import { env } from '$env/dynamic/private';
 
 export type ImageData = {
 	id: string;
@@ -57,6 +58,9 @@ export async function isApiAdmin(cookies: Cookies, headers: Headers): Promise<bo
 	const headerValue = headers.get(apiHeaderKey);
 	if (headerValue === null) {
 		return false;
+	}
+	if (env.TV_WEB_PROCESS_SECRET !== undefined && headerValue === env.TV_WEB_PROCESS_SECRET) {
+		return true;
 	}
 	const apiKeyQuery = await db
 		.select({ role: schema.apiKey.role })

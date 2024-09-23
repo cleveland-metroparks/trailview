@@ -15,13 +15,13 @@ if (process.env.TV_IMAGES_PATH === undefined) {
 if (process.env.TV_WEB_URL === undefined) {
     throw new Error('WEB_URL not specified in env');
 }
-if (process.env.TV_PROCESS_WEB_API_KEY === undefined) {
-    throw new Error('TV_PROCESS_WEB_API_KEY not specified in env');
+if (process.env.TV_WEB_PROCESS_SECRET === undefined) {
+    throw new Error('TV_WEB_PROCESS_SECRET not specified in env');
 }
 
 export const imagesPath = process.env.TV_IMAGES_PATH ?? '/trails';
 export const webUrl = process.env.TV_WEB_URL;
-export const apiKey = process.env.TV_PROCESS_WEB_API_KEY;
+export const apiKey = process.env.TV_WEB_PROCESS_SECRET;
 
 async function loop() {
     const sequences = await fetchSequenceStatuses();

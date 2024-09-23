@@ -1,22 +1,8 @@
-import { building, dev } from '$app/environment';
-import { env } from '$env/dynamic/private';
+import { dev } from '$app/environment';
 import { getAuthUrl, isSessionValid } from '$lib/server/auth-entra';
-import { db, schema } from '$lib/server/db';
 import { redirect, type Handle } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-
-if (!building) {
-	if (env.TV_PROCESS_WEB_API_KEY !== undefined) {
-		await db
-			.insert(schema.apiKey)
-			.values({ key: env.TV_PROCESS_WEB_API_KEY, active: true, name: 'process', role: 'admin' })
-			.onConflictDoUpdate({
-				target: schema.apiKey.name,
-				set: { key: env.TV_PROCESS_WEB_API_KEY, active: true, role: 'admin' }
-			});
-	}
-}
 
 function appendSecurityHeaders(res: Response) {
 	// Security-related headers
