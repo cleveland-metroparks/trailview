@@ -71,7 +71,7 @@ export const GET = (async ({ url, params, cookies, request }) => {
 	}
 	const neighbors = await getNeighbors({
 		imageId: imageIdParse.data,
-		includePrivate: false,
+		includePrivate,
 		groupsFilter,
 		sequencesFilter
 	});
