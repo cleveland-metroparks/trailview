@@ -3,13 +3,19 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
-import { imageQuerySelect } from '$api/common';
-import type { GetResType } from './common';
+import { imageQuerySelect, isApiAdmin } from '$api/common';
+import { type ImageData } from '$api/common';
 
-export const GET = (async () => {
-	const imagesQuery = await db
-		.select(imageQuerySelect)
-		.from(schema.image)
-		.where(eq(schema.image.public, true));
+export type GetResType = { success: false; message: string } | { success: true; data: ImageData[] };
+
+export const GET = (async ({ cookies, request, url }) => {
+	const includePrivate = url.searchParams.get('private') !== null;
+	if (includePrivate && !(await isApiAdmin(cookies, request.headers))) {
+		return json({ success: false, message: 'Unauthorized' } satisfies GetResType, { status: 401 });
+	}
+	const imagesQueryBase = db.select(imageQuerySelect).from(schema.image);
+	const imagesQuery = includePrivate
+		? await imagesQueryBase
+		: await imagesQueryBase.where(eq(schema.image.public, true));
 	return json({ success: true, data: imagesQuery } satisfies GetResType);
 }) satisfies RequestHandler;

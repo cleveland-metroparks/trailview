@@ -3,10 +3,14 @@ import { db, schema } from '$lib/server/db';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { type ImageData } from '$api/common';
+
+export type GetResType = { success: false; message: string } | { success: true; data: ImageData[] };
 
 export const GET = (async ({ url, cookies, request }) => {
-	if (!(await isApiAdmin(cookies, request.headers))) {
-		return json({ success: false, message: 'Unauthorized' }, { status: 401 });
+	const includePrivate = url.searchParams.get('private') !== null;
+	if (includePrivate && !(await isApiAdmin(cookies, request.headers))) {
+		return json({ success: false, message: 'Unauthorized' } satisfies GetResType, { status: 401 });
 	}
 	const paramMinLat = url.searchParams.get('minLat');
 	const paramMinLng = url.searchParams.get('minLng');
@@ -19,7 +23,10 @@ export const GET = (async ({ url, cookies, request }) => {
 		paramMaxLng === null
 	) {
 		return json(
-			{ success: false, message: 'minLat, minLng, maxLat, and maxLng query params required' },
+			{
+				success: false,
+				message: 'minLat, minLng, maxLat, and maxLng query params required'
+			} satisfies GetResType,
 			{ status: 400 }
 		);
 	}
@@ -28,7 +35,9 @@ export const GET = (async ({ url, cookies, request }) => {
 	const maxLat = z.coerce.number().finite().safeParse(paramMaxLat);
 	const maxLng = z.coerce.number().finite().safeParse(paramMaxLng);
 	if (!minLat.success || !minLng.success || !maxLat.success || !maxLng.success) {
-		return json({ success: false, message: 'Invalid query param values' });
+		return json({ success: false, message: 'Invalid query param values' } satisfies GetResType, {
+			status: 400
+		});
 	}
 	const imagesQuery = await db
 		.select(imageQuerySelect)
@@ -36,5 +45,5 @@ export const GET = (async ({ url, cookies, request }) => {
 		.where(
 			sql`ST_Within(${schema.image.coordinates}), ST_MakeEnvelope(${minLng}, ${minLat}, ${maxLng}, ${maxLat}, 4326)`
 		);
-	return json({ success: true, data: imagesQuery });
+	return json({ success: true, data: imagesQuery } satisfies GetResType);
 }) satisfies RequestHandler;

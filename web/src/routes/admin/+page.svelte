@@ -35,7 +35,7 @@
 	import InspectorMove from './InspectorMove.svelte';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import type { PageData } from './$types';
-	import type { GetResType as GroupGetResType } from '$api/group/[groupId]/common';
+	import type { GetResType as GroupGetResType } from '$api/group/[groupId]/+server';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
 	import { scale, slide } from 'svelte/transition';
@@ -111,7 +111,7 @@
 	}
 
 	async function goToGroup(groupId: number) {
-		const res = await fetch(`/api/group/${groupId}/private`, { method: 'GET' });
+		const res = await fetch(`/api/group/${groupId}?private`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === true) {
 			const image = resData.data.images.at(0);
@@ -132,7 +132,7 @@
 		) {
 			return;
 		}
-		const res = await fetch(`/api/group/${groupId}/private`, { method: 'GET' });
+		const res = await fetch(`/api/group/${groupId}?private`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === false) {
 			formAlert.popup(resData);

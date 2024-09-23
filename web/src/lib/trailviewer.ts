@@ -209,7 +209,7 @@ export class TrailViewer implements TrailViewerEvents {
 	}
 
 	async fetchAllImageData() {
-		const res = await fetch('/api/images/private', { method: 'GET' });
+		const res = await fetch('/api/images?private', { method: 'GET' });
 		const imagesData = await res.json();
 		if (imagesData.success !== true) {
 			throw new Error('Unable to fetch all image data');
@@ -720,7 +720,7 @@ export class TrailViewer implements TrailViewerEvents {
 				this._options.baseUrl,
 				'/api/images',
 				initImageId,
-				this._options.fetchPrivate ? 'private' : ''
+				this._options.fetchPrivate ? '?private' : ''
 			)
 		);
 		const data = await res.json();
@@ -779,7 +779,7 @@ export class TrailViewer implements TrailViewerEvents {
 				throw new Error('Fetching image data unsuccessful');
 			}
 		} else {
-			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images/private'), {
+			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images?private'), {
 				method: 'GET'
 			});
 			const data = await res.json();
@@ -942,7 +942,7 @@ export class TrailViewer implements TrailViewerEvents {
 					this._options.baseUrl,
 					'/api/images',
 					imageId,
-					this._options.fetchPrivate ? 'private' : ''
+					this._options.fetchPrivate ? '?private' : ''
 				)
 			);
 			const data = await res.json();
