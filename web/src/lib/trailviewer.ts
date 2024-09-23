@@ -94,7 +94,7 @@ export const defaultOptions: TrailViewerOptions = {
 	panoramaTarget: 'trailview_panorama',
 	mapTarget: 'trailview_map',
 	initialImageId: undefined,
-	baseUrl: process.env.ORIGIN!,
+	baseUrl: 'https://trailview.clevelandmetroparks.com',
 	mapboxKey: undefined,
 	navArrowMinAngle: -25,
 	navArrowMaxAngle: -20,
