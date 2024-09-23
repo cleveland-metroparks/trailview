@@ -39,6 +39,8 @@
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
 	import { scale, slide } from 'svelte/transition';
+	import type { GetResType as SequenceImageIdsGetResType } from '$api/sequences/[sequenceId]/image-ids/common';
+	import type { GetResType as SequenceImageCoordinatesGetResType } from '$api/sequences/[sequenceId]/image-coordinates/+server';
 
 	export let data: PageData;
 
@@ -205,33 +207,37 @@
 		selectedGroupId = undefined;
 	}
 
-	function onSequenceSelectChange(event: Event) {
+	async function onSequenceSelectChange(event: Event) {
 		if (trailviewer === undefined) {
+			console.error('Failed to select sequence, trailviewer is undefined');
 			return;
 		}
-		if (trailviewer.allImageData !== undefined) {
-			let sequenceId: number | undefined;
-			const image = trailviewer.allImageData.find((image) => {
-				const sequence = data.sequences.find((sequence) => {
-					return sequence.id === image.sequenceId;
-				});
-				if (!sequence) {
-					return;
-				}
-				if (sequence.name === (event.target as HTMLSelectElement).value) {
-					sequenceId = sequence.id;
-					return true;
-				} else {
-					return false;
-				}
-			});
-			if (image) {
-				trailviewer.goToImageID(image.id);
-				inspectorPage = 'Sequence';
-				if (sequenceId !== undefined) {
-					highlightSequence(sequenceId);
-				}
-			}
+		const sequenceId = parseInt((event.target as HTMLSelectElement).value);
+		if (isNaN(sequenceId)) {
+			console.error('Failed to select sequence, sequenceId is NaN');
+			return;
+		}
+		const res = await fetch(`/api/sequences/${sequenceId}/image-ids/private?limit=1`, {
+			method: 'GET'
+		});
+		if (!res.ok) {
+			console.error('Failed to select sequence, status =', res.status);
+			return;
+		}
+		const resJson = (await res.json()) as SequenceImageIdsGetResType;
+		if (!resJson.success) {
+			console.error('Failed to select sequence, response not successful');
+			return;
+		}
+		const imageId = resJson.data.at(0);
+		if (imageId === undefined) {
+			console.error('Failed to select sequence, no images');
+			return;
+		}
+		trailviewer.goToImageID(imageId);
+		inspectorPage = 'Sequence';
+		if (sequenceId !== undefined) {
+			highlightSequence(sequenceId);
 		}
 		goToSequenceSelect.value = 'select';
 	}
@@ -253,30 +259,36 @@
 		}
 	}
 
-	function highlightSequence(sequenceId: number) {
-		if (
-			trailviewer === undefined ||
-			trailviewer.map === undefined ||
-			trailviewer.allImageData === undefined
-		) {
+	async function highlightSequence(sequenceId: number) {
+		if (trailviewer === undefined || trailviewer.map === undefined) {
+			console.error('Failed to highlight sequence, trailviewer or map is undefined');
 			return;
 		}
+		const res = await fetch(`/api/sequences/${sequenceId}/image-coordinates?private`, {
+			method: 'GET'
+		});
+		if (!res.ok) {
+			console.error('Failed to highlight sequence, status =', res.status);
+			return;
+		}
+		const resJson = (await res.json()) as SequenceImageCoordinatesGetResType;
+		if (!resJson.success) {
+			console.error('Failed to highlight sequence, response unsuccessful');
+			return;
+		}
+		const images = resJson.data;
 		const geoJsonData: FeatureCollection = {
 			type: 'FeatureCollection',
-			features: trailviewer.allImageData
-				.filter((i) => {
-					return i.sequenceId === sequenceId;
-				})
-				.map((i) => {
-					return {
-						type: 'Feature',
-						geometry: {
-							type: 'Point',
-							coordinates: i.coordinates
-						},
-						properties: {}
-					};
-				})
+			features: images.map((i) => {
+				return {
+					type: 'Feature',
+					geometry: {
+						type: 'Point',
+						coordinates: i.coordinates
+					},
+					properties: {}
+				};
+			})
 		};
 		if (trailviewer.map.getLayer('sequenceLayer') === undefined) {
 			trailviewer.map.addSource('sequenceSource', {
@@ -393,7 +405,7 @@
 		>
 			<option value="select">Go To Sequence</option>
 			{#each data.sequences as sequence}
-				<option class="sequence-option" id={`sequence_${sequence.id}`}>{sequence.name}</option>
+				<option class="sequence-option" value={sequence.id}>{sequence.name}</option>
 			{/each}
 		</select>
 		<select

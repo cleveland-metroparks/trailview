@@ -4,7 +4,10 @@ import { querySequenceImageIds, type GetResType } from '../common';
 import z from 'zod';
 import { isApiAdmin } from '$api/common';
 
-export const GET = (async ({ params, cookies, request }) => {
+export const GET = (async ({ params, cookies, request, url }) => {
+	const paramLimit = url.searchParams.get('limit');
+	const limitParse = z.coerce.number().int().finite().safeParse(paramLimit);
+	const limit = paramLimit !== null && limitParse.success ? limitParse.data : null;
 	if ((await isApiAdmin(cookies, request.headers)) !== true) {
 		return json({ success: false, message: 'Unauthorized' } satisfies GetResType, { status: 403 });
 	}
@@ -16,7 +19,8 @@ export const GET = (async ({ params, cookies, request }) => {
 	}
 	const imageIds = await querySequenceImageIds({
 		sequenceId: paramSequenceId.data,
-		includePrivate: true
+		includePrivate: true,
+		limit: limit ?? undefined
 	});
 	return json({ success: true, data: imageIds } satisfies GetResType);
 }) satisfies RequestHandler;
