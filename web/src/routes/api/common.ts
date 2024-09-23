@@ -17,6 +17,16 @@ export type ImageData = {
 	shtHash: string;
 };
 
+export type ImageDataPrivate = {
+	id: string;
+	sequenceId: number;
+	coordinates: [number, number];
+	bearing: number;
+	flipped: boolean;
+	pitchCorrection: number;
+	public: boolean;
+};
+
 export const imageQuerySelect = {
 	id: schema.image.id,
 	sequenceId: schema.image.sequenceId,
