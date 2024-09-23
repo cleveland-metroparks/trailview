@@ -39,7 +39,7 @@
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
 	import { scale, slide } from 'svelte/transition';
-	import type { GetResType as SequenceImageIdsGetResType } from '$api/sequences/[sequenceId]/image-ids/common';
+	import type { GetResType as SequenceImageIdsGetResType } from '$api/sequences/[sequenceId]/image-ids/+server';
 	import type { GetResType as SequenceImageCoordinatesGetResType } from '$api/sequences/[sequenceId]/image-coordinates/+server';
 
 	export let data: PageData;
@@ -217,7 +217,7 @@
 			console.error('Failed to select sequence, sequenceId is NaN');
 			return;
 		}
-		const res = await fetch(`/api/sequences/${sequenceId}/image-ids/private?limit=1`, {
+		const res = await fetch(`/api/sequences/${sequenceId}/image-ids?private&limit=1`, {
 			method: 'GET'
 		});
 		if (!res.ok) {
