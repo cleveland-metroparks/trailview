@@ -227,7 +227,7 @@ export class TrailViewer extends TrailViewerBase {
                 urlJoin(
                     this._extended_options.baseUrl,
                     '/api/tiles/{z}/{x}/{y}/',
-                    this._extended_options.fetchPrivate ? 'private' : ''
+                    this._extended_options.fetchPrivate ? '?private' : ''
                 ),
             ],
         };

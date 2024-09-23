@@ -698,9 +698,10 @@ export class TrailViewer implements TrailViewerEvents {
 		const res = await fetch(
 			urlJoin(
 				this._options.baseUrl,
-				'/api/neighbors',
+				'/api/images',
 				image.id,
-				this._options.fetchPrivate ? 'private' : ''
+				'/neighbors',
+				this._options.fetchPrivate ? '?private' : ''
 			)
 		);
 		const data = await res.json();

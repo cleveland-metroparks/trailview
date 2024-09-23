@@ -439,9 +439,10 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
         const neighborsUrl = new URL(
             urlJoin(
                 this._options.baseUrl,
-                '/api/neighbors',
+                '/api/images',
                 image.id,
-                this._options.fetchPrivate ? 'private' : ''
+                '/neighbors',
+                this._options.fetchPrivate ? '?private' : ''
             )
         );
         if (this._options.filterSequences !== undefined) {
@@ -484,10 +485,10 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             const nearRes = await fetch(
                 urlJoin(
                     this._options.baseUrl,
-                    'api/near/',
-                    initial.latitude.toString(),
-                    initial.longitude.toString(),
-                    this._options.fetchPrivate ? 'private' : ''
+                    'api/images/near',
+                    `?lat=${initial.latitude.toString()}`,
+                    `?lng=${initial.longitude.toString()}`,
+                    this._options.fetchPrivate ? '?private' : ''
                 ),
                 { headers: { 'X-API-Key': this._options.apiKey } }
             );
@@ -503,7 +504,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                 this._options.baseUrl,
                 '/api/images',
                 initImageId,
-                this._options.fetchPrivate ? 'private' : ''
+                this._options.fetchPrivate ? '?private' : ''
             ),
             { headers: { 'X-API-Key': this._options.apiKey } }
         );
@@ -667,7 +668,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                     this._options.baseUrl,
                     '/api/images',
                     imageId,
-                    this._options.fetchPrivate ? 'private' : ''
+                    this._options.fetchPrivate ? '?private' : ''
                 ),
                 { headers: { 'X-API-Key': this._options.apiKey } }
             );
