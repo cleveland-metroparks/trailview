@@ -16,7 +16,7 @@ if (process.env.TV_WEB_URL === undefined) {
     throw new Error('WEB_URL not specified in env');
 }
 if (process.env.TV_PROCESS_WEB_API_KEY === undefined) {
-    throw new Error('TV_WEB_API_KEY not specified in env');
+    throw new Error('TV_PROCESS_WEB_API_KEY not specified in env');
 }
 
 export const imagesPath = process.env.TV_IMAGES_PATH ?? '/trails';
@@ -28,6 +28,25 @@ async function loop() {
     if (sequences === null) {
         throw new Error('Unable to fetch sequence statuses');
     }
+    sequences.sort((a, b) => {
+        if (a.toDelete != b.toDelete) {
+            return a.toDelete ? -1 : 1;
+        }
+        const preferredOrder = [
+            'upload',
+            'manifest',
+            'tile',
+            'blur',
+            'done',
+        ] as const;
+        if (a.status != b.status) {
+            return (
+                preferredOrder.indexOf(a.status) -
+                preferredOrder.indexOf(b.status)
+            );
+        }
+        return 0;
+    });
     for (const sequence of sequences) {
         if (sequence.toDelete === true) {
             console.log(`=== Start Deleting: "${sequence.name}"===`);
@@ -35,20 +54,20 @@ async function loop() {
             console.log(`=== End Deleting: "${sequence.name}" ===`);
             return;
         }
-        if (sequence.status === 'blur') {
-            console.log(`==== Start Blurring Process: "${sequence.name}" ====`);
-            await processBlur(sequence);
-            console.log(`==== End Blurring Process: "${sequence.name}" ====`);
+        if (sequence.status === 'manifest') {
+            console.log(`==== Start Manifest Process: "${sequence.name}" ====`);
+            await processManifest(sequence);
+            console.log(`==== End Manifest Process: ${sequence.name} ====`);
             return;
         } else if (sequence.status === 'tile') {
             console.log(`==== Start Tiling Process: "${sequence.name}" ====`);
             await processTile(sequence);
             console.log(`==== End Tiling Process: "${sequence.name}" ====`);
             return;
-        } else if (sequence.status === 'manifest') {
-            console.log(`==== Start Manifest Process: "${sequence.name}" ====`);
-            await processManifest(sequence);
-            console.log(`==== End Manifest Process: ${sequence.name} ====`);
+        } else if (sequence.status === 'blur') {
+            console.log(`==== Start Blurring Process: "${sequence.name}" ====`);
+            await processBlur(sequence);
+            console.log(`==== End Blurring Process: "${sequence.name}" ====`);
             return;
         }
     }

@@ -9,7 +9,7 @@
         "check": "tsc -noEmit",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
-        "start": "node --env-file=.env build",
+        "start": "node --env-file=.env build/index.cjs",
         "pre-commit": "npm run format && npm run lint && npm run check"
     },
     "devDependencies": {

@@ -48,8 +48,9 @@ int main(int argc, const char** argv)
             });
         if (ends_with(file_str_lowered, ".jpg") == true) {
             std::filesystem::path output_dir_path(output_dir);
-            if (std::filesystem::path output_file = output_dir_path / file.path().filename();
-                files.size() < 100 && !exists(output_file)) {
+            std::filesystem::path output_file = output_dir_path / file.path().filename();
+            output_file.replace_extension(".png");
+            if (files.size() < 100 && !exists(output_file)) {
                 std::cout << "Input File: " << file.path().u8string() << std::endl;
                 files.push_back(file.path().u8string());
             }
