@@ -1,14 +1,11 @@
-<script context="module" lang="ts">
-	export interface InfoModalOptions {
-		title: string;
-	}
-</script>
-
 <script lang="ts">
 	import { fly, scale } from 'svelte/transition';
+	import type { AccessibleTrailName } from './InfoContent.svelte';
+	import InfoContent from './InfoContent.svelte';
+	import imgClose from '$lib/assets/icons/close.svg';
+	import imgInfo from '$lib/assets/icons/info.svg';
 
-	export let options: InfoModalOptions = { title: '' };
-	export let infoHtml = '';
+	export let trail: AccessibleTrailName;
 
 	let visible = false;
 	export function show() {
@@ -23,22 +20,22 @@
 {#if visible}
 	<div transition:fly={{ x: 100, duration: 500 }} class="modal">
 		<button on:click={hide} type="button" class="green-button close-button"
-			><img src="/icons/close.svg" alt="close icon" /></button
+			><img src={imgClose} alt="close icon" /></button
 		>
-		{#key infoHtml}
+		{#key trail}
 			<div in:fly|global={{ x: 100, duration: 500 }}>
-				<h2 class="title">{options.title}</h2>
+				<h2 class="title">{trail}</h2>
 				<hr />
 				<div class="body">
 					<!-- eslint-disable -->
-					{@html infoHtml}
+					<InfoContent selectedTrail={trail} />
 				</div>
 			</div>
 		{/key}
 	</div>
 {:else}
 	<button on:click={show} in:scale={{ delay: 200 }} out:scale class="green-button info-button"
-		><img src="/icons/info.svg" alt="open info icon" /></button
+		><img src={imgInfo} alt="open info icon" /></button
 	>
 {/if}
 

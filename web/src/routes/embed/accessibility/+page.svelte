@@ -1,12 +1,16 @@
 <script lang="ts">
 	import '@cmparks/trailviewer/dist/trailviewer.css';
-	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import { onMount } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import type { PageData } from './$types';
 	import type { TrailViewer } from '@cmparks/trailviewer';
-	import InfoModal, { type InfoModalOptions } from './InfoModal.svelte';
+	import InfoModal from './InfoModal.svelte';
 	import InfoPopup from './InfoPopup.svelte';
+	import type { AccessibleTrailName } from './InfoContent.svelte';
+	import imgChevronLeft from '$lib/assets/icons/chevron-left.svg';
+	import imgChevronRight from '$lib/assets/icons/chevron-right.svg';
+	import { page } from '$app/stores';
 
 	export let data: PageData;
 
@@ -19,8 +23,9 @@
 		const trailviewerLib = await import('@cmparks/trailviewer');
 		const options = trailviewerLib.defaultOptions;
 		options.initial = data.accessibleTrails[0].initImgId;
-		options.mapboxKey = PUBLIC_MAPBOX_KEY;
+		options.mapboxKey = env.PUBLIC_TV_MAPBOX_KEY;
 		options.target = 'viewer';
+		options.baseUrl = $page.url.origin;
 		const sequences: number[] = [];
 		const groups: number[] = [];
 		for (const t of data.accessibleTrails) {
@@ -72,19 +77,14 @@
 	}
 
 	let infoModal: InfoModal;
-	let infoModalOptions: InfoModalOptions = { title: data.accessibleTrails[0].displayName };
-	let infoModalHtml: string = data.accessibleTrails[0].infoHtml;
+	let infoModalTrail: AccessibleTrailName = 'Woodpecker Way';
 </script>
 
 <InfoPopup />
 
 <div class="container">
 	<div class="viewer-container">
-		<InfoModal
-			bind:this={infoModal}
-			bind:options={infoModalOptions}
-			bind:infoHtml={infoModalHtml}
-		/>
+		<InfoModal bind:this={infoModal} bind:trail={infoModalTrail} />
 		<div class="viewer" id="viewer" />
 	</div>
 	<div class="carousel">
@@ -93,8 +93,7 @@
 				transition:scale
 				on:click={carouselPrev}
 				type="button"
-				class="carousel-button carousel-prev"
-				><img src="/icons/chevron-left.svg" alt="scroll left" /></button
+				class="carousel-button carousel-prev"><img src={imgChevronLeft} alt="scroll left" /></button
 			>
 		{/if}
 		{#if showNextButton}
@@ -103,7 +102,7 @@
 				on:click={carouselNext}
 				type="button"
 				class="carousel-button carousel-next"
-				><img src="/icons/chevron-right.svg" alt="scroll right" /></button
+				><img src={imgChevronRight} alt="scroll right" /></button
 			>
 		{/if}
 		<div on:scroll={onCarouselScroll} bind:this={carouselContent} class="carousel-content">
@@ -112,8 +111,7 @@
 					on:click={() => {
 						if (trailviewer !== undefined) {
 							trailviewer.goToImageID(trail.initImgId);
-							infoModalOptions.title = trail.displayName;
-							infoModalHtml = trail.infoHtml;
+							infoModalTrail = trail.displayName;
 							infoModal.show();
 						}
 					}}

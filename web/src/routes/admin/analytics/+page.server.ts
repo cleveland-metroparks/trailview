@@ -1,21 +1,23 @@
-import { redirectIfSessionInvalid } from '$lib/server/auth';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { max, min } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
+import { error, redirect } from '@sveltejs/kit';
+import urlJoin from 'url-join';
 
-export const load = (async ({ cookies }) => {
-	await redirectIfSessionInvalid('/login', cookies);
-
-	const analytics = await db.analytics.findMany();
-	const hitsPerDayMap = new Map<number, number>();
-	for (const a of analytics) {
-		const count = hitsPerDayMap.get(a.date.valueOf());
-		if (count !== undefined) {
-			hitsPerDayMap.set(a.date.valueOf(), count + 1);
-		} else {
-			hitsPerDayMap.set(a.date.valueOf(), 1);
-		}
+export const load: PageServerLoad = async () => {
+	const analyticsQuery = await db
+		.select({
+			minDate: min(schema.analytics.date),
+			maxDate: max(schema.analytics.date)
+		})
+		.from(schema.analytics);
+	const row = analyticsQuery.at(0);
+	if (row === undefined || row.minDate === null || row.maxDate === null) {
+		throw error(500, 'Server error');
 	}
-	const hitsPerDay = Array.from(hitsPerDayMap.entries());
-
-	return { hitsPerDay };
-}) satisfies PageServerLoad;
+	throw redirect(
+		302,
+		urlJoin('/admin/analytics/', row.minDate.toISOString(), row.maxDate.toISOString())
+	);
+};

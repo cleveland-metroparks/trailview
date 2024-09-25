@@ -1,1 +1,5 @@
-build
+/build
+/scripts/venv
+*.env
+node_modules
+/logs

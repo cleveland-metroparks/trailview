@@ -56,7 +56,7 @@ export class TrailViewer extends TrailViewerBase {
         this._target.appendChild(this._viewerTarget);
         this.on('image-change', (image: Image) => {
             if (this._map !== undefined && this._mapMarker !== undefined) {
-                this._mapMarker.setLngLat([image.longitude, image.latitude]);
+                this._mapMarker.setLngLat(image.coordinates);
                 this._map.easeTo({
                     center: this._mapMarker.getLngLat(),
                     duration: 500,
@@ -220,20 +220,21 @@ export class TrailViewer extends TrailViewerBase {
             this._map.removeLayer('dots');
             this._map.removeSource('dots');
         }
-        const layerData: mapboxgl.AnySourceData = {
+        const layerData: mapboxgl.SourceSpecification = {
             type: 'vector',
             format: 'pbf',
             tiles: [
                 urlJoin(
                     this._extended_options.baseUrl,
-                    `/api/tiles/{z}/{x}/{y}/${this._extended_options.imageFetchType}`
+                    '/api/tiles/{z}/{x}/{y}/',
+                    this._extended_options.fetchPrivate ? '?private' : ''
                 ),
             ],
         };
 
         this._map.addSource('dots', layerData);
 
-        const layer: mapboxgl.AnyLayer = {
+        const layer: mapboxgl.LayerSpecification = {
             id: 'dots',
             'source-layer': 'geojsonLayer',
             source: 'dots',
@@ -242,7 +243,7 @@ export class TrailViewer extends TrailViewerBase {
                 'circle-radius': 10,
                 'circle-color': [
                     'case',
-                    ['==', ['get', 'visible'], true],
+                    ['==', ['get', 'public'], true],
                     '#00a108',
                     '#db8904',
                 ],

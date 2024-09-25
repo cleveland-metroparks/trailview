@@ -1,27 +1,30 @@
-import { isSessionValid } from '$lib/server/auth';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
+import { and, count, eq } from 'drizzle-orm';
 
 const patchReqType = z.object({
 	action: z.union([z.literal('addImages'), z.literal('removeImages')]),
-	imageIds: z.array(z.string().nonempty())
+	imageIds: z.array(z.string().min(1))
 });
 export type PatchReqType = z.infer<typeof patchReqType>;
 
-export const PATCH = (async ({ cookies, request, params }) => {
-	if ((await isSessionValid(cookies)) !== true) {
-		return json({ success: false, message: 'Invalid session' }, { status: 403 });
-	}
+export const PATCH = (async ({ request, params }) => {
 	const paramGroupId = parseInt(params.groupId);
-	if (isNaN(paramGroupId) || (await db.group.count({ where: { id: paramGroupId } })) === 0) {
+	const groupCountQuery = await db
+		.select({ count: count() })
+		.from(schema.group)
+		.where(eq(schema.group.id, paramGroupId));
+	if (isNaN(paramGroupId) || groupCountQuery[0].count === 0) {
 		return json({ success: false, message: 'Invalid group id' }, { status: 400 });
 	}
 	let jsonData: unknown;
 	try {
 		jsonData = await request.json();
-	} catch (error) {
+	} catch (e) {
+		console.error(e);
 		return json({ success: false, message: 'Invalid JSON' }, { status: 400 });
 	}
 	const patch = patchReqType.safeParse(jsonData);
@@ -33,17 +36,23 @@ export const PATCH = (async ({ cookies, request, params }) => {
 		const totalBatches = Math.ceil(patch.data.imageIds.length / batchSize);
 		for (let i = 0; i < totalBatches; i++) {
 			const batchIds = patch.data.imageIds.slice(i * batchSize, (i + 1) * batchSize);
-			await db.group.update({
-				where: { id: paramGroupId },
-				data: { images: { connect: batchIds.map((id) => ({ id })) } }
-			});
+			await db.insert(schema.imageGroupRelation).values(
+				batchIds.map((id) => {
+					return { imageId: id, groupId: paramGroupId };
+				})
+			);
 		}
 		return json({ success: true });
 	} else if (patch.data.action === 'removeImages') {
 		for (const id of patch.data.imageIds) {
-			await db.$queryRaw`
-                DELETE FROM "_ImageGroupRelation"
-                WHERE "A" = ${paramGroupId} AND "B" = ${id}`;
+			await db
+				.delete(schema.imageGroupRelation)
+				.where(
+					and(
+						eq(schema.imageGroupRelation.imageId, id),
+						eq(schema.imageGroupRelation.groupId, paramGroupId)
+					)
+				);
 		}
 		return json({ success: true });
 	}

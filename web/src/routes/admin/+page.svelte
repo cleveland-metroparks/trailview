@@ -24,7 +24,7 @@
 	import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { PUBLIC_MAPBOX_KEY } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import { onDestroy, onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import FormAlert from '$lib/FormAlert.svelte';
@@ -35,16 +35,18 @@
 	import InspectorMove from './InspectorMove.svelte';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import type { PageData } from './$types';
-	import type { GetResType as GroupGetResType } from '../api/group/[groupId]/all/+server';
+	import type { GetResType as GroupGetResType } from '$api/group/[groupId]/+server';
 	import type { FeatureCollection } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
-	import { scale } from 'svelte/transition';
+	import { scale, slide } from 'svelte/transition';
+	import type { GetResType as SequenceImageIdsGetResType } from '$api/sequences/[sequenceId]/image-ids/+server';
+	import type { GetResType as SequenceImageCoordinatesGetResType } from '$api/sequences/[sequenceId]/image-coordinates/+server';
 
 	export let data: PageData;
 
 	let selectedGroupId: number | undefined = undefined;
 
-	let inspectorPages = ['Sequence', 'Image', 'Group', 'Move'] as const;
+	let inspectorPages = ['Sequence', 'Image(s)', 'Group', 'Move'] as const;
 	let inspectorPage: (typeof inspectorPages)[number] = 'Sequence';
 
 	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
@@ -104,12 +106,12 @@
 			const groupId = parseInt(selectValue.split('_')[1]);
 			selectedGroupId = groupId;
 			await goToGroup(groupId);
-			await drawGroup(groupId);
+			await highlightGroup(groupId);
 		}
 	}
 
 	async function goToGroup(groupId: number) {
-		const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
+		const res = await fetch(`/api/group/${groupId}?private`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === true) {
 			const image = resData.data.images.at(0);
@@ -122,7 +124,7 @@
 		}
 	}
 
-	async function drawGroup(groupId: number) {
+	async function highlightGroup(groupId: number) {
 		if (
 			trailviewer === undefined ||
 			trailviewer.allImageData === undefined ||
@@ -130,7 +132,7 @@
 		) {
 			return;
 		}
-		const res = await fetch(`/api/group/${groupId}/all`, { method: 'GET' });
+		const res = await fetch(`/api/group/${groupId}?private`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === false) {
 			formAlert.popup(resData);
@@ -146,7 +148,7 @@
 					type: 'Feature',
 					geometry: {
 						type: 'Point',
-						coordinates: [i.longitude, i.latitude]
+						coordinates: i.coordinates
 					},
 					properties: {}
 				};
@@ -199,33 +201,43 @@
 		goToGroup(groupId);
 	}
 
-	function onSequenceSelectChange(event: Event) {
+	function removeGroupHighlight() {
+		trailviewer?.map?.removeLayer('groupLayer');
+		trailviewer?.map?.removeSource('groupSource');
+		selectedGroupId = undefined;
+	}
+
+	async function onSequenceSelectChange(event: Event) {
 		if (trailviewer === undefined) {
+			console.error('Failed to select sequence, trailviewer is undefined');
 			return;
 		}
-		if (trailviewer.allImageData !== undefined) {
-			let sequenceId: number | undefined;
-			const image = trailviewer.allImageData.find((image) => {
-				const sequence = data.sequences.find((sequence) => {
-					return sequence.id === image.sequenceId;
-				});
-				if (!sequence) {
-					return;
-				}
-				if (sequence.name === (event.target as HTMLSelectElement).value) {
-					sequenceId = sequence.id;
-					return true;
-				} else {
-					return false;
-				}
-			});
-			if (image) {
-				trailviewer.goToImageID(image.id);
-				inspectorPage = 'Sequence';
-				if (sequenceId !== undefined) {
-					highlightSequence(sequenceId);
-				}
-			}
+		const sequenceId = parseInt((event.target as HTMLSelectElement).value);
+		if (isNaN(sequenceId)) {
+			console.error('Failed to select sequence, sequenceId is NaN');
+			return;
+		}
+		const res = await fetch(`/api/sequences/${sequenceId}/image-ids?private&limit=1`, {
+			method: 'GET'
+		});
+		if (!res.ok) {
+			console.error('Failed to select sequence, status =', res.status);
+			return;
+		}
+		const resJson = (await res.json()) as SequenceImageIdsGetResType;
+		if (!resJson.success) {
+			console.error('Failed to select sequence, response not successful');
+			return;
+		}
+		const imageId = resJson.data.at(0);
+		if (imageId === undefined) {
+			console.error('Failed to select sequence, no images');
+			return;
+		}
+		trailviewer.goToImageID(imageId);
+		inspectorPage = 'Sequence';
+		if (sequenceId !== undefined) {
+			highlightSequence(sequenceId);
 		}
 		goToSequenceSelect.value = 'select';
 	}
@@ -247,30 +259,36 @@
 		}
 	}
 
-	function highlightSequence(sequenceId: number) {
-		if (
-			trailviewer === undefined ||
-			trailviewer.map === undefined ||
-			trailviewer.allImageData === undefined
-		) {
+	async function highlightSequence(sequenceId: number) {
+		if (trailviewer === undefined || trailviewer.map === undefined) {
+			console.error('Failed to highlight sequence, trailviewer or map is undefined');
 			return;
 		}
+		const res = await fetch(`/api/sequences/${sequenceId}/image-coordinates?private`, {
+			method: 'GET'
+		});
+		if (!res.ok) {
+			console.error('Failed to highlight sequence, status =', res.status);
+			return;
+		}
+		const resJson = (await res.json()) as SequenceImageCoordinatesGetResType;
+		if (!resJson.success) {
+			console.error('Failed to highlight sequence, response unsuccessful');
+			return;
+		}
+		const images = resJson.data;
 		const geoJsonData: FeatureCollection = {
 			type: 'FeatureCollection',
-			features: trailviewer.allImageData
-				.filter((i) => {
-					return i.sequenceId === sequenceId;
-				})
-				.map((i) => {
-					return {
-						type: 'Feature',
-						geometry: {
-							type: 'Point',
-							coordinates: [i.longitude, i.latitude]
-						},
-						properties: {}
-					};
-				})
+			features: images.map((i) => {
+				return {
+					type: 'Feature',
+					geometry: {
+						type: 'Point',
+						coordinates: i.coordinates
+					},
+					properties: {}
+				};
+			})
 		};
 		if (trailviewer.map.getLayer('sequenceLayer') === undefined) {
 			trailviewer.map.addSource('sequenceSource', {
@@ -320,14 +338,16 @@
 	}
 
 	async function createTrailViewer() {
+		if (data.initialImageId === null) {
+			return;
+		}
 		const trailview = await import('$lib/trailviewer');
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
-		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
-		trailviewerOptions.imageFetchType = 'all';
-		trailviewerOptions.initialImageId =
-			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
+		trailviewerOptions.mapboxKey = env.PUBLIC_TV_MAPBOX_KEY;
+		trailviewerOptions.fetchPrivate = true;
+		trailviewerOptions.initialImageId = $page.url.searchParams.get('i') ?? data.initialImageId;
 		trailviewer = new trailview.TrailViewer();
 		trailviewer.on('image-change', (image: Image) => {
 			if ($page.url.searchParams.get('i') !== image.id) {
@@ -346,7 +366,12 @@
 		trailviewer.on('edit', () => {
 			inspectorPage = 'Move';
 		});
+		trailviewer.on('edit-change', (enabled) => {
+			editEnabled = enabled;
+		});
 	}
+
+	let editEnabled = false;
 
 	function toggleLayout() {
 		layout = layout === 'map' ? 'viewer' : 'map';
@@ -354,6 +379,10 @@
 
 	function onGroupSequenceSelect(event: CustomEvent<{ sequenceId: number }>) {
 		goToSequence(event.detail.sequenceId);
+	}
+
+	function onEditEnabledChange(event: CustomEvent<boolean>) {
+		trailviewer?.setEditOnZoom(event.detail);
 	}
 </script>
 
@@ -366,7 +395,7 @@
 <ConfirmModal bind:this={confirmModal} />
 
 <div class="d-flex flex-row py-1 px-2 justify-content-between">
-	<div class="d-flex flex-row gap-1">
+	<div class="d-flex flex-row gap-2 align-items-center">
 		<select
 			id="goToSequenceSelect"
 			on:change={onSequenceSelectChange}
@@ -376,7 +405,7 @@
 		>
 			<option value="select">Go To Sequence</option>
 			{#each data.sequences as sequence}
-				<option class="sequence-option" id={`sequence_${sequence.id}`}>{sequence.name}</option>
+				<option class="sequence-option" value={sequence.id}>{sequence.name}</option>
 			{/each}
 		</select>
 		<select
@@ -391,26 +420,36 @@
 		</select>
 		{#if currentSequence !== undefined && currentSequence.id !== highlightedSequenceId}
 			<button
-				transition:scale
+				in:scale
 				on:click={() => {
 					if (currentSequence !== undefined) {
 						highlightSequence(currentSequence.id);
 					}
 				}}
 				type="button"
-				class="btn btn-sm btn-outline-warning">Highlight current sequence</button
+				class="btn btn-sm btn-outline-warning">Highlight image sequence</button
 			>
 		{/if}
 		{#if highlightedSequenceId !== undefined}
 			<button
-				transition:scale
+				in:scale
 				on:click={() => {
 					trailviewer?.map?.removeLayer('sequenceLayer');
 					trailviewer?.map?.removeSource('sequenceSource');
 					highlightedSequenceId = undefined;
 				}}
 				type="button"
-				class="btn btn-sm btn-outline-secondary">Remove Sequence Highlight</button
+				class="btn btn-sm btn-outline-warning">Remove sequence highlight</button
+			>
+		{/if}
+		{#if selectedGroupId !== undefined}
+			<button
+				on:click={removeGroupHighlight}
+				transition:scale
+				type="button"
+				class="btn btn-sm btn-outline-info"
+			>
+				Remove group highlight</button
 			>
 		{/if}
 	</div>
@@ -428,7 +467,7 @@
 			}}
 		>
 			<button class="btn btn-sm btn-info"
-				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if} Refresh DB Cache</button
+				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if} Refresh Map Tiles</button
 			>
 		</form>
 	</div>
@@ -437,6 +476,9 @@
 
 <div class="d-flex flex-row flex-grow-1">
 	<div class="col position-relative">
+		{#if editEnabled}
+			<div transition:slide class="edit-indicator">Edit Mode Enabled</div>
+		{/if}
 		<div id="trailview_map" class={layout === 'map' ? 'main-container' : 'small-container'} />
 		<div
 			id="trailview_panorama"
@@ -446,7 +488,7 @@
 			><i class="bi bi-arrows-angle-expand"></i></button
 		>
 	</div>
-	<div style="width:350px">
+	<div style="width:370px">
 		<div class="mt-1 mx-2">
 			<FormAlert bind:this={formAlert} />
 			<ul class="nav nav-tabs mb-2">
@@ -468,10 +510,10 @@
 					{currentSequence}
 					bind:pitchCorrection
 					bind:flipped
-					mapsApiTrails={data.mapsApi.trails}
+					mapsApiTrails={data.mapsApiTrails}
 					on:should-refresh={refreshEverything}
 				/>
-			{:else if inspectorPage === 'Image'}
+			{:else if inspectorPage === 'Image(s)'}
 				<InspectorImage
 					{confirmModal}
 					{formAlert}
@@ -488,19 +530,37 @@
 					sequenceData={data.sequences}
 					bind:selectedGroupId
 					on:draw-group={(e) => {
-						drawGroup(e.detail.groupId);
+						highlightGroup(e.detail.groupId);
 					}}
 					on:should-refresh={refreshEverything}
 					on:sequence-select={onGroupSequenceSelect}
 				/>
 			{:else if inspectorPage === 'Move'}
-				<InspectorMove {trailviewer} on:should-refresh={refreshEverything} />
+				<InspectorMove
+					{trailviewer}
+					on:should-refresh={refreshEverything}
+					on:edit-enabled={onEditEnabledChange}
+				/>
 			{/if}
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
+	.edit-indicator {
+		position: absolute;
+		background-color: red;
+		padding: 5px;
+		font-size: 18px;
+		border-radius: 10px;
+		font-weight: bold;
+		color: white;
+		top: 5px;
+		right: 5px;
+		z-index: 10;
+		box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+	}
+
 	.main-container {
 		width: 100%;
 		height: 100%;

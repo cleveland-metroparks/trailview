@@ -7,7 +7,6 @@ import css from 'rollup-plugin-import-css';
 export default [
     {
         input: './src/trailviewer-base.ts',
-        external: ['events', 'url-join'],
         output: {
             file: './dist/trailviewer-base.mjs',
             format: 'es',
@@ -23,7 +22,6 @@ export default [
     },
     {
         input: './src/trailviewer.ts',
-        external: ['mapbox-gl', 'events', 'url-join'],
         output: {
             file: './dist/trailviewer.mjs',
             format: 'es',

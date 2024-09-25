@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
+	import imgClose from '$lib/assets/icons/close.svg';
 
 	let shown = true;
 
@@ -11,7 +12,7 @@
 {#if shown}
 	<div transition:fly={{ x: -100, duration: 500 }} class="info-popup">
 		<button on:click={hide} type="button" class="green-button close-button"
-			><img src="/icons/close.svg" alt="close icon" /></button
+			><img src={imgClose} alt="close icon" /></button
 		>
 		Click/Tap on the green highlight on the map to navigate
 	</div>

@@ -6,6 +6,10 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+		alias: {
+			$db: 'db',
+			$api: 'src/routes/api'
+		},
 		adapter: adapter(),
 		csp: {
 			directives: {

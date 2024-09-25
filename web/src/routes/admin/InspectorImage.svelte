@@ -19,10 +19,6 @@
 	let showPrivateViewSpinner = false;
 	let showPublicViewSpinner = false;
 
-	$: if (currentImage !== undefined) {
-		console.log(currentImage.createdAt);
-	}
-
 	async function setViewVisibility(visible: boolean) {
 		if (
 			trailviewer === undefined ||
@@ -49,9 +45,11 @@
 
 		const bounds = trailviewer.map.getBounds();
 		const imageIdList: string[] = [];
-		for (const image of trailviewer.allImageData) {
-			if (bounds.contains([image.longitude, image.latitude])) {
-				imageIdList.push(image.id);
+		if (bounds !== null) {
+			for (const image of trailviewer.allImageData) {
+				if (bounds.contains(image.coordinates)) {
+					imageIdList.push(image.id);
+				}
 			}
 		}
 		const data = {
@@ -83,61 +81,71 @@
 		};
 	}}
 >
-	<input name="imageId" type="hidden" value={currentImage?.id} />
-	<label for="image_id">Image Id</label>
-	<input id="image_id" readonly class="form-control" value={currentImage?.id ?? 'Undefined'} />
+	<div class="d-flex flex-column">
+		<h4>Image Info</h4>
+		<input name="imageId" type="hidden" value={currentImage?.id} />
+		<label for="image_id">Image Id</label>
+		<input id="image_id" readonly class="form-control" value={currentImage?.id ?? 'Undefined'} />
 
-	{#if currentImage !== undefined}
-		<div class="mt-2 input-group input-group-sm">
-			<div class="input-group-text">Captured At</div>
-			{#if currentImage.createdAt !== null}
-				<input
-					class="form-control"
-					readonly
-					type="datetime-local"
-					value={moment(currentImage.createdAt).format('YYYY-MM-DDTkk:mm')}
-				/>
-			{:else}
-				<input class="form-control" readonly type="text" value="Unknown" />
-			{/if}
+		{#if currentImage !== undefined}
+			<div class="mt-2 input-group input-group-sm">
+				<div class="input-group-text">Captured At</div>
+				{#if currentImage.createdAt !== null}
+					<input
+						class="form-control"
+						readonly
+						type="datetime-local"
+						value={moment(currentImage.createdAt).format('YYYY-MM-DDTkk:mm')}
+					/>
+				{:else}
+					<input class="form-control" readonly type="text" value="Unknown" />
+				{/if}
+			</div>
+		{/if}
+
+		<hr />
+		<h4>Image Options</h4>
+
+		<div class="mt-2 form-check form-switch">
+			<input
+				checked={(() => {
+					return currentImage?.public ?? false;
+				})()}
+				name="public"
+				id="image_public_switch"
+				class="form-check-input"
+				type="checkbox"
+				role="switch"
+			/>
+			<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
 		</div>
-	{/if}
 
-	<div class="mt-2 form-check form-switch">
-		<input
-			checked={(() => {
-				return currentImage?.visibility ?? false;
-			})()}
-			name="public"
-			id="image_public_switch"
-			class="form-check-input"
-			type="checkbox"
-			role="switch"
-		/>
-		<label class="form-check-label" for="image_public_switch">Publicly Visible</label>
-	</div>
-
-	<button formaction="?/image" type="submit" class="btn btn-sm btn-primary"
-		>{#if showImageSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set</button
-	>
-	<div class="d-flex flex-row mt-2 gap-2">
-		<button
-			on:click={async () => {
-				await setViewVisibility(false);
-			}}
-			type="button"
-			class="btn btn-sm btn-warning"
-			>{#if showPrivateViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all in
-			view private</button
-		>
-		<button
-			on:click={async () => {
-				await setViewVisibility(true);
-			}}
-			type="button"
-			class="btn btn-sm btn-warning"
-			>{#if showPublicViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all in view
-			public</button
-		>
+		<div class="d-flex flex-row justify-content-center mt-2">
+			<button formaction="?/image" type="submit" class="btn btn-sm btn-primary"
+				>{#if showImageSpinner}<span class="spinner-border spinner-border-sm" />{/if} Apply Changes</button
+			>
+		</div>
+		<hr />
+		<h4>Images in View</h4>
+		<div class="d-flex flex-row mt-2 gap-2">
+			<button
+				on:click={async () => {
+					await setViewVisibility(false);
+				}}
+				type="button"
+				class="btn btn-sm btn-warning"
+				>{#if showPrivateViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all in
+				view private</button
+			>
+			<button
+				on:click={async () => {
+					await setViewVisibility(true);
+				}}
+				type="button"
+				class="btn btn-sm btn-warning"
+				>{#if showPublicViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all in
+				view public</button
+			>
+		</div>
 	</div>
 </form>

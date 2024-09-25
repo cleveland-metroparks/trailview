@@ -20,13 +20,13 @@ declare class PannellumViewer {
     removeScene(sceneId: string): boolean;
     addScene(sceneId: string, config: object): PannellumViewer;
     addHotSpot(hs: object, sceneId?: string): PannellumViewer;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     on(type: string, listener: Function): PannellumViewer;
     getScene(): string;
     setYaw(
         yaw: number,
         animated: boolean | number,
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         callback?: Function,
         callbackArgs?: object
     ): PannellumViewer;
@@ -43,7 +43,7 @@ declare class PannellumViewer {
         yaw?: number,
         hfov?: number,
         animated?: boolean | number,
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         callback?: Function,
         callbackArgs?: object
     ): PannellumViewer;
@@ -83,22 +83,24 @@ interface PannellumConfig {
 
 export interface TrailViewerBaseOptions {
     target: string;
+    apiKey: string;
     initial: string | { latitude: number; longitude: number };
     baseUrl: string;
     navArrowMinAngle: number;
     navArrowMaxAngle: number;
-    imageFetchType: 'standard' | 'all';
+    fetchPrivate: boolean;
     filterSequences: number[] | undefined;
     filterGroups: number[] | undefined;
 }
 
 export const defaultBaseOptions: TrailViewerBaseOptions = {
     target: 'trailview_panorama',
+    apiKey: '',
     initial: 'c96ba6029cad464e9a4b7f9a6b8ac0d5',
     baseUrl: 'https://trailview.cmparks.net',
     navArrowMinAngle: -25,
     navArrowMaxAngle: -20,
-    imageFetchType: 'standard',
+    fetchPrivate: false,
     filterSequences: undefined,
     filterGroups: undefined,
 };
@@ -130,8 +132,7 @@ function customMod(a: number, b: number): number {
 export interface Image {
     id: string;
     sequenceId: number;
-    latitude: number;
-    longitude: number;
+    coordinates: [number, number];
     bearing: number;
     flipped: boolean;
     pitchCorrection: number;
@@ -179,6 +180,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
         this._options = options;
         fetch(urlJoin(this._options.baseUrl, '/api/sequences'), {
             method: 'GET',
+            headers: { 'X-API-Key': this._options.apiKey },
         }).then(async (res) => {
             const data = await res.json();
             if (!data.success) {
@@ -216,9 +218,8 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                         (arrow as HTMLNavArrowElement).yaw,
                     360
                 );
-                (
-                    arrow as HTMLNavArrowElement
-                ).style.transform = `scale(80%) translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
+                (arrow as HTMLNavArrowElement).style.transform =
+                    `scale(80%) translate(-50%, -50%) rotateZ(${yaw}deg) translateY(-100px)`;
             }
             let rot = (this._panViewer.getPitch() + 90) / 2.5;
             if (rot > 80) {
@@ -305,8 +306,9 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             multiRes: {
                 basePath: urlJoin(
                     this._options.baseUrl,
-                    '/api/panImage',
-                    `/${scene.id}`
+                    '/api/images',
+                    `/${scene.id}`,
+                    '/pan'
                 ),
                 path: '/%l/%s%y_%x',
                 extension: 'jpg',
@@ -352,8 +354,9 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             multiRes: {
                 basePath: urlJoin(
                     this._options.baseUrl,
-                    '/api/panImage',
-                    `/${image.id}`
+                    '/api/images',
+                    `/${image.id}`,
+                    '/pan'
                 ),
                 path: '/%l/%s%y_%x',
                 fallbackPath: '/fallback/%s',
@@ -438,9 +441,10 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
         const neighborsUrl = new URL(
             urlJoin(
                 this._options.baseUrl,
-                '/api/neighbors',
-                this._options.imageFetchType,
-                image.id
+                '/api/images',
+                image.id,
+                '/neighbors',
+                this._options.fetchPrivate ? '?private' : ''
             )
         );
         if (this._options.filterSequences !== undefined) {
@@ -463,10 +467,12 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             }
             neighborsUrl.searchParams.set('g', ids);
         }
-        const res = await fetch(neighborsUrl);
+        const res = await fetch(neighborsUrl, {
+            headers: { 'X-API-Key': this._options.apiKey },
+        });
         const data = await res.json();
         if (data.success !== true) {
-            throw new Error('Failed to retrieve neighbors');
+            throw new Error('Failed to fetch neighbors');
         }
         return data.data;
     }
@@ -481,11 +487,12 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             const nearRes = await fetch(
                 urlJoin(
                     this._options.baseUrl,
-                    'api/near/',
-                    initial.latitude.toString(),
-                    initial.longitude.toString(),
-                    this._options.imageFetchType
-                )
+                    'api/images/near',
+                    `?lat=${initial.latitude.toString()}`,
+                    `?lng=${initial.longitude.toString()}`,
+                    this._options.fetchPrivate ? '?private' : ''
+                ),
+                { headers: { 'X-API-Key': this._options.apiKey } }
             );
             const resData = await nearRes.json();
             if (resData.success !== true) {
@@ -498,9 +505,10 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             urlJoin(
                 this._options.baseUrl,
                 '/api/images',
-                this._options.imageFetchType,
-                initImageId
-            )
+                initImageId,
+                this._options.fetchPrivate ? '?private' : ''
+            ),
+            { headers: { 'X-API-Key': this._options.apiKey } }
         );
         const data = await res.json();
         if (data.success !== true) {
@@ -584,8 +592,8 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             throw new Error('Current image is undefined');
         }
 
-        this._geo.latitude = this._currImg.latitude;
-        this._geo.longitude = this._currImg.longitude;
+        this._geo.latitude = this._currImg.coordinates[1];
+        this._geo.longitude = this._currImg.coordinates[0];
 
         if (this._prevImg !== undefined) {
             for (let i = 0; i < this._hotSpotList.length; i++) {
@@ -661,9 +669,10 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                 urlJoin(
                     this._options.baseUrl,
                     '/api/images',
-                    this._options.imageFetchType,
-                    imageId
-                )
+                    imageId,
+                    this._options.fetchPrivate ? '?private' : ''
+                ),
+                { headers: { 'X-API-Key': this._options.apiKey } }
             );
             const data = await res.json();
             if (data.success !== true) {

@@ -25,7 +25,7 @@
 			.optional()
 			.nullable(),
 		baseUrl: z.string(),
-		imageFetchType: z.enum(['standard', 'all']),
+		fetchPrivate: z.boolean(),
 		filterSequences: z.array(z.number()).optional().nullable()
 	});
 
@@ -58,7 +58,7 @@
 				options.baseUrl = o.baseUrl;
 				options.navArrowMinAngle = -25;
 				options.navArrowMaxAngle = -20;
-				options.imageFetchType = o.imageFetchType;
+				options.fetchPrivate = o.fetchPrivate;
 				if (o.filterSequences !== undefined && o.filterSequences !== null) {
 					options.filterSequences = o.filterSequences;
 				}

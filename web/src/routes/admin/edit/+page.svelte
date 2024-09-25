@@ -2,7 +2,7 @@
 	import '$lib/trailviewer.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { PUBLIC_MAPBOX_KEY, PUBLIC_MAPS_API } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import type { Image, TrailViewer } from '$lib/trailviewer';
 	import { onDestroy, onMount } from 'svelte';
 	import type { PageData } from './$types';
@@ -22,8 +22,8 @@
 		let trailviewerOptions = trailview.defaultOptions;
 
 		trailviewerOptions.baseUrl = $page.url.origin;
-		trailviewerOptions.mapboxKey = PUBLIC_MAPBOX_KEY;
-		trailviewerOptions.imageFetchType = 'all';
+		trailviewerOptions.mapboxKey = env.PUBLIC_TV_MAPBOX_KEY;
+		trailviewerOptions.fetchPrivate = true;
 		trailviewerOptions.initialImageId =
 			$page.url.searchParams.get('i') ?? 'c96ba6029cad464e9a4b7f9a6b8ac0d5';
 		trailviewer = new trailview.TrailViewer();
@@ -75,11 +75,11 @@
 		if (mapsApiTrailValue === 'unassigned') {
 			return;
 		}
-		if (PUBLIC_MAPS_API === '') {
+		if (env.PUBLIC_TV_MAPS_API === '') {
 			return;
 		}
 		const res = await fetch(
-			urlJoin(PUBLIC_MAPS_API, '/trail_geometries', mapsApiTrailValue.toString())
+			urlJoin(env.PUBLIC_TV_MAPS_API, '/trail_geometries', mapsApiTrailValue.toString())
 		);
 		if (res.status !== 200) {
 			return;
@@ -174,10 +174,7 @@
 				console.warn('Unable to find image Id');
 				continue;
 			}
-			geoJsonData.coordinates.push([
-				[image.longitude, image.latitude],
-				[edit.new.longitude, edit.new.latitude]
-			]);
+			geoJsonData.coordinates.push([image.coordinates, [edit.new.longitude, edit.new.latitude]]);
 		}
 
 		if (mapHasEditLayer === true) {
@@ -215,14 +212,17 @@
 			return;
 		}
 		const mapBounds = trailviewer.map.getBounds();
+		if (mapBounds === null) {
+			return;
+		}
 		const imagesInBounds = trailviewer.allImageData.filter((i) => {
-			return mapBounds.contains([i.longitude, i.latitude]);
+			return mapBounds.contains(i.coordinates);
 		});
 		for (const image of imagesInBounds) {
 			let dir = degreeToVector(image.bearing);
 			dir = { x: -dir.y, y: dir.x };
 			const correction = closestIntersection(
-				{ x: image.latitude, y: image.longitude },
+				{ x: image.coordinates[1], y: image.coordinates[0] },
 				dir,
 				currentApiTrailGeoJson,
 				rangeLimit

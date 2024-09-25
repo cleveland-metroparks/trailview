@@ -1,0 +1,68 @@
+services:
+  trailview-web:
+    build:
+      context: .
+      dockerfile: ./web/Dockerfile
+    environment:
+      TV_DB_USER: ${TV_DB_USER}
+      TV_DB_PASSWORD: ${TV_DB_PASSWORD}
+      TV_DB_HOST: trailview-db
+      TV_DB_PORT: 5432
+      TV_DB_DATABASE: ${TV_DB_DATABASE}
+      TV_IMAGES_PATH: /trails
+      TV_ADMIN_USER: ${TV_ADMIN_USER}
+      TV_ADMIN_PASSWORD: ${TV_ADMIN_PASSWORD}
+      TV_WEB_PROCESS_SECRET: ${TV_WEB_PROCESS_SECRET}
+      TV_ENTRA_TENANT_ID: ${TV_ENTRA_TENANT_ID}
+      TV_ENTRA_CLIENT_ID: ${TV_ENTRA_CLIENT_ID}
+      TV_ENTRA_CLIENT_SECRET_VALUE: ${TV_ENTRA_CLIENT_SECRET_VALUE}
+      TV_ENTRA_REDIRECT_URL: ${TV_ENTRA_REDIRECT_URL}
+      TV_CLUSTER_WORKERS: ${TV_CLUSTER_WORKERS}
+      PUBLIC_TV_MAPBOX_KEY: ${PUBLIC_TV_MAPBOX_KEY}
+      PUBLIC_TV_MAPS_API: ${PUBLIC_TV_MAPS_API}
+      ORIGIN: ${ORIGIN}
+      PORT: 3000
+      TZ: ${TZ}
+    ports:
+      - ${TV_DOCKER_PORT_EXTERNAL}:3000
+    restart: unless-stopped
+    volumes:
+      - ${TV_DOCKER_IMAGES_MOUNT_PATH}:/trails
+      - ./logs/web:/app/web/logs
+    depends_on:
+      - trailview-db
+    healthcheck:
+      interval: 30s
+      start_period: 30s
+      timeout: 30s
+      retries: 5
+  trailview-db:
+    image: "postgis/postgis:16-3.4"
+    container_name: "trailview-db"
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${TV_DB_DATABASE}
+      POSTGRES_USER: ${TV_DB_USER}
+      POSTGRES_PASSWORD: ${TV_DB_PASSWORD}
+      TZ: ${TZ}
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+  trailview-process:
+    container_name: "trailview-process"
+    build:
+      context: ./process
+      dockerfile: ./Dockerfile
+    environment:
+      TV_IMAGES_PATH: /trails
+      TV_WEB_URL: http://trailview-web:3000
+      TV_WEB_PROCESS_SECRET: ${TV_WEB_PROCESS_SECRET}
+      TZ: ${TZ}
+    restart: unless-stopped
+    volumes:
+      - ${TV_DOCKER_IMAGES_MOUNT_PATH}:/trails
+      - ./logs/process:/app/process/logs
+    depends_on:
+      trailview-web:
+        condition: service_healthy
+        restart: true
+        required: true

@@ -1,15 +1,15 @@
-import { isSessionValid } from '$lib/server/auth';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
-import { db } from '$lib/server/prisma';
+import { db } from '$lib/server/db';
+import * as schema from '$db/schema';
 import { refreshGeoJsonData } from '$lib/server/geojson';
-import { refreshImageData } from '$lib/server/dbcache';
+import { eq } from 'drizzle-orm';
 
 const patchRequestType = z.object({
 	data: z.array(
 		z.object({
-			imageId: z.string().nonempty(),
+			imageId: z.string().min(1),
 			new: z.object({
 				latitude: z.number(),
 				longitude: z.number()
@@ -19,14 +19,12 @@ const patchRequestType = z.object({
 });
 export type PatchRequestType = z.infer<typeof patchRequestType>;
 
-export const PATCH = (async ({ cookies, request }) => {
-	if ((await isSessionValid(cookies)) !== true) {
-		return json({ success: false, message: 'Invalid session' }, { status: 401 });
-	}
+export const PATCH = (async ({ request }) => {
 	let jsonData: unknown;
 	try {
 		jsonData = await request.json();
-	} catch (error) {
+	} catch (e) {
+		console.error(e);
 		return json({ success: false, message: 'Invalid JSON' }, { status: 400 });
 	}
 	const patch = patchRequestType.safeParse(jsonData);
@@ -38,18 +36,16 @@ export const PATCH = (async ({ cookies, request }) => {
 	}
 	try {
 		for (const p of patch.data.data) {
-			await db.image.update({
-				where: { id: p.imageId },
-				data: { latitude: p.new.latitude, longitude: p.new.longitude }
-			});
+			await db
+				.update(schema.image)
+				.set({ coordinates: [p.new.longitude, p.new.latitude] })
+				.where(eq(schema.image.id, p.imageId));
 		}
 	} catch (error) {
 		console.error(error);
-		await refreshGeoJsonData(true);
-		await refreshImageData(true);
+		await refreshGeoJsonData();
 		return json({ success: false, message: 'Database error' }, { status: 500 });
 	}
-	await refreshGeoJsonData(true);
-	await refreshImageData(true);
+	await refreshGeoJsonData();
 	return json({ success: true });
 }) satisfies RequestHandler;

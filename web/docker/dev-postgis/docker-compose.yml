@@ -1,0 +1,17 @@
+services:
+  db:
+    image: 'postgis/postgis:16-3.4'
+    container_name: 'trailview-postgis'
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: 'trailview'
+      POSTGRES_USER: 'trailview'
+      POSTGRES_PASSWORD: 'metroparks123'
+    ports:
+      - '5432:5432'
+    volumes:
+      - trailview-postgis-data:/var/lib/postgresql/data
+      # - trailview-postgis-data-test:/var/lib/postgresql/data
+volumes:
+  trailview-postgis-data:
+  # trailview-postgis-data-test:

@@ -1,0 +1,14 @@
+services:
+    trailview-process:
+        build: .
+        environment:
+            TV_IMAGES_PATH: /trails
+            TV_WEB_URL: ${TV_WEB_URL}
+            TV_WEB_PROCESS_SECRET: ${TV_WEB_PROCESS_SECRET}
+        restart: unless-stopped
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        volumes:
+            - ${TV_DOCKER_IMAGES_MOUNT_PATH}:/trails
+            - ./logs:/app/logs
+        network_mode: host

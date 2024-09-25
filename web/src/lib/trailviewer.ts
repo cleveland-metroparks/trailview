@@ -18,13 +18,13 @@ declare class PannellumViewer {
 	removeScene(sceneId: string): boolean;
 	addScene(sceneId: string, config: object): PannellumViewer;
 	addHotSpot(hs: object, sceneId?: string): PannellumViewer;
-	// eslint-disable-next-line @typescript-eslint/ban-types
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	on(type: string, listener: Function): PannellumViewer;
 	getScene(): string;
 	setYaw(
 		yaw: number,
 		animated: boolean | number,
-		// eslint-disable-next-line @typescript-eslint/ban-types
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 		callback?: Function,
 		callbackArgs?: object
 	): PannellumViewer;
@@ -41,7 +41,7 @@ declare class PannellumViewer {
 		yaw?: number,
 		hfov?: number,
 		animated?: boolean | number,
-		// eslint-disable-next-line @typescript-eslint/ban-types
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 		callback?: Function,
 		callbackArgs?: object
 	): PannellumViewer;
@@ -87,18 +87,18 @@ export interface TrailViewerOptions {
 	mapboxKey: string | undefined;
 	navArrowMinAngle: number;
 	navArrowMaxAngle: number;
-	imageFetchType: 'standard' | 'all';
+	fetchPrivate: boolean;
 }
 
 export const defaultOptions: TrailViewerOptions = {
 	panoramaTarget: 'trailview_panorama',
 	mapTarget: 'trailview_map',
 	initialImageId: undefined,
-	baseUrl: 'https://trailview.cmparks.net',
+	baseUrl: 'https://trailview.clevelandmetroparks.com',
 	mapboxKey: undefined,
 	navArrowMinAngle: -25,
 	navArrowMaxAngle: -20,
-	imageFetchType: 'standard'
+	fetchPrivate: false
 };
 
 interface HTMLNavArrowElement extends HTMLImageElement {
@@ -113,30 +113,21 @@ function angle180to360(angle: number): number {
 	return angle;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function angle360to180(angle: number): number {
-	if (angle > 180) {
-		angle = -(360 - angle);
-	}
-	return angle;
-}
-
 function customMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
 
-export interface Image {
+export type Image = {
 	id: string;
 	sequenceId: number;
-	latitude: number;
-	longitude: number;
+	coordinates: [number, number];
 	bearing: number;
 	flipped: boolean;
 	pitchCorrection: number;
-	visibility: boolean;
+	public: boolean;
 	createdAt: Date;
 	shtHash: string | undefined;
-}
+};
 
 export interface Neighbor extends Image {
 	distance: number;
@@ -149,16 +140,15 @@ interface NavArrowInfo {
 	yaw: number;
 }
 
-interface ImageData {
+type ImageData = {
 	id: string;
 	pitchCorrection: number;
 	bearing: number;
-	longitude: number;
-	latitude: number;
+	coordinates: [number, number];
 	flipped: boolean;
-	visibility: boolean;
+	public: boolean;
 	sequenceId: number;
-}
+};
 
 export interface TrailViewerEvents {
 	on(event: 'image-change', listener: (image: Image) => void): void;
@@ -166,6 +156,7 @@ export interface TrailViewerEvents {
 	on(event: 'edit', listener: () => void): void;
 	on(event: 'map-move-end', listener: (bounds: mapboxgl.LngLatBounds) => void): void;
 	on(event: 'map-load', listener: () => void): void;
+	on(event: 'edit-change', listener: (enabled: boolean) => void): void;
 }
 
 export class TrailViewer implements TrailViewerEvents {
@@ -192,6 +183,7 @@ export class TrailViewer implements TrailViewerEvents {
 		imageId: string;
 		new: { latitude: number; longitude: number };
 	}[] = [];
+	private _editOnZoom: boolean = false;
 
 	public allImageData: ImageData[] | undefined;
 
@@ -217,7 +209,7 @@ export class TrailViewer implements TrailViewerEvents {
 	}
 
 	async fetchAllImageData() {
-		const res = await fetch('/api/images/all', { method: 'GET' });
+		const res = await fetch('/api/images?private', { method: 'GET' });
 		const imagesData = await res.json();
 		if (imagesData.success !== true) {
 			throw new Error('Unable to fetch all image data');
@@ -249,7 +241,11 @@ export class TrailViewer implements TrailViewerEvents {
 			type: 'vector',
 			format: 'pbf',
 			tiles: [
-				urlJoin(this._options.baseUrl, `/api/tiles/{z}/{x}/{y}/${this._options.imageFetchType}`)
+				urlJoin(
+					this._options.baseUrl,
+					`/api/tiles/{z}/{x}/{y}`,
+					this._options.fetchPrivate ? 'private' : ''
+				)
 			]
 		};
 
@@ -262,7 +258,7 @@ export class TrailViewer implements TrailViewerEvents {
 			type: 'circle',
 			paint: {
 				'circle-radius': 10,
-				'circle-color': ['case', ['==', ['get', 'visible'], true], '#00a108', '#db8904']
+				'circle-color': ['case', ['==', ['get', 'public'], true], '#00a108', '#db8904']
 			}
 		});
 		this.map.setPaintProperty('dots', 'circle-radius', [
@@ -299,7 +295,9 @@ export class TrailViewer implements TrailViewerEvents {
 			20,
 			1
 		]);
-		this.map.setLayerZoomRange('dots', 0, 17);
+		if (this._editOnZoom === true) {
+			this.map.setLayerZoomRange('dots', 0, 17);
+		}
 	}
 
 	private _startMap() {
@@ -325,7 +323,9 @@ export class TrailViewer implements TrailViewerEvents {
 
 		this.map.on('moveend', () => {
 			this._updateEditMarkers();
-			this._emitter.emit('map-move-end', this.map!.getBounds());
+			if (this.map !== undefined) {
+				this._emitter.emit('map-move-end', this.map.getBounds());
+			}
 		});
 
 		this.map.on('mouseenter', 'dots', () => {
@@ -360,7 +360,7 @@ export class TrailViewer implements TrailViewerEvents {
 
 		this.map.on('click', 'dots', (event) => {
 			if (event.features === undefined || event.features[0].properties === null) {
-				console.warn('Features is undefiend or properties are null');
+				console.warn('Features is undefined or properties are null');
 				return;
 			}
 			this.goToImageID(event.features[0].properties.imageID);
@@ -373,6 +373,23 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 	}
 
+	public setEditOnZoom(enabled: boolean) {
+		if (this.map === undefined) {
+			this._editOnZoom = enabled;
+			return;
+		}
+		if (enabled === true) {
+			this.map.setLayerZoomRange('dots', 0, 17);
+			this._updateEditMarkers();
+			this.map.zoomTo(17);
+		} else {
+			this.map.setLayerZoomRange('dots', 0, 22);
+			this._updateEditMarkers();
+			this.map.zoomTo(17);
+		}
+		this._editOnZoom = enabled;
+	}
+
 	public _updateEditMarkers() {
 		if (this.map === undefined || this.allImageData === undefined) {
 			return;
@@ -380,10 +397,14 @@ export class TrailViewer implements TrailViewerEvents {
 		for (const marker of this._editMarkers) {
 			marker.remove();
 		}
-		if (this.map.getZoom() >= 17) {
+		if (this._editOnZoom === true && this.map.getZoom() >= 17) {
+			this._emitter.emit('edit-change', true);
 			const bounds = this.map.getBounds();
+			if (bounds === null) {
+				return;
+			}
 			for (const image of this.allImageData) {
-				if (!bounds.contains([image.longitude, image.latitude])) {
+				if (!bounds.contains(image.coordinates)) {
 					if (
 						this.editList.find((e) => {
 							return e.imageId === image.id && bounds.contains([e.new.longitude, e.new.latitude]);
@@ -394,13 +415,13 @@ export class TrailViewer implements TrailViewerEvents {
 				}
 				const element = document.createElement('div');
 				element.classList.add('trailview-draggable');
-				if (image.visibility === false) {
+				if (image.public === false) {
 					element.classList.add('trailview-draggable-private');
 				}
 				element.addEventListener('click', () => {
 					this.goToImageID(image.id);
 				});
-				let markerLoc: [number, number] = [image.longitude, image.latitude];
+				let markerLoc: [number, number] = image.coordinates;
 				const lastEdit = this.editList.findLast((e) => {
 					return e.imageId === image.id;
 				});
@@ -423,6 +444,8 @@ export class TrailViewer implements TrailViewerEvents {
 				});
 				this._editMarkers.push(marker);
 			}
+		} else {
+			this._emitter.emit('edit-change', false);
 		}
 	}
 
@@ -555,7 +578,13 @@ export class TrailViewer implements TrailViewerEvents {
 			northOffset: scene['bearing'],
 			type: 'multires',
 			multiRes: {
-				basePath: urlJoin(this._options.baseUrl, '/api/panImage', `/${scene.id}`),
+				basePath: urlJoin(
+					this._options.baseUrl,
+					'/api/images',
+					`/${scene.id}`,
+					'/pan',
+					this._options.fetchPrivate ? 'private' : ''
+				),
 				path: '/%l/%s%y_%x',
 				extension: 'jpg',
 				tileResolution: 512,
@@ -596,7 +625,13 @@ export class TrailViewer implements TrailViewerEvents {
 			northOffset: bearing,
 			type: 'multires',
 			multiRes: {
-				basePath: urlJoin(this._options.baseUrl, '/api/panImage', `/${image.id}`),
+				basePath: urlJoin(
+					this._options.baseUrl,
+					'/api/images',
+					`/${image.id}`,
+					'/pan',
+					this._options.fetchPrivate ? 'private' : ''
+				),
 				path: '/%l/%s%y_%x',
 				fallbackPath: '/fallback/%s',
 				extension: 'jpg',
@@ -661,17 +696,19 @@ export class TrailViewer implements TrailViewerEvents {
 		this._createNavArrows();
 	}
 
-	private _customMod(a: number, b: number): number {
-		return a - Math.floor(a / b) * b;
-	}
-
 	private async _getNeighbors(image: Image): Promise<Neighbor[]> {
 		const res = await fetch(
-			urlJoin(this._options.baseUrl, '/api/neighbors', this._options.imageFetchType, image.id)
+			urlJoin(
+				this._options.baseUrl,
+				'/api/images',
+				image.id,
+				'/neighbors',
+				this._options.fetchPrivate ? '?private' : ''
+			)
 		);
 		const data = await res.json();
 		if (data.success !== true) {
-			throw new Error('Failed to retrieve neighbors');
+			throw new Error('Failed to fetch neighbors');
 		}
 		return data.data;
 	}
@@ -682,7 +719,12 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 		let config = this._createViewerConfig(initImageId);
 		const res = await fetch(
-			urlJoin(this._options.baseUrl, '/api/images', this._options.imageFetchType, initImageId)
+			urlJoin(
+				this._options.baseUrl,
+				'/api/images',
+				initImageId,
+				this._options.fetchPrivate ? '?private' : ''
+			)
 		);
 		const data = await res.json();
 		if (data.success !== true) {
@@ -729,8 +771,8 @@ export class TrailViewer implements TrailViewerEvents {
 	}
 
 	private async _fetchData(): Promise<Image[]> {
-		if (this._options.imageFetchType == 'standard') {
-			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images/standard'), {
+		if (this._options.fetchPrivate === false) {
+			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images'), {
 				method: 'GET'
 			});
 			const data = await res.json();
@@ -740,7 +782,7 @@ export class TrailViewer implements TrailViewerEvents {
 				throw new Error('Fetching image data unsuccessful');
 			}
 		} else {
-			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images/all'), {
+			const res = await fetch(urlJoin(this._options.baseUrl, '/api/images?private'), {
 				method: 'GET'
 			});
 			const data = await res.json();
@@ -751,27 +793,6 @@ export class TrailViewer implements TrailViewerEvents {
 			}
 		}
 	}
-
-	// Returns nearest hotspot from yaw angle
-	// Returns nearest hotspot config
-	// private _getNearestHotspot(yaw: number): any {
-	// 	const config = this._panViewer.getConfig();
-	// 	const hotspots = config['hotSpots'];
-	// 	if (!hotspots) {
-	// 		return null;
-	// 	}
-	// 	let nearest = hotspots[0];
-	// 	let nearestDiff;
-	// 	for (let i = 0; i < hotspots.length; i++) {
-	// 		const diff = Math.abs(this._customMod(angle180to360(hotspots[i].yaw) - yaw + 180, 360) - 180);
-	// 		nearestDiff = Math.abs(this._customMod(angle180to360(nearest.yaw) - yaw + 180, 360) - 180);
-	// 		if (diff < nearestDiff) {
-	// 			nearest = hotspots[i];
-	// 			nearestDiff = diff;
-	// 		}
-	// 	}
-	// 	return nearest;
-	// }
 
 	private async _onImageChange(img: string | undefined) {
 		if (img === undefined) {
@@ -792,8 +813,8 @@ export class TrailViewer implements TrailViewerEvents {
 			throw new Error('Current image is undefined');
 		}
 
-		this._geo.latitude = this._currImg.latitude;
-		this._geo.longitude = this._currImg.longitude;
+		this._geo.latitude = this._currImg.coordinates[1];
+		this._geo.longitude = this._currImg.coordinates[0];
 
 		if (this.map !== undefined && this._mapMarker !== undefined) {
 			let markerLoc: [number, number] = [this._geo.longitude, this._geo.latitude];
@@ -835,29 +856,6 @@ export class TrailViewer implements TrailViewerEvents {
 		this._emitter.emit('image-change', this._currImg);
 	}
 
-	// public getNearestImageId(lat: number, lng: number, distCutoff = 10): string | undefined {
-	// 	const ruler = new CheapRuler(41, 'meters');
-	// 	let minDist = Number.MAX_SAFE_INTEGER;
-	// 	let minId: string | undefined;
-	// 	if (this._dataArr === undefined) {
-	// 		console.warn('Cannot get nearest image id as dataArr is undefined');
-	// 		return undefined;
-	// 	}
-	// 	for (let i = 0; i < this._dataArr.length; i++) {
-	// 		const dist = ruler.distance(
-	// 			[lng, lat],
-	// 			[this._dataArr[i].longitude, this._dataArr[i].latitude]
-	// 		);
-	// 		if (dist < distCutoff) {
-	// 			if (dist < minDist) {
-	// 				minId = this._dataArr[i].id;
-	// 				minDist = dist;
-	// 			}
-	// 		}
-	// 	}
-	// 	return minId;
-	// }
-
 	public undoEdit() {
 		if (this.map !== undefined && this.map.getZoom() > 17) {
 			if (this.editList.length !== 0) {
@@ -865,6 +863,15 @@ export class TrailViewer implements TrailViewerEvents {
 			}
 			this._updateEditMarkers();
 		}
+		this._emitter.emit('edit');
+	}
+
+	public discardEdits() {
+		if (this.map === undefined) {
+			return;
+		}
+		this.editList = [];
+		this._updateEditMarkers();
 		this._emitter.emit('edit');
 	}
 
@@ -917,46 +924,6 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 	}
 
-	// Creates info in viewer
-	// private _createLocalInfo(infoJson: any) {
-	// 	if (this._infoJson != null) {
-	// 		for (let i = 0; i < this._infoJson['ImgInfo'].length; i++) {
-	// 			if (this._panViewer != null) {
-	// 				this._panViewer.removeHotSpot(
-	// 					this._infoJson['ImgInfo'][i]['ID'],
-	// 					this._infoJson['ImgInfo'][i]['ImageID']
-	// 				);
-	// 			}
-	// 		}
-	// 	}
-	// 	this._infoJson = infoJson;
-	// 	for (let i = 0; i < infoJson['ImgInfo'].length; i++) {
-	// 		const info = infoJson['ImgInfo'][i];
-	// 		if (this._panViewer != null) {
-	// 			this._panViewer.addHotSpot(
-	// 				{
-	// 					id: info['ID'],
-	// 					pitch: info['Pitch'],
-	// 					yaw: info['Yaw'],
-	// 					type: 'info',
-	// 					text: info['HoverText'],
-	// 					clickHandlerFunc: this._onHotSpotClicked,
-	// 					clickHandlerArgs: [this, info['ID']]
-	// 				},
-	// 				info['ImageID']
-	// 			);
-	// 		}
-	// 	}
-	// }
-
-	// Called when info is clicked
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private _onHotSpotClicked(evt: Event, info: any) {
-		if ('onHotSpotClickFunc' in info[0]._options) {
-			info[0]._options.onHotSpotClickFunc(info[1]);
-		}
-	}
-
 	public async goToImageID(imageId: string, reset = false) {
 		if (this._panViewer === undefined) {
 			return;
@@ -974,7 +941,12 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 		if (image === undefined) {
 			const res = await fetch(
-				urlJoin(this._options.baseUrl, '/api/images', this._options.imageFetchType, imageId)
+				urlJoin(
+					this._options.baseUrl,
+					'/api/images',
+					imageId,
+					this._options.fetchPrivate ? '?private' : ''
+				)
 			);
 			const data = await res.json();
 			if (data.success !== true) {

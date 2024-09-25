@@ -1,7 +1,14 @@
-import { json } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { logout } from '$lib/server/auth';
+import { env } from '$env/dynamic/private';
 
-export const POST = (async ({ cookies }) => {
-	return json({ success: await logout(cookies) });
-}) satisfies RequestHandler;
+export const GET: RequestHandler = async ({ cookies }) => {
+	cookies.delete('idToken', { path: '/' });
+	cookies.delete('accessToken', { path: '/' });
+	cookies.delete('codeVerifier', { path: '/' });
+	cookies.delete('state', { path: '/' });
+	throw redirect(
+		302,
+		`https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=${encodeURIComponent(env.ORIGIN)}`
+	);
+};

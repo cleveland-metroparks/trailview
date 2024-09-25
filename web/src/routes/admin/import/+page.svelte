@@ -39,23 +39,33 @@
 			throw new Error('Failed to upload');
 		}
 		for (let i = 0; i < files.length; i++) {
-			const file = files[i];
-			const formData = new FormData();
-			formData.append('file', file);
-			formData.append('fileName', file.name);
-			formData.append('sequenceName', sequenceName);
-			progressFileName = file.name;
-			const res = await fetch('/admin/import', { method: 'POST', body: formData });
-			const data = await res.json();
-			if (data.success !== true) {
-				error = true;
-				if (data.message !== undefined) {
-					errorMessage = data.message;
+			let success = false;
+			for (let j = 0; j < 20; ++j) {
+				const file = files[i];
+				const formData = new FormData();
+				formData.append('file', file);
+				formData.append('fileName', file.name);
+				formData.append('sequenceName', sequenceName);
+				progressFileName = file.name;
+				const res = await fetch('/admin/import', {
+					method: 'POST',
+					body: formData,
+					cache: 'no-store',
+					keepalive: false
+				});
+				const data = await res.json();
+				if (data.success !== true) {
+					continue;
 				}
+				updateProgress((i + 1) / total);
+				success = true;
+				break;
+			}
+			if (!success) {
+				error = true;
 				uploading = false;
 				throw new Error('Failed to upload');
 			}
-			updateProgress((i + 1) / total);
 		}
 		const resFinish = await fetch('/admin/import/finish', {
 			method: 'POST',
@@ -92,7 +102,7 @@
 			class={`mt-3 alert alert-${error ? 'danger' : complete ? 'success' : 'secondary'}`}
 		>
 			{error
-				? errorMessage ?? 'An error has occured, uploading cancelled'
+				? (errorMessage ?? 'An error has occured, uploading cancelled')
 				: complete
 					? 'Upload complete!'
 					: 'Undefined'}
