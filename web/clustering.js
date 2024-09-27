@@ -13,6 +13,12 @@ if (cluster.isPrimary) {
 		cluster.fork();
 	}
 
+	cluster.on('message', (_, message) => {
+		for (const id in cluster.workers) {
+			cluster.workers[id].send(message);
+		}
+	});
+
 	cluster.on('exit', (worker, code) => {
 		console.log(`Worker ${worker.process.pid} died`);
 		if (code !== 0) {

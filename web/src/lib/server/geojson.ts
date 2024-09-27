@@ -4,7 +4,8 @@ import cron from 'node-cron';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
-import { building } from '$app/environment';
+import { building, dev } from '$app/environment';
+import { z } from 'zod';
 
 export let allTileIndex: ReturnType<typeof geojsonvt> | undefined;
 export let standardTileIndex: ReturnType<typeof geojsonvt> | undefined;
@@ -60,6 +61,17 @@ function createTiles(images: ImageData[], groups: GroupRelationData) {
 		indexMaxZoom: 5, // max zoom in the initial tile index
 		indexMaxPoints: 100000 // max number of points per tile in the index
 	});
+}
+
+export const processMessageSchema = z.object({ type: z.literal('refreshGeoJson') });
+export type ProcessMessage = z.infer<typeof processMessageSchema>;
+
+export async function broadcastGeoJsonRefresh() {
+	if (dev) {
+		await refreshGeoJsonData();
+	} else {
+		process.send?.({ type: 'refreshGeoJson' } satisfies ProcessMessage);
+	}
 }
 
 export async function refreshGeoJsonData() {

@@ -1,5 +1,6 @@
-import { dev } from '$app/environment';
+import { building, dev } from '$app/environment';
 import { getAuthUrl, isSessionValid } from '$lib/server/auth-entra';
+import { processMessageSchema, refreshGeoJsonData } from '$lib/server/geojson';
 import { redirect, type Handle } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
@@ -16,6 +17,15 @@ function appendSecurityHeaders(res: Response) {
 const accessTokenSchema = z.object({
 	name: z.string()
 });
+
+if (!building) {
+	process.on('message', async (message: unknown) => {
+		const parse = processMessageSchema.safeParse(message);
+		if (parse.success) {
+			await refreshGeoJsonData();
+		}
+	});
+}
 
 export const handle = (async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/api')) {

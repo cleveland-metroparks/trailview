@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { refreshGeoJsonData, standardTileIndex } from '$lib/server/geojson';
+import { broadcastGeoJsonRefresh, standardTileIndex } from '$lib/server/geojson';
 import * as vtpbf from 'vt-pbf';
 
 export const GET = (async ({ params }) => {
@@ -11,7 +11,7 @@ export const GET = (async ({ params }) => {
 		return json({ success: false, message: 'Invalid parameters' }, { status: 400 });
 	}
 	if (standardTileIndex === undefined) {
-		await refreshGeoJsonData();
+		await broadcastGeoJsonRefresh();
 	}
 	if (standardTileIndex === undefined) {
 		return json({ success: false, message: 'Server error' }, { status: 500 });

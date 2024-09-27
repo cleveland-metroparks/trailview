@@ -1,4 +1,4 @@
-import { refreshGeoJsonData } from '$lib/server/geojson';
+import { broadcastGeoJsonRefresh } from '$lib/server/geojson';
 import { db } from '$lib/server/db';
 import type { Actions, PageServerLoad } from './$types';
 import * as schema from '$db/schema';
@@ -68,7 +68,7 @@ export const actions = {
 			.update(schema.image)
 			.set({ public: formPublic !== null })
 			.where(eq(schema.image.id, formImageId.toString()));
-		await refreshGeoJsonData();
+		await broadcastGeoJsonRefresh();
 		return { success: true };
 	},
 	sequence: async ({ request }) => {
@@ -107,11 +107,11 @@ export const actions = {
 			.update(schema.image)
 			.set({ flipped: formFlip !== null, pitchCorrection: pitch, public: formIsPublic !== null })
 			.where(eq(schema.image.sequenceId, sequenceId));
-		await refreshGeoJsonData();
+		await broadcastGeoJsonRefresh();
 		return { success: true };
 	},
 	refresh: async () => {
-		refreshGeoJsonData();
+		await broadcastGeoJsonRefresh();
 		return { success: true };
 	},
 	'create-group': async ({ request }) => {
