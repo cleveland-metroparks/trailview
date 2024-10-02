@@ -4,6 +4,8 @@ import type { Actions, PageServerLoad } from './$types';
 import * as schema from '$db/schema';
 import { count, eq } from 'drizzle-orm';
 import { fetchTrails } from '$lib/mapsApi';
+import { z } from 'zod';
+import { zodStringToJsonSchema } from '$lib/util';
 
 export const load = (async () => {
 	const groupsQuery = await db
@@ -154,6 +156,38 @@ export const actions = {
 			console.error(error);
 			return { success: false, message: 'Database error' };
 		}
+		return { success: true };
+	},
+	'select-public': async ({ request }) => {
+		const selectPublicSchema = z.object({
+			imageIds: zodStringToJsonSchema.pipe(z.array(z.string()))
+		});
+		const form = Object.fromEntries(await request.formData());
+		const parse = selectPublicSchema.safeParse(form);
+		if (!parse.success) {
+			console.error(parse.error);
+			return { success: false, message: 'Invalid form data' };
+		}
+		for (const id of parse.data.imageIds) {
+			await db.update(schema.image).set({ public: true }).where(eq(schema.image.id, id));
+		}
+		broadcastGeoJsonRefresh();
+		return { success: true };
+	},
+	'select-private': async ({ request }) => {
+		const selectPublicSchema = z.object({
+			imageIds: zodStringToJsonSchema.pipe(z.array(z.string()))
+		});
+		const form = Object.fromEntries(await request.formData());
+		const parse = selectPublicSchema.safeParse(form);
+		if (!parse.success) {
+			console.error(parse.error);
+			return { success: false, message: 'Invalid form data' };
+		}
+		for (const id of parse.data.imageIds) {
+			await db.update(schema.image).set({ public: false }).where(eq(schema.image.id, id));
+		}
+		broadcastGeoJsonRefresh();
 		return { success: true };
 	}
 } satisfies Actions;

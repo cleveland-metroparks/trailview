@@ -157,6 +157,7 @@ export interface TrailViewerEvents {
 	on(event: 'map-move-end', listener: (bounds: mapboxgl.LngLatBounds) => void): void;
 	on(event: 'map-load', listener: () => void): void;
 	on(event: 'edit-change', listener: (enabled: boolean) => void): void;
+	on(event: 'select-change', listener: () => void): void;
 }
 
 export class TrailViewer implements TrailViewerEvents {
@@ -184,6 +185,9 @@ export class TrailViewer implements TrailViewerEvents {
 		new: { latitude: number; longitude: number };
 	}[] = [];
 	private _editOnZoom: boolean = false;
+	public selectedIds: Set<string> = new Set();
+	private _selectModeEnabled = false;
+	private _selectionMarkers: mapboxgl.Marker[] = [];
 
 	public allImageData: ImageData[] | undefined;
 
@@ -363,7 +367,18 @@ export class TrailViewer implements TrailViewerEvents {
 				console.warn('Features is undefined or properties are null');
 				return;
 			}
-			this.goToImageID(event.features[0].properties.imageID);
+			const id = event.features[0].properties.imageID;
+			if (!this._selectModeEnabled) {
+				this.goToImageID(id);
+			} else {
+				if (this.selectedIds.has(id)) {
+					this.selectedIds.delete(event.features[0].properties.imageID);
+				} else {
+					this.selectedIds.add(id);
+				}
+				this._updateSelectionMarkers();
+				this._emitter.emit('select-change');
+			}
 		});
 	}
 
@@ -449,9 +464,45 @@ export class TrailViewer implements TrailViewerEvents {
 		}
 	}
 
+	public enableSelectMode(enable: boolean) {
+		this._selectModeEnabled = enable;
+	}
+
+	public _updateSelectionMarkers() {
+		if (this.map === undefined || this.allImageData === undefined) {
+			return;
+		}
+		for (const marker of this._selectionMarkers) {
+			marker.remove();
+		}
+		const bounds = this.map.getBounds();
+		if (bounds === null) {
+			return;
+		}
+		for (const image of this.allImageData) {
+			if (!bounds.contains(image.coordinates) || !this.selectedIds.has(image.id)) {
+				continue;
+			}
+			const element = document.createElement('div');
+			element.classList.add('trailview-selected');
+			const marker = new mapboxgl.Marker({
+				element
+			})
+				.setLngLat(image.coordinates)
+				.addTo(this.map);
+			this._selectionMarkers.push(marker);
+		}
+	}
+
 	public pushEdit(imageId: string, latitude: number, longitude: number): void {
 		this.editList.push({ imageId: imageId, new: { latitude, longitude } });
 		this._emitter.emit('edit');
+	}
+
+	public clearSelection() {
+		this.selectedIds.clear();
+		this._updateSelectionMarkers();
+		this._emitter.emit('select-change');
 	}
 
 	private _createMapMarker() {

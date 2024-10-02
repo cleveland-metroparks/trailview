@@ -90,11 +90,11 @@
 		}
 	}
 
-	function refreshEverything() {
+	async function refreshEverything() {
 		if (trailviewer !== undefined) {
 			trailviewer.destroy();
-			createTrailViewer();
-			trailviewer.fetchAllImageData();
+			await createTrailViewer();
+			await trailviewer.fetchAllImageData();
 		}
 	}
 
@@ -369,6 +369,13 @@
 		trailviewer.on('edit-change', (enabled) => {
 			editEnabled = enabled;
 		});
+		trailviewer.on('select-change', () => {
+			if (trailviewer !== undefined) {
+				selectedIds = [...trailviewer.selectedIds];
+			} else {
+				console.warn('trailviewer is undefined in selection change listener');
+			}
+		});
 	}
 
 	let editEnabled = false;
@@ -383,6 +390,12 @@
 
 	function onEditEnabledChange(event: CustomEvent<boolean>) {
 		trailviewer?.setEditOnZoom(event.detail);
+	}
+
+	let selectedIds: string[] = [];
+
+	function onSelectSwitchInput(event: Event & { currentTarget: EventTarget & HTMLInputElement }) {
+		trailviewer?.enableSelectMode(event.currentTarget.checked);
 	}
 </script>
 
@@ -451,6 +464,49 @@
 			>
 				Remove group highlight</button
 			>
+		{/if}
+		<div class="form-check form-switch">
+			<input
+				on:input={onSelectSwitchInput}
+				class="form-check-input"
+				type="checkbox"
+				role="switch"
+				id="selectSwitch"
+			/>
+			<label class="form-check-label" for="selectSwitch">Select Mode</label>
+		</div>
+		{#if selectedIds.length !== 0}
+			<button
+				transition:scale
+				on:click={() => {
+					trailviewer?.clearSelection();
+				}}
+				type="button"
+				class="btn btn-sm btn-outline-secondary"
+			>
+				Clear Selection
+			</button>
+			<form
+				transition:scale
+				class="d-flex flex-row gap-2 align-items-center"
+				method="POST"
+				use:enhance={() => {
+					return async ({ update }) => {
+						await update({ reset: false });
+						await refreshEverything();
+						selectedIds = [];
+						trailviewer?.enableSelectMode(true);
+					};
+				}}
+			>
+				<input name="imageIds" type="hidden" value={JSON.stringify(selectedIds)} />
+				<button formaction="?/select-public" type="submit" class="btn btn-sm btn-success">
+					Make Public
+				</button>
+				<button formaction="?/select-private" type="submit" class="btn btn-sm btn-danger">
+					Make Private
+				</button>
+			</form>
 		{/if}
 	</div>
 	<div class="d-flex flex-row-reverse gap-1">

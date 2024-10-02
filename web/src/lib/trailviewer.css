@@ -1202,3 +1202,13 @@ div.pnlm-tooltip:hover span:after {
 .trailview-draggable-private {
 	background: radial-gradient(orange, transparent);
 }
+
+.trailview-selected {
+	width: 20px;
+	height: 20px;
+	border: 4px solid blue;
+	background: transparent;
+	border-radius: 50%;
+	z-index: 11;
+	cursor: pointer;
+}
