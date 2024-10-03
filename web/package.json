@@ -14,7 +14,11 @@
 		"lint": "prettier --plugin prettier-plugin-svelte --check . && eslint .",
 		"format": "prettier --plugin prettier-plugin-svelte --write .",
 		"start": "node -r dotenv/config clustering.js",
-		"pre-commit": "npm run format && npm run lint && npm run check"
+		"pre-commit": "npm run format && npm run lint && npm run check",
+		"docker-build:test": "docker build -t registry.cmparks.net/trailview-web:test .",
+		"docker-push:test": "docker push registry.cmparks.net/trailview-web:test",
+		"docker-build:prod": "docker build -t registry.cmparks.net/trailview-web:prod .",
+		"docker-push:prod": "docker push registry.cmparks.net/trailview-web:prod"
 	},
 	"engines": {
 		"node": "20"
