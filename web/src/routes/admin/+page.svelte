@@ -523,7 +523,7 @@
 			}}
 		>
 			<button class="btn btn-sm btn-info"
-				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if} Refresh Map Tiles</button
+				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if} Refresh Cache</button
 			>
 		</form>
 	</div>

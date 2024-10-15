@@ -3,8 +3,8 @@ import type { RequestHandler } from './$types';
 import { z } from 'zod';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
-import { broadcastGeoJsonRefresh } from '$lib/server/geojson';
 import { eq } from 'drizzle-orm';
+import { broadcastCacheRefresh } from '$lib/server/cache';
 
 const patchRequestType = z.object({
 	data: z.array(
@@ -43,9 +43,9 @@ export const PATCH = (async ({ request }) => {
 		}
 	} catch (error) {
 		console.error(error);
-		await broadcastGeoJsonRefresh();
+		await broadcastCacheRefresh();
 		return json({ success: false, message: 'Database error' }, { status: 500 });
 	}
-	await broadcastGeoJsonRefresh();
+	await broadcastCacheRefresh();
 	return json({ success: true });
 }) satisfies RequestHandler;

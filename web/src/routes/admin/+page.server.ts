@@ -1,4 +1,3 @@
-import { broadcastGeoJsonRefresh } from '$lib/server/geojson';
 import { db } from '$lib/server/db';
 import type { Actions, PageServerLoad } from './$types';
 import * as schema from '$db/schema';
@@ -6,6 +5,7 @@ import { count, eq } from 'drizzle-orm';
 import { fetchTrails } from '$lib/mapsApi';
 import { z } from 'zod';
 import { zodStringToJsonSchema } from '$lib/util';
+import { broadcastCacheRefresh } from '$lib/server/cache';
 
 export const load = (async () => {
 	const groupsQuery = await db
@@ -70,7 +70,7 @@ export const actions = {
 			.update(schema.image)
 			.set({ public: formPublic !== null })
 			.where(eq(schema.image.id, formImageId.toString()));
-		await broadcastGeoJsonRefresh();
+		await broadcastCacheRefresh();
 		return { success: true };
 	},
 	sequence: async ({ request }) => {
@@ -109,11 +109,11 @@ export const actions = {
 			.update(schema.image)
 			.set({ flipped: formFlip !== null, pitchCorrection: pitch, public: formIsPublic !== null })
 			.where(eq(schema.image.sequenceId, sequenceId));
-		await broadcastGeoJsonRefresh();
+		await broadcastCacheRefresh();
 		return { success: true };
 	},
 	refresh: async () => {
-		await broadcastGeoJsonRefresh();
+		await broadcastCacheRefresh();
 		return { success: true };
 	},
 	'create-group': async ({ request }) => {
@@ -171,7 +171,7 @@ export const actions = {
 		for (const id of parse.data.imageIds) {
 			await db.update(schema.image).set({ public: true }).where(eq(schema.image.id, id));
 		}
-		broadcastGeoJsonRefresh();
+		await broadcastCacheRefresh();
 		return { success: true };
 	},
 	'select-private': async ({ request }) => {
@@ -187,7 +187,7 @@ export const actions = {
 		for (const id of parse.data.imageIds) {
 			await db.update(schema.image).set({ public: false }).where(eq(schema.image.id, id));
 		}
-		broadcastGeoJsonRefresh();
+		await broadcastCacheRefresh();
 		return { success: true };
 	}
 } satisfies Actions;

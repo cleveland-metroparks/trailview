@@ -1,8 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { allTileIndex, broadcastGeoJsonRefresh } from '$lib/server/geojson';
+import { allTileIndex } from '$lib/server/geojson';
 import * as vtpbf from 'vt-pbf';
 import { isApiAdmin } from '$api/common';
+import { broadcastCacheRefresh } from '$lib/server/cache';
 
 export const GET = (async ({ params, cookies, request }) => {
 	if (!(await isApiAdmin(cookies, request.headers))) {
@@ -15,7 +16,7 @@ export const GET = (async ({ params, cookies, request }) => {
 		return json({ success: false, message: 'Invalid parameters' }, { status: 400 });
 	}
 	if (allTileIndex === undefined) {
-		await broadcastGeoJsonRefresh();
+		await broadcastCacheRefresh();
 	}
 	if (allTileIndex === undefined) {
 		return json({ success: false, message: 'Server error' }, { status: 500 });
