@@ -1,3 +1,6 @@
+<script lang="ts">
+</script>
+
 <div class="d-flex flex-row py-1 px-2 w-100 justify-content-between">
 	<div class="d-flex flex-row gap-3 align-items-center">
 		<h1 class="me-3 mb-0" style="font-size:24px">
