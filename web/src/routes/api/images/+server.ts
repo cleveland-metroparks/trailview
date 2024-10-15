@@ -18,8 +18,8 @@ let cache: Cache | null = null;
 export async function _refreshImageCache(): Promise<Cache> {
 	const imagesQueryBase = db.select(imageQuerySelect).from(schema.image);
 	cache = {
-		public: await imagesQueryBase,
-		private: await imagesQueryBase.where(eq(schema.image.public, true))
+		private: await imagesQueryBase,
+		public: await imagesQueryBase.where(eq(schema.image.public, true))
 	};
 	return cache;
 }
