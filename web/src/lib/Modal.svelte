@@ -3,11 +3,16 @@
 	import type bootstrap from 'bootstrap';
 	import { beforeNavigate } from '$app/navigation';
 
-	export let title: string;
-	export let closeButton = true;
+	interface Props {
+		title: string;
+		closeButton?: boolean;
+		children?: import('svelte').Snippet;
+	}
 
-	let modalElement: HTMLDivElement;
-	let modal: bootstrap.Modal | undefined;
+	let { title, closeButton = true, children }: Props = $props();
+
+	let modalElement: HTMLDivElement | undefined = $state();
+	let modal: bootstrap.Modal | undefined = $state();
 
 	export function show() {
 		modal?.show();
@@ -19,6 +24,9 @@
 
 	onMount(async () => {
 		const bootstrap = await import('bootstrap');
+		if (modalElement === undefined) {
+			throw new Error('modalElement undefined');
+		}
 		modal = new bootstrap.Modal(modalElement);
 	});
 
@@ -34,15 +42,16 @@
 				<h2 class="modal-title fs-5">{title}</h2>
 				{#if closeButton}
 					<button
-						on:click={() => {
+						onclick={() => {
 							modal?.hide();
 						}}
 						type="button"
 						class="btn-close"
-					/>
+						aria-label="close"
+					></button>
 				{/if}
 			</div>
-			<slot />
+			{@render children?.()}
 		</div>
 	</div>
 </div>

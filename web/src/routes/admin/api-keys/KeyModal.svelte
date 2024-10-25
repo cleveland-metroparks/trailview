@@ -3,17 +3,17 @@
 
 	export function show(apiKey: string) {
 		key = apiKey;
-		modal.show();
+		modal?.show();
 	}
 
 	export function hide() {
 		key = null;
-		modal.hide();
+		modal?.hide();
 	}
 
-	let key: string | null = null;
+	let key: string | null = $state(null);
 
-	let modal: Modal;
+	let modal: ReturnType<typeof Modal> | undefined = $state();
 </script>
 
 <Modal bind:this={modal} title="API Key">
@@ -23,8 +23,8 @@
 	</div>
 	<div class="modal-footer">
 		<button
-			on:click={() => {
-				modal.hide();
+			onclick={() => {
+				modal?.hide();
 			}}
 			type="button"
 			class="btn btn-secondary">Close</button

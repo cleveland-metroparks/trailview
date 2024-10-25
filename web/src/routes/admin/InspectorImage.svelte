@@ -6,18 +6,22 @@
 	import type ConfirmModal from '$lib/ConfirmModal.svelte';
 	import type FormAlert from '$lib/FormAlert.svelte';
 
-	export let currentImage: Image | undefined;
-	export let trailviewer: TrailViewer | undefined;
-	export let confirmModal: ConfirmModal;
-	export let formAlert: FormAlert;
+	interface Props {
+		currentImage: Image | undefined;
+		trailviewer: TrailViewer | undefined;
+		confirmModal: ReturnType<typeof ConfirmModal>;
+		formAlert: FormAlert;
+	}
+
+	let { currentImage, trailviewer, confirmModal, formAlert }: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		'should-refresh': void;
 	}>();
 
-	let showImageSpinner = false;
-	let showPrivateViewSpinner = false;
-	let showPublicViewSpinner = false;
+	let showImageSpinner = $state(false);
+	let showPrivateViewSpinner = $state(false);
+	let showPublicViewSpinner = $state(false);
 
 	async function setViewVisibility(visible: boolean) {
 		if (
@@ -122,29 +126,29 @@
 
 		<div class="d-flex flex-row justify-content-center mt-2">
 			<button formaction="?/image" type="submit" class="btn btn-sm btn-primary"
-				>{#if showImageSpinner}<span class="spinner-border spinner-border-sm" />{/if} Apply Changes</button
+				>{#if showImageSpinner}<span class="spinner-border spinner-border-sm"></span>{/if} Apply Changes</button
 			>
 		</div>
 		<hr />
 		<h4>Images in View</h4>
 		<div class="d-flex flex-row mt-2 gap-2">
 			<button
-				on:click={async () => {
+				onclick={async () => {
 					await setViewVisibility(false);
 				}}
 				type="button"
 				class="btn btn-sm btn-warning"
-				>{#if showPrivateViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all in
-				view private</button
+				>{#if showPrivateViewSpinner}<span class="spinner-border spinner-border-sm"></span>{/if} Set
+				all in view private</button
 			>
 			<button
-				on:click={async () => {
+				onclick={async () => {
 					await setViewVisibility(true);
 				}}
 				type="button"
 				class="btn btn-sm btn-warning"
-				>{#if showPublicViewSpinner}<span class="spinner-border spinner-border-sm" />{/if} Set all in
-				view public</button
+				>{#if showPublicViewSpinner}<span class="spinner-border spinner-border-sm"></span>{/if} Set all
+				in view public</button
 			>
 		</div>
 	</div>

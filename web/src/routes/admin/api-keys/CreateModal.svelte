@@ -4,14 +4,14 @@
 	import ModalFields from './ModalFields.svelte';
 
 	export function show() {
-		modal.show();
+		modal?.show();
 	}
 
 	export function hide() {
-		modal.hide();
+		modal?.hide();
 	}
 
-	let modal: Modal;
+	let modal: ReturnType<typeof Modal> | undefined = $state();
 </script>
 
 <Modal bind:this={modal} title="Create API Key">
@@ -29,8 +29,8 @@
 		</div>
 		<div class="modal-footer">
 			<button
-				on:click={() => {
-					modal.hide();
+				onclick={() => {
+					modal?.hide();
 				}}
 				type="button"
 				class="btn btn-secondary">Cancel</button

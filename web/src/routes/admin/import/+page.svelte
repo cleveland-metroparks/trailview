@@ -3,26 +3,32 @@
 	import { browser } from '$app/environment';
 	import { slide } from 'svelte/transition';
 
-	let progressBar: HTMLDivElement;
-	let progressFileName: string | undefined;
-	let uploading = false;
-	let files: FileList;
-	let sequenceName: string;
-	let error = false;
-	let errorMessage: string | undefined;
-	let complete = false;
+	let progressBar: HTMLDivElement | undefined = $state();
+	let progressFileName: string | undefined = $state();
+	let uploading = $state(false);
+	let files: FileList | undefined = $state();
+	let sequenceName: string = $state('');
+	let error = $state(false);
+	let errorMessage: string | undefined = $state();
+	let complete = $state(false);
 
-	$: if (browser) {
-		window.onbeforeunload = uploading
-			? () => {
-					return true;
-				}
-			: null;
-	}
+	$effect(() => {
+		if (browser) {
+			window.onbeforeunload = uploading
+				? () => {
+						return true;
+					}
+				: null;
+		}
+	});
 
-	async function handleSubmit() {
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
 		if (error === true) {
 			return;
+		}
+		if (files === undefined) {
+			throw new Error('files undefined');
 		}
 		complete = false;
 		uploading = true;
@@ -83,6 +89,9 @@
 	}
 
 	function updateProgress(fraction: number) {
+		if (progressBar === undefined) {
+			throw new Error('progressBar undefined');
+		}
 		progressBar.style.width = `${(fraction * 100).toFixed(0)}%`;
 		progressBar.innerHTML = `${(fraction * 100).toFixed(0)}%`;
 	}
@@ -109,7 +118,7 @@
 		</div>
 	{/if}
 
-	<form class="mt-3" on:submit|preventDefault={handleSubmit}>
+	<form class="mt-3" onsubmit={handleSubmit}>
 		<label for="sequenceName">Sequence Name (Use PascalCase)</label>
 		<input bind:value={sequenceName} id="sequenceName" type="text" class="form-control" required />
 
@@ -135,7 +144,7 @@
 				<label for="progressBar">{progressFileName}</label>
 			{/if}
 			<div transition:slide id="progressBar" class="progress" role="progressbar">
-				<div bind:this={progressBar} class="progress-bar" />
+				<div bind:this={progressBar} class="progress-bar"></div>
 			</div>
 		</div>
 	{/if}

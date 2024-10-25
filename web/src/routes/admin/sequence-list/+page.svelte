@@ -5,10 +5,14 @@
 	import { enhance } from '$app/forms';
 	import FormAlert from '$lib/FormAlert.svelte';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let showDone = true;
-	let tableData = data.sequences;
+	let { data }: Props = $props();
+
+	let showDone = $state(true);
+	let tableData = $state(data.sequences);
 
 	function statusColor(value: PageData['sequences'][number]['status']) {
 		switch (value) {
@@ -27,13 +31,15 @@
 		}
 	}
 
-	$: if (showDone) {
-		tableData = data.sequences;
-	} else {
-		tableData = data.sequences.filter((sequence) => {
-			return sequence.status !== 'done' || sequence.toDelete !== false;
-		});
-	}
+	$effect(() => {
+		if (showDone) {
+			tableData = data.sequences;
+		} else {
+			tableData = data.sequences.filter((sequence) => {
+				return sequence.status !== 'done' || sequence.toDelete !== false;
+			});
+		}
+	});
 
 	let fetchInterval: ReturnType<typeof setInterval> | undefined;
 

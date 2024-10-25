@@ -12,12 +12,16 @@
 	import { env } from '$env/dynamic/public';
 	import { page } from '$app/stores';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let lineChartContainer: HTMLDivElement;
+	let { data }: Props = $props();
+
+	let lineChartContainer: HTMLDivElement | undefined = $state();
 	let lineChart: ApexCharts | null = null;
 
-	let barChartContainer: HTMLDivElement;
+	let barChartContainer: HTMLDivElement | undefined = $state();
 	let barChart: ApexCharts | null = null;
 
 	let showLoadingSpinner = false;
@@ -266,9 +270,12 @@
 		}
 	}
 
-	let mapContainer: HTMLDivElement;
+	let mapContainer: HTMLDivElement | undefined = $state();
 	let heatmap: mapboxgl.Map | null = null;
 	function createHeatmap() {
+		if (mapContainer === undefined) {
+			throw new Error('mapContainer undefined');
+		}
 		heatmap = new mapboxgl.Map({
 			accessToken: env.PUBLIC_TV_MAPBOX_KEY,
 			container: mapContainer,
@@ -374,7 +381,7 @@
 		<div class="btn-group btn-group-sm">
 			{#each presetRanges as range}
 				<button
-					on:click={() => {
+					onclick={() => {
 						onPresetRange(range);
 					}}
 					type="button"
@@ -383,7 +390,7 @@
 			{/each}
 		</div>
 	</div>
-	<div bind:this={lineChartContainer} />
+	<div bind:this={lineChartContainer}></div>
 	<h2 transition:fly style="font-size:24px">
 		Image Hits per Sequence for {localDateTimeString(data.selectedMinDate)} - {localDateTimeString(
 			data.selectedMaxDate
@@ -391,9 +398,9 @@
 		{#if showLoadingSpinner}<span transition:scale class="spinner-border"></span>{/if}
 	</h2>
 	<div class="d-flex flex-row">
-		<div bind:this={barChartContainer} class="w-50" />
+		<div bind:this={barChartContainer} class="w-50"></div>
 		<div class="w-50">
-			<div bind:this={mapContainer} style="height:500px" />
+			<div bind:this={mapContainer} style="height:500px"></div>
 		</div>
 	</div>
 </div>

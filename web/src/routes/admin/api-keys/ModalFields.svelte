@@ -1,10 +1,16 @@
 <script lang="ts">
-	export let name = '';
-	export let role: 'standard' | 'admin' = 'standard';
-	export let active = false;
+	interface Props {
+		name?: string;
+		role?: 'standard' | 'admin';
+		active?: boolean;
+	}
 
-	let selectedRole: 'standard' | 'admin' | null;
-	$: selectedRole = role;
+	let { name = '', role = 'standard', active = false }: Props = $props();
+
+	let selectedRole: 'standard' | 'admin' | null = $state(null);
+	$effect(() => {
+		selectedRole = role;
+	});
 </script>
 
 <label for="apiKeyName" class="form-label">Name</label>
@@ -15,7 +21,7 @@
 <div id="apiKeyRole" class="btn-group" role="group">
 	<button
 		type="button"
-		on:click={() => {
+		onclick={() => {
 			selectedRole = 'standard';
 		}}
 		id="apiKeyRoleStandard"
@@ -25,7 +31,7 @@
 
 	<button
 		type="button"
-		on:click={() => {
+		onclick={() => {
 			selectedRole = 'admin';
 		}}
 		id="apiKeyRoleAdmin"

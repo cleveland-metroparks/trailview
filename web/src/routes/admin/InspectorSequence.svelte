@@ -4,20 +4,29 @@
 	import { mapsApiTrailSelectValue, type MapsApiTrailsType } from './+page.svelte';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 
-	export let trailviewer: TrailViewer | undefined;
-	export let currentSequence:
-		| { name: string; id: number; mapsApiTrailId: number | null }
-		| undefined;
-	export let mapsApiTrails: MapsApiTrailsType | null = null;
-	export let currentImage: Image | undefined;
-	export let pitchCorrection = 0;
-	export let flipped: boolean;
+	interface Props {
+		trailviewer: TrailViewer | undefined;
+		currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
+		mapsApiTrails?: MapsApiTrailsType | null;
+		currentImage: Image | undefined;
+		pitchCorrection?: number;
+		flipped: boolean;
+	}
+
+	let {
+		trailviewer,
+		currentSequence,
+		mapsApiTrails = null,
+		currentImage,
+		pitchCorrection = $bindable(0),
+		flipped = $bindable()
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		'should-refresh': void;
 	}>();
 
-	let showSequenceSpinner = false;
+	let showSequenceSpinner = $state(false);
 
 	function onPitchCorrectionChange() {
 		if (!trailviewer || !currentImage) {
@@ -90,7 +99,6 @@
 		</div>
 		<div class="mt-2 form-check form-switch">
 			<input
-				bind:value={flipped}
 				id="flip_switch"
 				name="flip"
 				class="form-check-input"
@@ -102,7 +110,7 @@
 		</div>
 		<label for="pitch_range" class="mt-2 form-label">Pitch Correction: {pitchCorrection}</label>
 		<input
-			on:change={onPitchCorrectionChange}
+			onchange={onPitchCorrectionChange}
 			bind:value={pitchCorrection}
 			name="pitch"
 			type="range"
@@ -114,14 +122,14 @@
 		/>
 		<div class="d-flex flex-row gap-2">
 			<button
-				on:click={() => {
+				onclick={() => {
 					dispatch('should-refresh');
 				}}
 				type="button"
 				class="btn btn-secondary btn-sm">Reset Pitch</button
 			>
 			<button
-				on:click={() => {
+				onclick={() => {
 					trailviewer?.getPanViewer()?.lookAt(0, 90, 120, false);
 				}}
 				type="button"
@@ -130,7 +138,7 @@
 		</div>
 		<div class="mt-3 d-flex flex-row justify-content-center">
 			<button type="submit" class="btn btn-primary btn-sm"
-				>{#if showSequenceSpinner}<span class="spinner-border spinner-border-sm" />{/if} Apply Changes</button
+				>{#if showSequenceSpinner}<span class="spinner-border spinner-border-sm"></span>{/if} Apply Changes</button
 			>
 		</div>
 	</div>

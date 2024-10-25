@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	export type AccessibleTrailName =
 		| 'Bonnie Park Loop'
 		| 'Bunns Lake Loop'
@@ -20,7 +20,11 @@
 	import imgMapRockyRiver from '$lib/assets/accessibility/maps/rocky-river.jpg';
 	import imgMapWestCreek from '$lib/assets/accessibility/maps/west-creek.jpg';
 
-	export let selectedTrail: AccessibleTrailName;
+	interface Props {
+		selectedTrail: AccessibleTrailName;
+	}
+
+	let { selectedTrail }: Props = $props();
 </script>
 
 {#if selectedTrail === 'Bonnie Park Loop'}

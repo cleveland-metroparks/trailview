@@ -3,6 +3,11 @@
 	import { onMount } from 'svelte';
 	import 'bootstrap/dist/css/bootstrap.min.css';
 	import 'bootstrap-icons/font/bootstrap-icons.min.css';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 	onMount(async () => {
 		await import('bootstrap');
 	});
@@ -10,7 +15,7 @@
 
 <div class="d-flex flex-column h-100 overflow-hidden">
 	<Header />
-	<slot />
+	{@render children?.()}
 </div>
 
 <style lang="scss">

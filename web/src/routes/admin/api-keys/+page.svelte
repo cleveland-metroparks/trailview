@@ -9,18 +9,23 @@
 	import EditModal from './EditModal.svelte';
 	import { browser } from '$app/environment';
 
-	export let data: PageData;
-	export let form: ActionData;
-
-	$: if (form && browser) {
-		createModal.hide();
-		editModal.hide();
+	interface Props {
+		data: PageData;
+		form: ActionData;
 	}
 
-	let createModal: CreateModal;
-	let keyModal: KeyModal;
-	let confirmModal: ConfirmModal;
-	let editModal: EditModal;
+	let { data, form }: Props = $props();
+
+	let createModal: ReturnType<typeof CreateModal> | undefined = $state();
+	let keyModal: ReturnType<typeof KeyModal> | undefined = $state();
+	let confirmModal: ReturnType<typeof ConfirmModal> | undefined = $state();
+	let editModal: ReturnType<typeof EditModal> | undefined = $state();
+	$effect(() => {
+		if (form && browser) {
+			createModal?.hide();
+			editModal?.hide();
+		}
+	});
 </script>
 
 <CreateModal bind:this={createModal} />
@@ -33,8 +38,8 @@
 
 	<div class="d-flex flex-row-reverse mb-3">
 		<button
-			on:click={() => {
-				createModal.show();
+			onclick={() => {
+				createModal?.show();
 			}}
 			type="button"
 			class="btn btn-success">Create</button
@@ -68,20 +73,22 @@
 						<td>{localDateTimeString(apiKey.createdAt)}</td>
 						<td class="d-flex flex-row gap-2">
 							<button
-								on:click={() => {
-									keyModal.show(apiKey.key);
+								onclick={() => {
+									keyModal?.show(apiKey.key);
 								}}
 								type="button"
 								class="btn btn-sm btn-outline-info"
+								aria-label="show API key"
 							>
 								<i class="bi bi-key"></i>
 							</button>
 							<button
-								on:click={() => {
-									editModal.show(apiKey.id, apiKey.name, apiKey.role, apiKey.active);
+								onclick={() => {
+									editModal?.show(apiKey.id, apiKey.name, apiKey.role, apiKey.active);
 								}}
 								type="button"
 								class="btn btn-sm btn-outline-warning"
+								aria-label="edit"
 							>
 								<i class="bi bi-pencil"></i>
 							</button>
@@ -91,7 +98,7 @@
 								method="POST"
 								use:enhance={async ({ cancel }) => {
 									cancel();
-									const res = await confirmModal.prompt(
+									const res = await confirmModal?.prompt(
 										`Are you sure you want to delete this API key (${apiKey.name})?`,
 										'Confirm Delete API Key'
 									);
@@ -104,7 +111,7 @@
 								}}
 							>
 								<input name="id" type="hidden" value={apiKey.id} />
-								<button type="submit" class="btn btn-sm btn-danger">
+								<button type="submit" class="btn btn-sm btn-danger" aria-label="delete">
 									<i class="bi bi-trash3"></i>
 								</button>
 							</form>

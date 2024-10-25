@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	declare class FlutterChannel {
 		postMessage(message: string): void;
 	}
@@ -155,7 +155,7 @@
 	});
 </script>
 
-<div id="trailviewer" />
+<div id="trailviewer"></div>
 
 <style>
 	:global(html, body) {

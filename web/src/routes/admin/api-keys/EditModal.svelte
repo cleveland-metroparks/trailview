@@ -13,20 +13,20 @@
 		fieldRole = role;
 		fieldActive = active;
 		keyId = apiKeyId;
-		modal.show();
+		modal?.show();
 	}
 
 	export function hide() {
 		keyId = null;
-		modal.hide();
+		modal?.hide();
 	}
 
-	let fieldName: string | undefined;
-	let fieldRole: 'standard' | 'admin' | undefined;
-	let fieldActive: boolean | undefined;
+	let fieldName: string | undefined = $state();
+	let fieldRole: 'standard' | 'admin' | undefined = $state();
+	let fieldActive: boolean | undefined = $state();
 
-	let keyId: number | null = null;
-	let modal: Modal;
+	let keyId: number | null = $state(null);
+	let modal: ReturnType<typeof Modal> | undefined = $state();
 </script>
 
 <Modal bind:this={modal} title="Edit API Key">
@@ -45,8 +45,8 @@
 		</div>
 		<div class="modal-footer">
 			<button
-				on:click={() => {
-					modal.hide();
+				onclick={() => {
+					modal?.hide();
 				}}
 				type="button"
 				class="btn btn-secondary">Cancel</button

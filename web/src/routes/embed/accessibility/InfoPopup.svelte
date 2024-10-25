@@ -2,7 +2,7 @@
 	import { fly } from 'svelte/transition';
 	import imgClose from '$lib/assets/icons/close.svg';
 
-	let shown = true;
+	let shown = $state(true);
 
 	function hide() {
 		shown = false;
@@ -11,7 +11,7 @@
 
 {#if shown}
 	<div transition:fly={{ x: -100, duration: 500 }} class="info-popup">
-		<button on:click={hide} type="button" class="green-button close-button"
+		<button onclick={hide} type="button" class="green-button close-button"
 			><img src={imgClose} alt="close icon" /></button
 		>
 		Click/Tap on the green highlight on the map to navigate

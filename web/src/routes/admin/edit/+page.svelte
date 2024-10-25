@@ -12,7 +12,11 @@
 	import type { MultiLineString } from 'geojson';
 	import type { GeoJSONSource } from 'mapbox-gl';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	let listenForEdits = true;
 
@@ -145,7 +149,7 @@
 		}
 	}
 
-	let mapsApiTrailValue: number | 'unassigned' = 'unassigned';
+	let mapsApiTrailValue: number | 'unassigned' = $state('unassigned');
 
 	let mapHasEditLayer = false;
 
@@ -249,17 +253,17 @@
 		trailviewer?.undoEdit();
 	}
 
-	let rangeLimit: number = 10;
+	let rangeLimit: number = $state(10);
 </script>
 
-<svelte:window on:keypress={onKeyPress} />
+<svelte:window onkeypress={onKeyPress} />
 
 <div class="row mb-5">
 	<div class="col-12 col-md-9">
 		<div id="viewer-container">
-			<div id="trailview_panorama" />
+			<div id="trailview_panorama"></div>
 		</div>
-		<div id="trailview_map" />
+		<div id="trailview_map"></div>
 	</div>
 	<div class="col-12 col-md-3">
 		<h4>Maps API Trails</h4>
@@ -278,17 +282,17 @@
 		{:else}
 			<div class="alert alert-danger">Failed to fetch data</div>
 		{/if}
-		<div class="row mt-2" />
+		<div class="row mt-2"></div>
 		<h4>Actions</h4>
 		<div class="flex-row d-flex gap-2 flex-wrap">
 			<div class="col-auto">
-				<button on:click={drawTrail} type="button" class="btn btn-primary">Draw Trail</button>
+				<button onclick={drawTrail} type="button" class="btn btn-primary">Draw Trail</button>
 			</div>
 			<div class="col-auto">
-				<button on:click={alignImages} type="button" class="btn btn-warning">Align (a)</button>
+				<button onclick={alignImages} type="button" class="btn btn-warning">Align (a)</button>
 			</div>
 			<div class="col-auto">
-				<button on:click={undoEdit} type="button" class="btn btn-warning">Undo (z)</button>
+				<button onclick={undoEdit} type="button" class="btn btn-warning">Undo (z)</button>
 			</div>
 		</div>
 		<label for="limitRange" class="mt-3 form-label">Limit Align Range (meters) - {rangeLimit}</label

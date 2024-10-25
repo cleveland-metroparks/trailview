@@ -5,9 +5,13 @@
 	import imgClose from '$lib/assets/icons/close.svg';
 	import imgInfo from '$lib/assets/icons/info.svg';
 
-	export let trail: AccessibleTrailName;
+	interface Props {
+		trail: AccessibleTrailName;
+	}
 
-	let visible = false;
+	let { trail = $bindable() }: Props = $props();
+
+	let visible = $state(false);
 	export function show() {
 		visible = true;
 	}
@@ -19,7 +23,7 @@
 
 {#if visible}
 	<div transition:fly={{ x: 100, duration: 500 }} class="modal">
-		<button on:click={hide} type="button" class="green-button close-button"
+		<button onclick={hide} type="button" class="green-button close-button"
 			><img src={imgClose} alt="close icon" /></button
 		>
 		{#key trail}
@@ -34,7 +38,7 @@
 		{/key}
 	</div>
 {:else}
-	<button on:click={show} in:scale={{ delay: 200 }} out:scale class="green-button info-button"
+	<button onclick={show} in:scale={{ delay: 200 }} out:scale class="green-button info-button"
 		><img src={imgInfo} alt="open info icon" /></button
 	>
 {/if}

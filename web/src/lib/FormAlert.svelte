@@ -1,3 +1,4 @@
+<!-- @migration-task Error while migrating Svelte code: Can't migrate code with afterUpdate. Please migrate by hand. -->
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { afterUpdate } from 'svelte';
@@ -41,6 +42,7 @@
 			}}
 			type="button"
 			class="btn-close"
-		/>
+			aria-label="close"
+		></button>
 	</div>
 {/if}

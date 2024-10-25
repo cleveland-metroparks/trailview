@@ -12,9 +12,13 @@
 	import imgChevronRight from '$lib/assets/icons/chevron-right.svg';
 	import { page } from '$app/stores';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let trailviewer: TrailViewer | undefined;
+	let { data }: Props = $props();
+
+	let trailviewer: TrailViewer | undefined = $state();
 	onMount(async () => {
 		if (data.accessibleTrails.length === 0) {
 			throw new Error('No trails specified');
@@ -51,33 +55,36 @@
 		});
 	});
 
-	let carouselContent: HTMLDivElement;
+	let carouselContent: HTMLDivElement | undefined = $state();
 
 	function carouselPrev() {
-		carouselContent.scrollBy({
+		carouselContent?.scrollBy({
 			left: -400,
 			behavior: 'smooth'
 		});
 	}
 
 	function carouselNext() {
-		carouselContent.scrollBy({
+		carouselContent?.scrollBy({
 			left: 400,
 			behavior: 'smooth'
 		});
 	}
 
-	let showPrevButton = false;
-	let showNextButton = false;
+	let showPrevButton = $state(false);
+	let showNextButton = $state(false);
 
 	function onCarouselScroll() {
+		if (carouselContent === undefined) {
+			throw new Error('carouselContent undefined');
+		}
 		showPrevButton = carouselContent.scrollLeft !== 0;
 		showNextButton =
 			carouselContent.scrollLeft + carouselContent.offsetWidth + 1 < carouselContent.scrollWidth;
 	}
 
-	let infoModal: InfoModal;
-	let infoModalTrail: AccessibleTrailName = 'Woodpecker Way';
+	let infoModal: ReturnType<typeof InfoModal> | undefined = $state();
+	let infoModalTrail: AccessibleTrailName = $state('Woodpecker Way');
 </script>
 
 <InfoPopup />
@@ -85,13 +92,13 @@
 <div class="container">
 	<div class="viewer-container">
 		<InfoModal bind:this={infoModal} bind:trail={infoModalTrail} />
-		<div class="viewer" id="viewer" />
+		<div class="viewer" id="viewer"></div>
 	</div>
 	<div class="carousel">
 		{#if showPrevButton}
 			<button
 				transition:scale
-				on:click={carouselPrev}
+				onclick={carouselPrev}
 				type="button"
 				class="carousel-button carousel-prev"><img src={imgChevronLeft} alt="scroll left" /></button
 			>
@@ -99,17 +106,20 @@
 		{#if showNextButton}
 			<button
 				transition:scale
-				on:click={carouselNext}
+				onclick={carouselNext}
 				type="button"
 				class="carousel-button carousel-next"
 				><img src={imgChevronRight} alt="scroll right" /></button
 			>
 		{/if}
-		<div on:scroll={onCarouselScroll} bind:this={carouselContent} class="carousel-content">
+		<div onscroll={onCarouselScroll} bind:this={carouselContent} class="carousel-content">
 			{#each data.accessibleTrails as trail}
 				<button
-					on:click={() => {
+					onclick={() => {
 						if (trailviewer !== undefined) {
+							if (infoModal === undefined) {
+								throw new Error('infoModal undefined');
+							}
 							trailviewer.goToImageID(trail.initImgId);
 							infoModalTrail = trail.displayName;
 							infoModal.show();
@@ -118,7 +128,7 @@
 					class="carousel-item"
 				>
 					<span class="carousel-item-text">{trail.displayName}</span>
-					<div class="carousel-outline" />
+					<div class="carousel-outline"></div>
 					<img src={trail.thumbnail} class="placeholder-image" alt="Woodpecker Way" />
 				</button>
 			{/each}

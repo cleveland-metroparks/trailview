@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	export type MapsApiTrailsType = {
 		id: number;
 		name: string;
@@ -42,39 +42,46 @@
 	import type { GetResType as SequenceImageIdsGetResType } from '$api/sequences/[sequenceId]/image-ids/+server';
 	import type { GetResType as SequenceImageCoordinatesGetResType } from '$api/sequences/[sequenceId]/image-coordinates/+server';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let selectedGroupId: number | undefined = undefined;
+	let { data }: Props = $props();
+
+	let selectedGroupId: number | undefined = $state(undefined);
 
 	let inspectorPages = ['Sequence', 'Image(s)', 'Group', 'Move'] as const;
-	let inspectorPage: (typeof inspectorPages)[number] = 'Sequence';
+	let inspectorPage: (typeof inspectorPages)[number] = $state('Sequence');
 
-	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined;
-	let pitchCorrection = 0;
-	let flipped: boolean;
-	let currentImage: Image | undefined;
+	let currentSequence: { name: string; id: number; mapsApiTrailId: number | null } | undefined =
+		$state();
+	let pitchCorrection = $state(0);
+	let flipped: boolean = $state(false);
+	let currentImage: Image | undefined = $state();
 
-	let trailviewer: TrailViewer | undefined;
+	let trailviewer: TrailViewer | undefined = $state();
 
-	let goToSequenceSelect: HTMLSelectElement;
+	let goToSequenceSelect: HTMLSelectElement | undefined = $state();
 
-	let confirmModal: ConfirmModal;
-	let formAlert: FormAlert;
+	let confirmModal: ReturnType<typeof ConfirmModal> | undefined = $state();
+	let formAlert: FormAlert | undefined = $state();
 
-	let showCacheSpinner = false;
+	let showCacheSpinner = $state(false);
 
-	let highlightedSequenceId: number | undefined = undefined;
+	let highlightedSequenceId: number | undefined = $state(undefined);
 
-	let layout: 'viewer' | 'map' = 'map';
+	let layout: 'viewer' | 'map' = $state('map');
 
-	$: if (layout) {
-		// This defers the map resize until the layout
-		// changes after current event loop
-		setTimeout(() => {
-			trailviewer?.map?.resize();
-			trailviewer?.centerMarker();
-		}, 0);
-	}
+	$effect(() => {
+		if (layout) {
+			// This defers the map resize until the layout
+			// changes after current event loop
+			setTimeout(() => {
+				trailviewer?.map?.resize();
+				trailviewer?.centerMarker();
+			}, 0);
+		}
+	});
 
 	onMount(async () => {
 		await createTrailViewer();
@@ -135,7 +142,7 @@
 		const res = await fetch(`/api/group/${groupId}?private`, { method: 'GET' });
 		const resData = (await res.json()) as GroupGetResType;
 		if (resData.success === false) {
-			formAlert.popup(resData);
+			formAlert?.popup(resData);
 			return;
 		}
 		const images = trailviewer.allImageData.filter((i) => {
@@ -238,6 +245,9 @@
 		inspectorPage = 'Sequence';
 		if (sequenceId !== undefined) {
 			highlightSequence(sequenceId);
+		}
+		if (goToSequenceSelect === undefined) {
+			throw new Error('goToSequenceSelect undefined');
 		}
 		goToSequenceSelect.value = 'select';
 	}
@@ -378,7 +388,7 @@
 		});
 	}
 
-	let editEnabled = false;
+	let editEnabled = $state(false);
 
 	function toggleLayout() {
 		layout = layout === 'map' ? 'viewer' : 'map';
@@ -392,14 +402,14 @@
 		trailviewer?.setEditOnZoom(event.detail);
 	}
 
-	let selectedIds: string[] = [];
+	let selectedIds: string[] = $state([]);
 
 	function onSelectSwitchInput(event: Event & { currentTarget: EventTarget & HTMLInputElement }) {
 		trailviewer?.enableSelectMode(event.currentTarget.checked);
 	}
 </script>
 
-<svelte:window on:keypress={handleKeypress} />
+<svelte:window onkeypress={handleKeypress} />
 
 <svelte:head>
 	<title>TrailView Admin</title>
@@ -411,7 +421,7 @@
 	<div class="d-flex flex-row gap-2 align-items-center">
 		<select
 			id="goToSequenceSelect"
-			on:change={onSequenceSelectChange}
+			onchange={onSequenceSelectChange}
 			class="col-auto form-select form-select-sm"
 			style="width:210px"
 			bind:this={goToSequenceSelect}
@@ -422,7 +432,7 @@
 			{/each}
 		</select>
 		<select
-			on:change={onGoToGroupChange}
+			onchange={onGoToGroupChange}
 			class="col-auto form-select form-select-sm"
 			style="width:210px"
 		>
@@ -434,7 +444,7 @@
 		{#if currentSequence !== undefined && currentSequence.id !== highlightedSequenceId}
 			<button
 				in:scale
-				on:click={() => {
+				onclick={() => {
 					if (currentSequence !== undefined) {
 						highlightSequence(currentSequence.id);
 					}
@@ -446,7 +456,7 @@
 		{#if highlightedSequenceId !== undefined}
 			<button
 				in:scale
-				on:click={() => {
+				onclick={() => {
 					trailviewer?.map?.removeLayer('sequenceLayer');
 					trailviewer?.map?.removeSource('sequenceSource');
 					highlightedSequenceId = undefined;
@@ -457,7 +467,7 @@
 		{/if}
 		{#if selectedGroupId !== undefined}
 			<button
-				on:click={removeGroupHighlight}
+				onclick={removeGroupHighlight}
 				transition:scale
 				type="button"
 				class="btn btn-sm btn-outline-info"
@@ -467,7 +477,7 @@
 		{/if}
 		<div class="form-check form-switch">
 			<input
-				on:input={onSelectSwitchInput}
+				oninput={onSelectSwitchInput}
 				class="form-check-input"
 				type="checkbox"
 				role="switch"
@@ -478,7 +488,7 @@
 		{#if selectedIds.length !== 0}
 			<button
 				transition:scale
-				on:click={() => {
+				onclick={() => {
 					trailviewer?.clearSelection();
 				}}
 				type="button"
@@ -523,7 +533,7 @@
 			}}
 		>
 			<button class="btn btn-sm btn-info"
-				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm" />{/if} Refresh Cache</button
+				>{#if showCacheSpinner}<span class="spinner-border spinner-border-sm"></span>{/if} Refresh Cache</button
 			>
 		</form>
 	</div>
@@ -535,14 +545,19 @@
 		{#if editEnabled}
 			<div transition:slide class="edit-indicator">Edit Mode Enabled</div>
 		{/if}
-		<div id="trailview_map" class={layout === 'map' ? 'main-container' : 'small-container'} />
+		<div id="trailview_map" class={layout === 'map' ? 'main-container' : 'small-container'}></div>
 		<div
 			id="trailview_panorama"
 			class={layout === 'viewer' ? 'main-container' : 'small-container'}
-		/>
-		<button on:click={toggleLayout} type="button" class="btn btn-sm btn-light expand-btn"
-			><i class="bi bi-arrows-angle-expand"></i></button
+		></div>
+		<button
+			onclick={toggleLayout}
+			type="button"
+			class="btn btn-sm btn-light expand-btn"
+			aria-label="expand"
 		>
+			<i class="bi bi-arrows-angle-expand"></i>
+		</button>
 	</div>
 	<div style="width:370px">
 		<div class="mt-1 mx-2">
@@ -551,7 +566,7 @@
 				{#each inspectorPages as page}
 					<li class="nav-item">
 						<button
-							on:click={() => {
+							onclick={() => {
 								inspectorPage = page;
 							}}
 							class={`nav-link ${inspectorPage === page ? 'active' : ''}`}>{page}</button

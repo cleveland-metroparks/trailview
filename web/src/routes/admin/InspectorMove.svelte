@@ -2,12 +2,16 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { TrailViewer } from '$lib/trailviewer';
 
-	export let trailviewer: TrailViewer | undefined;
+	interface Props {
+		trailviewer: TrailViewer | undefined;
+	}
+
+	let { trailviewer }: Props = $props();
 
 	const dispatch = createEventDispatcher<{ 'should-refresh': void; 'edit-enabled': boolean }>();
 
-	let showEditSpinner = false;
-	let editEnabled = false;
+	let showEditSpinner = $state(false);
+	let editEnabled = $state(false);
 
 	function onEditCheckChange() {
 		dispatch('edit-enabled', editEnabled);
@@ -21,13 +25,13 @@
 			class="form-check-input"
 			type="checkbox"
 			id="editZoomCheck"
-			on:change={onEditCheckChange}
+			onchange={onEditCheckChange}
 		/>
 		<label class="form-check-label" for="editZoomCheck">Edit Mode (When zoomed)</label>
 	</div>
 
 	<button
-		on:click={() => {
+		onclick={() => {
 			if (trailviewer !== undefined) {
 				trailviewer.undoEdit();
 			}
@@ -39,7 +43,7 @@
 		Undo Image Move (z)
 	</button>
 	<button
-		on:click={() => {
+		onclick={() => {
 			if (trailviewer !== undefined) {
 				trailviewer.discardEdits();
 			}
@@ -52,7 +56,7 @@
 	</button>
 
 	<button
-		on:click={async () => {
+		onclick={async () => {
 			showEditSpinner = true;
 			await trailviewer?.submitEdits();
 			showEditSpinner = false;
@@ -63,7 +67,7 @@
 		disabled={!editEnabled}
 	>
 		{#if showEditSpinner}
-			<span class="spinner-border spinner-border-sm" />
+			<span class="spinner-border spinner-border-sm"></span>
 		{/if}
 		Submit Changes
 	</button>

@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	export type GroupType = {
 		id: number;
 		name: string;
@@ -21,12 +21,23 @@
 	import type ConfirmModal from '$lib/ConfirmModal.svelte';
 	import { createEventDispatcher } from 'svelte';
 
-	export let selectedGroupId: number | undefined;
-	export let groupData: GroupType[];
-	export let sequenceData: SequenceType[];
-	export let trailviewer: TrailViewer | undefined;
-	export let formAlert: FormAlert;
-	export let confirmModal: ConfirmModal;
+	interface Props {
+		selectedGroupId: number | undefined;
+		groupData: GroupType[];
+		sequenceData: SequenceType[];
+		trailviewer: TrailViewer | undefined;
+		formAlert: FormAlert;
+		confirmModal: ReturnType<typeof ConfirmModal>;
+	}
+
+	let {
+		selectedGroupId = $bindable(),
+		groupData,
+		sequenceData,
+		trailviewer,
+		formAlert,
+		confirmModal
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		'should-refresh': void;
@@ -34,13 +45,13 @@
 		'sequence-select': { sequenceId: number };
 	}>();
 
-	let selectedGroup: GroupType | undefined;
-	let showGroupSpinner = false;
-	let groupSequenceSelectValue: string | undefined;
-
-	$: selectedGroup = groupData.find((g) => {
-		return g.id === selectedGroupId;
-	});
+	let selectedGroup: GroupType | undefined = $derived(
+		groupData.find((g) => {
+			return g.id === selectedGroupId;
+		})
+	);
+	let showGroupSpinner = $state(false);
+	let groupSequenceSelectValue: string | undefined = $state();
 
 	function onGroupSelectChange(event: Event) {
 		const element = event.target as HTMLSelectElement;
@@ -119,7 +130,7 @@
 	</div>
 </form>
 <label class="mt-1" for="groupSelect">Select Group</label>
-<select on:change={onGroupSelectChange} class="form-select form-select-sm" id="groupSelect">
+<select onchange={onGroupSelectChange} class="form-select form-select-sm" id="groupSelect">
 	<option value="select">Select</option>
 	{#each groupData as group}
 		<option value={`group_${group.id}`} selected={selectedGroupId === group.id}>{group.name}</option
@@ -133,13 +144,13 @@
 	</div>
 	<div class="mt-2 d-flex flex-row gap-2 flex-wrap">
 		<button
-			on:click={() => {
+			onclick={() => {
 				onChangeViewGroup('add');
 			}}
 			class="btn btn-sm btn-success">Assign all Images in View to Group</button
 		>
 		<button
-			on:click={() => {
+			onclick={() => {
 				onChangeViewGroup('remove');
 			}}
 			class="btn btn-sm btn-danger">Remove all Images in View from Group</button
@@ -148,7 +159,7 @@
 	<hr />
 	<h5>Add from Sequence</h5>
 	<select
-		on:change={onSequenceChange}
+		onchange={onSequenceChange}
 		bind:value={groupSequenceSelectValue}
 		class="form-select form-select-sm"
 	>
@@ -158,13 +169,13 @@
 	</select>
 	<div class="mt-1 d-flex flex-row gap-2">
 		<button
-			on:click={() => {
+			onclick={() => {
 				onGroupSequenceAction('add');
 			}}
 			class="btn btn-sm btn-success">Add from sequence</button
 		>
 		<button
-			on:click={() => {
+			onclick={() => {
 				onGroupSequenceAction('remove');
 			}}
 			class="btn btn-sm btn-danger">Remove from sequence</button
