@@ -24,9 +24,11 @@ const microsoftEntraId = new MicrosoftEntraId(
 export async function getAuthUrl(): Promise<{ state: string; codeVerifier: string; url: URL }> {
 	const state = generateState(); // Set as cookie to prevent CSRF
 	const codeVerifier = generateCodeVerifier();
-	const url = await microsoftEntraId.createAuthorizationURL(state, codeVerifier, {
-		scopes: ['user.read']
-	});
+	const url = microsoftEntraId.createAuthorizationURL(state, codeVerifier, [
+		'openid',
+		'user.read',
+		'offline_access'
+	]);
 	return { state, codeVerifier, url };
 }
 
@@ -51,9 +53,9 @@ export async function getTokens(params: {
 			params.codeVerifier
 		);
 		return {
-			accessToken: tokens.accessToken,
-			idToken: tokens.idToken,
-			refreshToken: tokens.refreshToken
+			accessToken: tokens.accessToken(),
+			idToken: tokens.idToken(),
+			refreshToken: tokens.hasRefreshToken() ? tokens.refreshToken() : null
 		};
 	} catch (e) {
 		console.error(e);
@@ -133,7 +135,7 @@ export async function getUserInfo(accessToken: string): Promise<{
 async function refreshAccessToken(refreshToken: string): Promise<string | null> {
 	try {
 		const tokens = await microsoftEntraId.refreshAccessToken(refreshToken);
-		return tokens.accessToken;
+		return tokens.accessToken();
 	} catch (e) {
 		console.error(e);
 		return null;

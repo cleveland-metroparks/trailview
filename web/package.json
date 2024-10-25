@@ -59,7 +59,7 @@
 		"@cmparks/trailviewer": "file:../trailviewer",
 		"@microsoft/microsoft-graph-client": "^3.0.7",
 		"apexcharts": "^3.54.1",
-		"arctic": "^1.9.2",
+		"arctic": "^2.0.1",
 		"bootstrap": "^5.3.3",
 		"bootstrap-icons": "^1.11.3",
 		"change-case": "^5.4.4",
