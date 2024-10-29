@@ -1,7 +1,8 @@
 <script lang="ts">
 	import 'normalize.css/normalize.css';
+	import type { Snippet } from 'svelte';
 	interface Props {
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	}
 
 	let { children }: Props = $props();

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import type bootstrap from 'bootstrap';
 	import { beforeNavigate } from '$app/navigation';
 
 	interface Props {
 		title: string;
 		closeButton?: boolean;
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	}
 
 	let { title, closeButton = true, children }: Props = $props();
