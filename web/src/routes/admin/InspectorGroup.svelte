@@ -19,7 +19,6 @@
 	import type { PatchReqType as GroupPatchReqType } from './edit/group/[groupId]/view/+server';
 	import type { PatchReqType as GroupSeqPatchReqType } from './edit/group/[groupId]/sequence/+server';
 	import type ConfirmModal from '$lib/ConfirmModal.svelte';
-	import { createEventDispatcher } from 'svelte';
 
 	interface Props {
 		selectedGroupId: number | undefined;
@@ -28,6 +27,9 @@
 		trailviewer: TrailViewer | undefined;
 		formAlert: FormAlert;
 		confirmModal: ReturnType<typeof ConfirmModal>;
+		onShouldRefresh: () => void;
+		onDrawGroup: (event: { groupId: number }) => void;
+		onSequenceSelect: (event: { sequenceId: number }) => void;
 	}
 
 	let {
@@ -36,14 +38,11 @@
 		sequenceData,
 		trailviewer,
 		formAlert,
-		confirmModal
+		confirmModal,
+		onShouldRefresh,
+		onDrawGroup,
+		onSequenceSelect
 	}: Props = $props();
-
-	const dispatch = createEventDispatcher<{
-		'should-refresh': void;
-		'draw-group': { groupId: number };
-		'sequence-select': { sequenceId: number };
-	}>();
 
 	let selectedGroup: GroupType | undefined = $derived(
 		groupData.find((g) => {
@@ -57,7 +56,7 @@
 		const element = event.target as HTMLSelectElement;
 		if (element.value.startsWith('group_')) {
 			selectedGroupId = parseInt(element.value.split('_')[1]);
-			dispatch('draw-group', { groupId: selectedGroupId });
+			onDrawGroup({ groupId: selectedGroupId });
 		} else {
 			selectedGroupId = undefined;
 		}
@@ -92,7 +91,7 @@
 		});
 		const resData = await res.json();
 		formAlert.popup(resData);
-		dispatch('draw-group', { groupId: selectedGroupId });
+		onDrawGroup({ groupId: selectedGroupId });
 		showGroupSpinner = false;
 	}
 
@@ -113,12 +112,12 @@
 		const resData = await res.json();
 		formAlert.popup(resData);
 		showGroupSpinner = false;
-		dispatch('draw-group', { groupId: selectedGroupId });
+		onDrawGroup({ groupId: selectedGroupId });
 	}
 
 	function onSequenceChange(event: Event) {
 		const sequenceId = parseInt((event.target as HTMLSelectElement).value.split('_')[1]);
-		dispatch('sequence-select', { sequenceId });
+		onSequenceSelect({ sequenceId });
 	}
 </script>
 
@@ -202,7 +201,7 @@
 			}
 			return async ({ update }) => {
 				await update();
-				dispatch('should-refresh');
+				onShouldRefresh();
 			};
 		}}
 	>

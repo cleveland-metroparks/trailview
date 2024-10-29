@@ -394,12 +394,12 @@
 		layout = layout === 'map' ? 'viewer' : 'map';
 	}
 
-	function onGroupSequenceSelect(event: CustomEvent<{ sequenceId: number }>) {
-		goToSequence(event.detail.sequenceId);
+	function onGroupSequenceSelect(event: { sequenceId: number }) {
+		goToSequence(event.sequenceId);
 	}
 
-	function onEditEnabledChange(event: CustomEvent<boolean>) {
-		trailviewer?.setEditOnZoom(event.detail);
+	function onEditEnabledChange(enabled: boolean) {
+		trailviewer?.setEditOnZoom(enabled);
 	}
 
 	let selectedIds: string[] = $state([]);
@@ -582,7 +582,7 @@
 					bind:pitchCorrection
 					bind:flipped
 					mapsApiTrails={data.mapsApiTrails}
-					on:should-refresh={refreshEverything}
+					onShouldRefresh={refreshEverything}
 				/>
 			{:else if inspectorPage === 'Image(s)'}
 				<InspectorImage
@@ -590,7 +590,7 @@
 					{formAlert}
 					{trailviewer}
 					{currentImage}
-					on:should-refresh={refreshEverything}
+					onShouldRefresh={refreshEverything}
 				/>
 			{:else if inspectorPage === 'Group'}
 				<InspectorGroup
@@ -600,17 +600,17 @@
 					groupData={data.groups}
 					sequenceData={data.sequences}
 					bind:selectedGroupId
-					on:draw-group={(e) => {
-						highlightGroup(e.detail.groupId);
+					onDrawGroup={(e) => {
+						highlightGroup(e.groupId);
 					}}
-					on:should-refresh={refreshEverything}
-					on:sequence-select={onGroupSequenceSelect}
+					onShouldRefresh={refreshEverything}
+					onSequenceSelect={onGroupSequenceSelect}
 				/>
 			{:else if inspectorPage === 'Move'}
 				<InspectorMove
 					{trailviewer}
-					on:should-refresh={refreshEverything}
-					on:edit-enabled={onEditEnabledChange}
+					onShouldRefresh={refreshEverything}
+					onEditEnabled={onEditEnabledChange}
 				/>
 			{/if}
 		</div>

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { createEventDispatcher } from 'svelte';
 	import moment from 'moment';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 	import type ConfirmModal from '$lib/ConfirmModal.svelte';
@@ -11,13 +10,10 @@
 		trailviewer: TrailViewer | undefined;
 		confirmModal: ReturnType<typeof ConfirmModal>;
 		formAlert: FormAlert;
+		onShouldRefresh: () => void;
 	}
 
-	let { currentImage, trailviewer, confirmModal, formAlert }: Props = $props();
-
-	const dispatch = createEventDispatcher<{
-		'should-refresh': void;
-	}>();
+	let { currentImage, trailviewer, confirmModal, formAlert, onShouldRefresh }: Props = $props();
 
 	let showImageSpinner = $state(false);
 	let showPrivateViewSpinner = $state(false);
@@ -70,7 +66,7 @@
 		} else {
 			showPrivateViewSpinner = false;
 		}
-		dispatch('should-refresh');
+		onShouldRefresh();
 	}
 </script>
 
@@ -81,7 +77,7 @@
 		return async ({ update }) => {
 			await update({ reset: false });
 			showImageSpinner = false;
-			dispatch('should-refresh');
+			onShouldRefresh();
 		};
 	}}
 >

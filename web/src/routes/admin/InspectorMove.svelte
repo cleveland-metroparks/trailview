@@ -1,20 +1,19 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import type { TrailViewer } from '$lib/trailviewer';
 
 	interface Props {
 		trailviewer: TrailViewer | undefined;
+		onShouldRefresh: () => void;
+		onEditEnabled: (enabled: boolean) => void;
 	}
 
-	let { trailviewer }: Props = $props();
-
-	const dispatch = createEventDispatcher<{ 'should-refresh': void; 'edit-enabled': boolean }>();
+	let { trailviewer, onShouldRefresh, onEditEnabled }: Props = $props();
 
 	let showEditSpinner = $state(false);
 	let editEnabled = $state(false);
 
 	function onEditCheckChange() {
-		dispatch('edit-enabled', editEnabled);
+		onEditEnabled(editEnabled);
 	}
 </script>
 
@@ -60,7 +59,7 @@
 			showEditSpinner = true;
 			await trailviewer?.submitEdits();
 			showEditSpinner = false;
-			dispatch('should-refresh');
+			onShouldRefresh();
 		}}
 		type="button"
 		class="btn btn-primary"

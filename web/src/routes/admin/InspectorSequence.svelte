@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { createEventDispatcher } from 'svelte';
 	import { mapsApiTrailSelectValue, type MapsApiTrailsType } from './+page.svelte';
 	import type { TrailViewer, Image } from '$lib/trailviewer';
 
@@ -11,6 +10,7 @@
 		currentImage: Image | undefined;
 		pitchCorrection?: number;
 		flipped: boolean;
+		onShouldRefresh: () => void;
 	}
 
 	let {
@@ -19,12 +19,9 @@
 		mapsApiTrails = null,
 		currentImage,
 		pitchCorrection = $bindable(0),
-		flipped = $bindable()
+		flipped = $bindable(),
+		onShouldRefresh
 	}: Props = $props();
-
-	const dispatch = createEventDispatcher<{
-		'should-refresh': void;
-	}>();
 
 	let showSequenceSpinner = $state(false);
 
@@ -46,7 +43,7 @@
 		return async ({ update }) => {
 			await update({ reset: false });
 			showSequenceSpinner = false;
-			dispatch('should-refresh');
+			onShouldRefresh();
 		};
 	}}
 >
@@ -123,7 +120,7 @@
 		<div class="d-flex flex-row gap-2">
 			<button
 				onclick={() => {
-					dispatch('should-refresh');
+					onShouldRefresh();
 				}}
 				type="button"
 				class="btn btn-secondary btn-sm">Reset Pitch</button
