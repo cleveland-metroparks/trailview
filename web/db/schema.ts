@@ -42,11 +42,7 @@ export const image = pgTable(
 		createdAt: timestamp('created_at', { mode: 'date' }).notNull(),
 		coordinates: geometry('coordinates', { type: 'point', mode: 'tuple', srid: 4326 }).notNull()
 	},
-	(table) => {
-		return {
-			coordinatesIndex: index().using('gist', table.coordinates)
-		};
-	}
+	(table) => [index().using('gist', table.coordinates)]
 );
 
 export const group = pgTable('group', {
@@ -64,10 +60,7 @@ export const analytics = pgTable(
 		date: timestamp('date', { mode: 'date' }).notNull(),
 		count: integer('count').notNull()
 	},
-	(table) => ({
-		dateIndex: index().on(table.date),
-		uniqueImageIdDate: unique().on(table.imageId, table.date)
-	})
+	(table) => [index().on(table.date), unique().on(table.imageId, table.date)]
 );
 
 export const imageGroupRelation = pgTable(
@@ -81,9 +74,7 @@ export const imageGroupRelation = pgTable(
 			.notNull()
 			.references(() => group.id, { onDelete: 'cascade' })
 	},
-	(table) => ({
-		uniqueImageIdGroupId: unique().on(table.imageId, table.groupId)
-	})
+	(table) => [unique().on(table.imageId, table.groupId)]
 );
 
 export const apiRole = pgEnum('apiRole', ['standard', 'admin']);
