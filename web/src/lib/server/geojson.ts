@@ -1,6 +1,5 @@
 import type { Feature, FeatureCollection } from 'geojson';
 import geojsonvt from 'geojson-vt';
-import cron from 'node-cron';
 import { db } from '$lib/server/db';
 import * as schema from '$db/schema';
 import { eq } from 'drizzle-orm';
@@ -91,11 +90,14 @@ export async function refreshGeoJsonData() {
 	standardTileIndex = createTiles(publicImagesQuery, groupsQuery);
 }
 
+let refreshing = false;
 (async () => {
-	if (building === false) {
-		await refreshGeoJsonData();
-		cron.schedule('0 * * * *', async () => {
+	if (building === false && refreshing === false) {
+		const refresh = async () => {
 			await refreshGeoJsonData();
-		});
+			setTimeout(refresh, 1000 * 60 * 60 + Math.floor(Math.random() * 1000 * 60 * 10));
+		};
+		await refresh();
+		refreshing = true;
 	}
 })();
