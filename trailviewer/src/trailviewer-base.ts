@@ -83,7 +83,7 @@ interface PannellumConfig {
 
 export interface TrailViewerBaseOptions {
     target: string;
-    apiKey: string;
+    // apiKey: string;
     initial: string | { latitude: number; longitude: number };
     baseUrl: string;
     navArrowMinAngle: number;
@@ -95,9 +95,9 @@ export interface TrailViewerBaseOptions {
 
 export const defaultBaseOptions: TrailViewerBaseOptions = {
     target: 'trailview_panorama',
-    apiKey: '',
+    // apiKey: '',
     initial: 'c96ba6029cad464e9a4b7f9a6b8ac0d5',
-    baseUrl: 'https://trailview.cmparks.net',
+    baseUrl: 'https://trailview.clevelandmetroparks.com',
     navArrowMinAngle: -25,
     navArrowMaxAngle: -20,
     fetchPrivate: false,
@@ -180,7 +180,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
         this._options = options;
         fetch(urlJoin(this._options.baseUrl, '/api/sequences'), {
             method: 'GET',
-            headers: { 'X-API-Key': this._options.apiKey },
+            // headers: { 'X-API-Key': this._options.apiKey },
         }).then(async (res) => {
             const data = await res.json();
             if (!data.success) {
@@ -468,7 +468,7 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
             neighborsUrl.searchParams.set('g', ids);
         }
         const res = await fetch(neighborsUrl, {
-            headers: { 'X-API-Key': this._options.apiKey },
+            // headers: { 'X-API-Key': this._options.apiKey },
         });
         const data = await res.json();
         if (data.success !== true) {
@@ -492,7 +492,9 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                     `?lng=${initial.longitude.toString()}`,
                     this._options.fetchPrivate ? '?private' : ''
                 ),
-                { headers: { 'X-API-Key': this._options.apiKey } }
+                {
+                    // headers: { 'X-API-Key': this._options.apiKey }
+                }
             );
             const resData = await nearRes.json();
             if (resData.success !== true) {
@@ -508,7 +510,9 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                 initImageId,
                 this._options.fetchPrivate ? '?private' : ''
             ),
-            { headers: { 'X-API-Key': this._options.apiKey } }
+            {
+                // headers: { 'X-API-Key': this._options.apiKey }
+            }
         );
         const data = await res.json();
         if (data.success !== true) {
@@ -672,7 +676,9 @@ export class TrailViewerBase implements TrailViewerBaseEvents {
                     imageId,
                     this._options.fetchPrivate ? '?private' : ''
                 ),
-                { headers: { 'X-API-Key': this._options.apiKey } }
+                {
+                    // headers: { 'X-API-Key': this._options.apiKey }
+                }
             );
             const data = await res.json();
             if (data.success !== true) {
