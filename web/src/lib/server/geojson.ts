@@ -49,7 +49,7 @@ function createTiles(images: ImageData[], groups: GroupRelationData) {
 	}
 	return geojsonvt(features, {
 		maxZoom: 24, // max zoom to preserve detail on; can't be higher than 24
-		tolerance: 3, // simplification tolerance (higher means simpler)
+		tolerance: 100, // simplification tolerance (higher means simpler)
 		extent: 4096, // tile extent (both width and height)
 		buffer: 64, // tile buffer on each side
 		debug: 0, // logging level (0 to disable, 1 or 2)
