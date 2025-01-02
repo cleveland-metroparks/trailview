@@ -56,7 +56,7 @@ function createTiles(images: ImageData[], groups: GroupRelationData) {
 		lineMetrics: false, // whether to enable line metrics tracking for LineString/MultiLineString features
 		promoteId: null, // name of a feature property to promote to feature.id. Cannot be used with `generateId`
 		generateId: false, // whether to generate feature ids. Cannot be used with `promoteId`
-		indexMaxZoom: 5, // max zoom in the initial tile index
+		indexMaxZoom: 0, // max zoom in the initial tile index
 		indexMaxPoints: 4096 // max number of points per tile in the index
 	});
 }
