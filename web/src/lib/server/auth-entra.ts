@@ -6,14 +6,18 @@ import jwt from 'jsonwebtoken';
 import { Client as GraphClient, ResponseType } from '@microsoft/microsoft-graph-client';
 import { z } from 'zod';
 import type { Cookies } from '@sveltejs/kit';
-import { dev } from '$app/environment';
+import { building, dev } from '$app/environment';
 
-const microsoftEntraId = new MicrosoftEntraId(
-	env.TV_ENTRA_TENANT_ID,
-	env.TV_ENTRA_CLIENT_ID,
-	env.TV_ENTRA_CLIENT_SECRET_VALUE,
-	env.TV_ENTRA_REDIRECT_URL
-);
+const microsoftEntraId = (
+	building
+		? null
+		: new MicrosoftEntraId(
+				env.TV_ENTRA_TENANT_ID,
+				env.TV_ENTRA_CLIENT_ID,
+				env.TV_ENTRA_CLIENT_SECRET_VALUE,
+				env.TV_ENTRA_REDIRECT_URL
+			)
+) as MicrosoftEntraId;
 
 /**
  * Get the authentication URL that prompts to user to log in.
@@ -134,7 +138,11 @@ export async function getUserInfo(accessToken: string): Promise<{
 
 async function refreshAccessToken(refreshToken: string): Promise<string | null> {
 	try {
-		const tokens = await microsoftEntraId.refreshAccessToken(refreshToken);
+		const tokens = await microsoftEntraId.refreshAccessToken(refreshToken, [
+			'openid',
+			'user.read',
+			'offline_access'
+		]);
 		return tokens.accessToken();
 	} catch (e) {
 		console.error(e);
