@@ -31,28 +31,28 @@
 	<p>Bonnie Park Loop Trail is 0.6 miles.</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/b20b9624-49ba-4fd3-845f-96101b2851b5/MillStreamRunReservationMap.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/b3ee508b-93b7-4f12-aa59-498c7a7d03bd/MillStreamRunReservationMap.pdf"
 		target="_blank"><img alt="Mill Stream Run Reservation map" src={imgMapMillStreamRun} /></a
 	>
 {:else if selectedTrail === 'Bunns Lake Loop'}
 	<p>Bunns Lake Loop Trail is 0.5 miles.</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/5d474272-b563-48e4-8b38-71bae1ec85b5/BradleyWoodsMap2017.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/0298141e-5c70-44cd-bd7f-8fde677d830e/BradleyWoodsMap2017.pdf"
 		target="_blank"><img alt="Bradley Woods Reservation map" src={imgMapBradleyWoods} /></a
 	>
 {:else if selectedTrail === 'Forbes Woods Loop'}
 	<p>Forbes Woods Loop Trail is 0.25 miles long.</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/36b8b4fb-839a-428c-a066-88063f2eeec0/BedfordMap2017.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/3ec23417-beca-43d6-b7e5-a3e1bd7252a1/Bedford.pdf"
 		target="_blank"><img alt="Bedford Reservation map" src={imgMapBedford} /></a
 	>
 {:else if selectedTrail === 'Huntington Walkway Loop'}
 	<p>Huntington Walkway Loop is 0.6 miles long.</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/0802d246-9e43-4b46-9908-a9d131fa0fdb/HuntingtonMap2017.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/77bee3a7-d547-4642-bf42-e6f5acf925ff/Huntington.pdf"
 		target="_blank"><img alt="Huntington Reservation map" src={imgMapHuntington} /></a
 	>
 {:else if selectedTrail === 'Lower Edgewater APT Loop'}
@@ -64,7 +64,7 @@
 	</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/afdabbf1-a4e2-49b4-9552-20142c409bb5/Lakefront-Reservation-Map.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/3496c101-b5d3-44f1-b19c-7ddff3907e44/Lakefront-Reservation-Map.pdf"
 		target="_blank"><img alt="Lakefront Reservation map" src={imgMapLakefront} /></a
 	>
 {:else if selectedTrail === 'Scenic Park APT Loop'}
@@ -77,7 +77,7 @@
 	</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/1c7c2fde-4aed-4fbe-872d-e5aa3d2f0dba/RockyRiverMap.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/ea5dbe3a-3d9e-4120-86cf-9800864cd54e/Rocky-River.pdf"
 		target="_blank"><img alt="Rocky River Reservation map" src={imgMapRockyRiver} /></a
 	>
 {:else if selectedTrail === 'West Creek APT Loop Trail'}
@@ -88,14 +88,14 @@
 	</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/d8e935c0-f0dd-47e2-9902-af0ef739c135/west-creek_reservation.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/bf72cf95-0344-4b40-9ca6-d3e971eae08a/50788-West-Creek-Reservation-Map-Final.pdf"
 		target="_blank"><img alt="West Creek Reservation map" src={imgMapWestCreek} /></a
 	>
 {:else if selectedTrail === 'Woodpecker Way'}
 	<p>Accessible through Woodpecker Way to Center Pond Boardwalk Loop (0.75 miles).</p>
 
 	<a
-		href="https://www.clevelandmetroparks.com/getmedia/04c9cb54-ce81-456b-bb4e-852b0be66ac6/Acacia-map.pdf.ashx?ext=.pdf"
+		href="https://www.clevelandmetroparks.com/getmedia/b0a2bca8-0e7c-493b-8799-52a1bf95a472/Acacia-map.pdf"
 		target="_blank"><img alt="Acacia Reservation map" src={imgMapAcacia} /></a
 	>
 {/if}
