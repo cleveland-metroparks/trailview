@@ -1,0 +1,56 @@
+trigger:
+  branches:
+    include:
+      - main
+      - test
+      - prod
+
+resources:
+  - repo: self
+
+variables:
+  DOCKER_BUILDKIT: 1
+
+stages:
+  - stage: Build
+    displayName: Build
+    pool: DewInternalPool
+    jobs:
+      - job: BuildPush
+        displayName: Build and Push
+        steps:
+          - task: Docker@2
+            displayName: Build and Push Web
+            inputs:
+              command: buildAndPush
+              repository: registry.cmparks.net/trailview-web
+              buildContext: "**"
+              dockerfile: "web/Dockerfile"
+              tags: |
+                $(Build.SourceBranchName)
+          - task: Docker@2
+            displayName: Build and Push Process
+            inputs:
+              command: buildAndPush
+              repository: registry.cmparks.net/trailview-process
+              buildContext: "**"
+              dockerfile: "process/Dockerfile"
+              tags: |
+                $(Build.SourceBranchName)
+  - stage: Deploy
+    displayName: Deploy
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'test'))
+    pool: DewTestPool
+    jobs:
+      - job: DeployTest
+        displayName: Deploy Test
+        steps:
+          - checkout: none
+          - script: |
+              #!/bin/bash
+              set -xe
+              cd /srv/docker/trailview
+              docker compose pull
+              docker compose down
+              docker compose up -d
+            displayName: Run Docker Commands
